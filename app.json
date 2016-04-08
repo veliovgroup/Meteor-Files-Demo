@@ -4,7 +4,7 @@
   "description": "Demo application for ostrio:files package",
   "repository": "https://github.com/VeliovGroup/Meteor-Files-Demo",
   "website": "https://github.com/VeliovGroup/Meteor-Files-Demo",
-  "logo": "https://d14xs1qewsqjcd.cloudfront.net/assets/og-image-logo.png",
+  "logo": "https://raw.githubusercontent.com/VeliovGroup/Meteor-Files/master/logo.png",
   "scripts": {
     "start": "node main.js"
   },
