@@ -4,6 +4,7 @@
   "description": "Demo application for ostrio:files package",
   "main": "main.js",
   "scripts": {
+    "postdeploy": "npm install --production",
     "start": "node main.js"
   },
   "repository": {

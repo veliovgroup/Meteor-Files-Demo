@@ -6,6 +6,7 @@
   "website": "https://github.com/VeliovGroup/Meteor-Files-Demo",
   "logo": "https://raw.githubusercontent.com/VeliovGroup/Meteor-Files/master/logo.png",
   "scripts": {
+    "postdeploy": "npm install --production",
     "start": "node main.js"
   },
   "dependencies": {
