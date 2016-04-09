@@ -1,6 +1,6 @@
 {
   "format": "javascript-image-pre1",
-  "arch": "os",
+  "arch": "os.linux.x86_64",
   "load": [
     {
       "path": "packages/underscore.js"
@@ -245,7 +245,7 @@
       "path": "packages/aldeed_collection2.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
+      "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules1",
       "sourceMap": "packages/ostrio_files.js.map",
       "path": "packages/ostrio_files.js"
     },
