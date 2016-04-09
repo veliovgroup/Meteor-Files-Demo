@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "connect": "^3.4.1",
-    "fibers": "1.0.8",
+    "fibers": "https://github.com/meteor/node-fibers/tarball/d519f0c5971c33d99c902dad346b817e84bab001",
     "http-proxy": "^1.13.2",
     "keypress": "^0.2.1",
     "meteor-promise": "0.5.1",
@@ -56,7 +56,7 @@
     }
   ],
   "engines": {
-    "node": "0.12.9",
+    "node": "0.10.41",
     "npm": "2.15.3"
   }
 }
