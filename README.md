@@ -23,6 +23,8 @@ cd Meteor-Files-Demo
 heroku create <your-app-name> --buildpack https://github.com/heroku/heroku-buildpack-nodejs
 # This command will output something like: https://<your-app-name>.herokuapp.com/ | https://git.heroku.com/<your-app-name>.git
 
+heroku git:remote -a <your-app-name>
+
 # Copy this: `https://<your-app-name>.herokuapp.com`, note use only `https://` protocol!
 heroku config:set ROOT_URL=https://<your-app-name>.herokuapp.com
 # To have a MongoDB, you can create one at https://mlab.com/
