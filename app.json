@@ -25,7 +25,6 @@
     "underscore": "1.5.2",
     "fs-extra": "0.26.7",
     "throttle": "1.0.3",
-    "meteor-node-stubs": "~0.2.0",
     "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
     "semver": "4.1.0"
   },
