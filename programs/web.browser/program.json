@@ -2,22 +2,22 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "6c457e80a77773745654c939a7272e038f4f7b36.js",
+      "path": "8592aa90011acebea6f484a773b00a1e0dbe020b.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/6c457e80a77773745654c939a7272e038f4f7b36.js?meteor_js_resource=true",
-      "size": 674786,
-      "hash": "6c457e80a77773745654c939a7272e038f4f7b36"
+      "url": "/8592aa90011acebea6f484a773b00a1e0dbe020b.js?meteor_js_resource=true",
+      "size": 650237,
+      "hash": "8592aa90011acebea6f484a773b00a1e0dbe020b"
     },
     {
-      "path": "42d1c26c2f9b2d8a7a83e14458887ad50c99f187.css",
+      "path": "16f7697212eb7a032192aaec1c56a7d4c8ab842e.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/42d1c26c2f9b2d8a7a83e14458887ad50c99f187.css?meteor_css_resource=true",
-      "size": 150745,
-      "hash": "42d1c26c2f9b2d8a7a83e14458887ad50c99f187"
+      "url": "/16f7697212eb7a032192aaec1c56a7d4c8ab842e.css?meteor_css_resource=true",
+      "size": 151479,
+      "hash": "16f7697212eb7a032192aaec1c56a7d4c8ab842e"
     },
     {
       "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
@@ -119,10 +119,118 @@
       "hash": "42c179eef588854b5ec151bcf6a3f58aa8b79b11"
     },
     {
+      "path": "app/favicon-128.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-128.png",
+      "size": 20407,
+      "hash": "555fcf08fd540e8514233755d68cb654670fe767"
+    },
+    {
+      "path": "app/favicon-16x16.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-16x16.png",
+      "size": 880,
+      "hash": "09e00a19aa6e5a827931722d1b26652d4b2a45a1"
+    },
+    {
+      "path": "app/favicon-196x196.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-196x196.png",
+      "size": 44887,
+      "hash": "89a579cb4867ff71a0af5cbcca2aac5d9611045d"
+    },
+    {
+      "path": "app/favicon-32x32.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-32x32.png",
+      "size": 2683,
+      "hash": "7e1b1d5ba5a5dd6ae12538759cae6db37e14dd27"
+    },
+    {
+      "path": "app/favicon-96x96.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-96x96.png",
+      "size": 13395,
+      "hash": "b6d5505cb3c6694301de2b3c673c3b21a62d2dbf"
+    },
+    {
+      "path": "app/favicon.ico",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon.ico",
+      "size": 34494,
+      "hash": "1ef63a23b8fb531495613344f13885e3bfd35458"
+    },
+    {
+      "path": "app/mstile-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-144x144.png",
+      "size": 27458,
+      "hash": "cb13f81b8be3ef5fa64eb66f22bb550190ae7342"
+    },
+    {
+      "path": "app/mstile-150x150.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-150x150.png",
+      "size": 71162,
+      "hash": "1e214ae614bba98de096ba7ac9b59b34ae308893"
+    },
+    {
+      "path": "app/mstile-310x150.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-310x150.png",
+      "size": 97106,
+      "hash": "ac57c69ee8d6fb984b0344a361d530743721adb5"
+    },
+    {
+      "path": "app/mstile-310x310.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-310x310.png",
+      "size": 155708,
+      "hash": "5c0a89e5569cd266e0eb2933e29e5bfe103d6a6f"
+    },
+    {
+      "path": "app/mstile-70x70.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-70x70.png",
+      "size": 20407,
+      "hash": "555fcf08fd540e8514233755d68cb654670fe767"
+    },
+    {
+      "path": "app/robots.txt",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/robots.txt",
+      "size": 57,
+      "hash": "24884cc6e422dd8f2cdd0cde1369eaf6615cb3de"
+    },
+    {
       "path": "head.html",
       "where": "internal",
       "type": "head",
-      "hash": "ae78c09900d046b548875c7da512e41f889aae74"
+      "hash": "7d4e06ddd8dd96776c51a7a98133325402a6d84b"
     }
   ]
 }

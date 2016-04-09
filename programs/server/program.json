@@ -53,10 +53,6 @@
       "path": "packages/modules.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
-      "path": "packages/es5-shim.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/promise/node_modules",
       "path": "packages/promise.js"
     },
@@ -305,8 +301,20 @@
       "path": "packages/global-imports.js"
     },
     {
-      "sourceMap": "app/app.js.map",
-      "path": "app/app.js"
+      "sourceMap": "app/lib/__compatability/__globals.coffee.js.map",
+      "path": "app/lib/__compatability/__globals.coffee.js"
+    },
+    {
+      "sourceMap": "app/lib/files.collection.coffee.js.map",
+      "path": "app/lib/files.collection.coffee.js"
+    },
+    {
+      "sourceMap": "app/lib/router.coffee.js.map",
+      "path": "app/lib/router.coffee.js"
+    },
+    {
+      "sourceMap": "app/lib/routes.coffee.js.map",
+      "path": "app/lib/routes.coffee.js"
     },
     {
       "sourceMap": "packages/mdg_validation-error.js.map",
