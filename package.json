@@ -26,7 +26,7 @@
   "homepage": "https://github.com/VeliovGroup/Meteor-Files-Demo",
   "dependencies": {
     "connect": "^3.4.1",
-    "fibers": "https://github.com/meteor/node-fibers/tarball/d519f0c5971c33d99c902dad346b817e84bab001",
+    "fibers": "^1.0.8",
     "http-proxy": "^1.13.2",
     "keypress": "^0.2.1",
     "meteor-promise": "0.5.1",
@@ -50,3 +50,4 @@
     "npm": "2.15.3"
   }
 }
+

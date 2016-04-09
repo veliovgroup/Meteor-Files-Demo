@@ -15,7 +15,7 @@ Collections.files = new Meteor.Files({                                 // 1
   collectionName: 'uploadedFiles',                                     // 2
   allowClientCode: false,                                              // 2
   onBeforeUpload: function() {                                         // 2
-    if (this.file.size <= 100000 * 10 * 128) {                         // 8
+    if (this.file.size <= 1024 * 1024 * 128) {                         // 8
       return true;                                                     //
     } else {                                                           //
       return "Max. file size is 128MB you've tried to upload " + (filesize(this.file.size));
@@ -52,33 +52,40 @@ if (Meteor.isServer) {                                                 // 14
     expireAfterSeconds: 0,                                             // 20
     background: true                                                   // 20
   });                                                                  //
+  Meteor.setInterval(function() {                                      // 15
+    return Collections.files.remove({                                  //
+      'meta.expireAt': {                                               // 29
+        $lte: new Date((+(new Date)) + 120000)                         // 29
+      }                                                                //
+    });                                                                //
+  }, 120000);                                                          //
   Meteor.publish('latest', function(take) {                            // 15
     if (take == null) {                                                //
       take = 50;                                                       //
     }                                                                  //
-    check(take, Number);                                               // 26
+    check(take, Number);                                               // 34
     return Collections.files.collection.find({}, {                     //
-      limit: take,                                                     // 29
-      sort: {                                                          // 29
-        'meta.created_at': -1                                          // 30
+      limit: take,                                                     // 37
+      sort: {                                                          // 37
+        'meta.created_at': -1                                          // 38
       },                                                               //
-      fields: {                                                        // 29
-        _id: 1,                                                        // 32
-        name: 1,                                                       // 32
-        size: 1,                                                       // 32
-        meta: 1,                                                       // 32
-        isVideo: 1,                                                    // 32
-        isAudio: 1,                                                    // 32
-        isImage: 1                                                     // 32
+      fields: {                                                        // 37
+        _id: 1,                                                        // 40
+        name: 1,                                                       // 40
+        size: 1,                                                       // 40
+        meta: 1,                                                       // 40
+        isVideo: 1,                                                    // 40
+        isAudio: 1,                                                    // 40
+        isImage: 1                                                     // 40
       }                                                                //
     });                                                                //
   });                                                                  //
   Meteor.publish('file', function(_id) {                               // 15
-    check(_id, String);                                                // 41
+    check(_id, String);                                                // 49
     return Collections.files.collection.find(_id);                     //
   });                                                                  //
   Meteor.methods({                                                     // 15
-    'filesLenght': function() {                                        // 45
+    'filesLenght': function() {                                        // 53
       return Collections.files.collection.find({}).count();            //
     }                                                                  //
   });                                                                  //
