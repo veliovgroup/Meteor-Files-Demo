@@ -25,7 +25,7 @@
   "homepage": "https://github.com/VeliovGroup/Meteor-Files-Demo",
   "dependencies": {
     "connect": "^3.4.1",
-    "fibers": "^1.0.8",
+    "fibers": "1.0.8",
     "http-proxy": "^1.13.2",
     "keypress": "^0.2.1",
     "meteor-promise": "^0.5.1",
