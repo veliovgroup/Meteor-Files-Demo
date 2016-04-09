@@ -45,7 +45,7 @@
     "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e"
   },
   "engines": {
-    "node": "0.10.40",
+    "node": "0.12.9",
     "npm": "2.15.3"
   }
 }
