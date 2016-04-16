@@ -2,22 +2,31 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "79c6fe7edf260ab0c4577c2b509a76f5eddf9f68.js",
+      "path": "427c40686940da288509bbba01333a2449199db8.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/79c6fe7edf260ab0c4577c2b509a76f5eddf9f68.js?meteor_js_resource=true",
-      "size": 649942,
-      "hash": "79c6fe7edf260ab0c4577c2b509a76f5eddf9f68"
+      "url": "/427c40686940da288509bbba01333a2449199db8.js?meteor_js_resource=true",
+      "size": 652341,
+      "hash": "427c40686940da288509bbba01333a2449199db8"
     },
     {
-      "path": "551a5e96073a51b1cf38cff38fd6d46b5499e1db.css",
+      "path": "95039614ab87332c102863cda0a2a610c4bb2bdd.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/551a5e96073a51b1cf38cff38fd6d46b5499e1db.css?meteor_css_resource=true",
-      "size": 151661,
-      "hash": "551a5e96073a51b1cf38cff38fd6d46b5499e1db"
+      "url": "/95039614ab87332c102863cda0a2a610c4bb2bdd.css?meteor_css_resource=true",
+      "size": 151556,
+      "hash": "95039614ab87332c102863cda0a2a610c4bb2bdd"
+    },
+    {
+      "path": "packages/ostrio_files/worker.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/ostrio_files/worker.js",
+      "size": 508,
+      "hash": "8208683d2ac13e4b2f08d550ee461175d9d9e246"
     },
     {
       "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
@@ -223,14 +232,14 @@
       "type": "asset",
       "cacheable": false,
       "url": "/robots.txt",
-      "size": 57,
-      "hash": "24884cc6e422dd8f2cdd0cde1369eaf6615cb3de"
+      "size": 24,
+      "hash": "6dfc427fe73587726797f47c981e2f24f5dcc61f"
     },
     {
       "path": "head.html",
       "where": "internal",
       "type": "head",
-      "hash": "d56cd0fcaa76c55fde7eaaa5474c8761dfaefb86"
+      "hash": "4c8c96b012adc9ea4bebdbed2da199e87734133f"
     }
   ]
 }

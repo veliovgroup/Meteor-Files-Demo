@@ -15,6 +15,7 @@ this._app = {                                                          // 1
 };                                                                     //
                                                                        //
 if (Meteor.isClient) {                                                 // 6
+  window.IS_RENDERED = false;                                          // 7
   Template.registerHelper('filesize', function(size) {                 // 7
     return filesize(size);                                             //
   });                                                                  //

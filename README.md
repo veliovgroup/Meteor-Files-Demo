@@ -12,6 +12,7 @@ __Functionality:__
 
 Deploy to Heroku
 ======
+ - Due to "*ephemeral filesystem*" on Heroku, we suggest to use DropBox as permanent storage, [read DropBox tutorial](https://github.com/VeliovGroup/Meteor-Files/wiki/Third-party-storage)
  - Go to [Heroku](https://signup.heroku.com/dc) create and confirm your new account
  - Go though [Node.js Tutorial](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
  - Install [Heroku Toolbet](https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up)
