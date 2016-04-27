@@ -12,7 +12,7 @@ var Promise = Package.promise.Promise;
 /* Package-scope variables */
 var meteorBabelHelpers;
 
-var require = meteorInstall({"node_modules":{"meteor":{"babel-runtime":{"babel-runtime.js":["regenerator/runtime-module",function(require,exports,module){
+var require = meteorInstall({"node_modules":{"meteor":{"babel-runtime":{"babel-runtime.js":["meteor-babel-helpers","regenerator/runtime-module",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
@@ -24,49 +24,7 @@ var hasOwn = Object.prototype.hasOwnProperty;
 var S = typeof Symbol === "function" ? Symbol : {};
 var iteratorSymbol = S.iterator || "@@iterator";
 
-function canDefineNonEnumerableProperties() {
-  var testObj = {};
-  var testPropName = "t";
-
-  try {
-    Object.defineProperty(testObj, testPropName, {
-      enumerable: false,
-      value: testObj
-    });
-
-    for (var k in testObj) {
-      if (k === testPropName) {
-        return false;
-      }
-    }
-  } catch (e) {
-    return false;
-  }
-
-  return testObj[testPropName] === testObj;
-}
-
-meteorBabelHelpers = {
-  // Meteor-specific runtime helper for wrapping the object of for-in
-  // loops, so that inherited Array methods defined by es5-shim can be
-  // ignored in browsers where they cannot be defined as non-enumerable.
-  sanitizeForInObject: canDefineNonEnumerableProperties()
-    ? function (value) { return value; }
-    : function (obj) {
-      if (Array.isArray(obj)) {
-        var newObj = {};
-        var keys = Object.keys(obj);
-        var keyCount = keys.length;
-        for (var i = 0; i < keyCount; ++i) {
-          var key = keys[i];
-          newObj[key] = obj[key];
-        }
-        return newObj;
-      }
-
-      return obj;
-    }
-};
+meteorBabelHelpers = require("meteor-babel-helpers");
 
 var BabelRuntime = {
   // es6.templateLiterals
@@ -445,7 +403,85 @@ meteorInstall({
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"node_modules":{"regenerator":{"runtime-module.js":["./runtime",function(require,exports,module){
+}],"node_modules":{"meteor-babel-helpers":{"package.json":function(require,exports){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                         //
+// ../npm/node_modules/meteor-babel-helpers/package.json                                                   //
+//                                                                                                         //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                           //
+exports.name = "meteor-babel-helpers";
+exports.version = "0.0.3";
+exports.main = "index.js";
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"index.js":function(require,exports,module){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                         //
+// node_modules/meteor/babel-runtime/node_modules/meteor-babel-helpers/index.js                            //
+//                                                                                                         //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                           //
+function canDefineNonEnumerableProperties() {
+  var testObj = {};
+  var testPropName = "t";
+
+  try {
+    Object.defineProperty(testObj, testPropName, {
+      enumerable: false,
+      value: testObj
+    });
+
+    for (var k in testObj) {
+      if (k === testPropName) {
+        return false;
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return testObj[testPropName] === testObj;
+}
+
+function sanitizeEasy(value) {
+  return value;
+}
+
+function sanitizeHard(obj) {
+  if (Array.isArray(obj)) {
+    var newObj = {};
+    var keys = Object.keys(obj);
+    var keyCount = keys.length;
+    for (var i = 0; i < keyCount; ++i) {
+      var key = keys[i];
+      newObj[key] = obj[key];
+    }
+    return newObj;
+  }
+
+  return obj;
+}
+
+meteorBabelHelpers = module.exports = {
+  // Meteor-specific runtime helper for wrapping the object of for-in
+  // loops, so that inherited Array methods defined by es5-shim can be
+  // ignored in browsers where they cannot be defined as non-enumerable.
+  sanitizeForInObject: canDefineNonEnumerableProperties()
+    ? sanitizeEasy
+    : sanitizeHard,
+
+  // Exposed so that we can test sanitizeForInObject in environments that
+  // support defining non-enumerable properties.
+  _sanitizeForInObjectHard: sanitizeHard
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}},"regenerator":{"runtime-module.js":["./runtime",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
@@ -1179,3 +1215,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=babel-runtime.js.map

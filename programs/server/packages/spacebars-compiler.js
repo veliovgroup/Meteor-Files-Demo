@@ -1352,3 +1352,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=spacebars-compiler.js.map

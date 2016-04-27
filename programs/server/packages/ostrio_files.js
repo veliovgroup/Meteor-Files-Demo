@@ -13,14 +13,9 @@ var Match = Package.check.Match;
 var SHA256 = Package.sha.SHA256;
 var Cookies = Package['ostrio:cookies'].Cookies;
 var Random = Package.random.Random;
-var Collection2 = Package['aldeed:collection2-core'].Collection2;
-var SimpleSchema = Package['aldeed:simple-schema'].SimpleSchema;
-var MongoObject = Package['aldeed:simple-schema'].MongoObject;
-var MongoInternals = Package.mongo.MongoInternals;
-var Mongo = Package.mongo.Mongo;
 
 /* Package-scope variables */
-var __coffeescriptShare;
+var __coffeescriptShare, FilesCollection;
 
 (function(){
 
@@ -31,21 +26,21 @@ var __coffeescriptShare;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-var NOOP, Throttle, _insts, bound, cp, formatFleURL, fs, rcp, request, util;                                           // 1
+var NOOP, Throttle, _insts, bound, cp, fileType, formatFleURL, fs, rcp, request;                                       // 1
                                                                                                                        //
 if (Meteor.isServer) {                                                                                                 // 1
                                                                                                                        // 2
   /*                                                                                                                   // 2
-  @description Require "fs-extra" npm package                                                                          //
+  @summary Require NPM packages                                                                                        //
    */                                                                                                                  //
   fs = Npm.require('fs-extra');                                                                                        // 2
   request = Npm.require('request');                                                                                    // 2
   Throttle = Npm.require('throttle');                                                                                  // 2
-  util = Npm.require('util');                                                                                          // 2
+  fileType = Npm.require('file-type');                                                                                 // 2
   NOOP = function() {};                                                                                                // 2
                                                                                                                        // 11
   /*                                                                                                                   // 11
-  @var {object} bound - Meteor.bindEnvironment aka Fiber wrapper                                                       //
+  @var {object} bound - Meteor.bindEnvironment (Fiber wrapper)                                                         //
    */                                                                                                                  //
   bound = Meteor.bindEnvironment(function(callback) {                                                                  // 2
     return callback();                                                                                                 // 14
@@ -55,69 +50,64 @@ if (Meteor.isServer) {                                                          
                                                                                                                        // 16
 /*                                                                                                                     // 16
 @private                                                                                                               //
-@object                                                                                                                //
 @name _insts                                                                                                           //
-@description Object of Meteor.Files instances                                                                          //
+@summary Object of FilesCollection instances                                                                           //
  */                                                                                                                    //
                                                                                                                        //
 _insts = {};                                                                                                           // 1
                                                                                                                        //
-                                                                                                                       // 24
-/*                                                                                                                     // 24
+                                                                                                                       // 23
+/*                                                                                                                     // 23
 @private                                                                                                               //
-@function                                                                                                              //
 @name rcp                                                                                                              //
 @param {Object} obj - Initial object                                                                                   //
-@description Create object with only needed props                                                                      //
+@summary Create object with only needed props                                                                          //
  */                                                                                                                    //
                                                                                                                        //
 rcp = function(obj) {                                                                                                  // 1
-  var o;                                                                                                               // 32
-  o = {                                                                                                                // 32
-    currentFile: obj.currentFile,                                                                                      // 33
-    search: obj.search,                                                                                                // 33
-    storagePath: obj.storagePath,                                                                                      // 33
-    collectionName: obj.collectionName,                                                                                // 33
-    downloadRoute: obj.downloadRoute,                                                                                  // 33
-    chunkSize: obj.chunkSize,                                                                                          // 33
-    debug: obj.debug,                                                                                                  // 33
-    _prefix: obj._prefix,                                                                                              // 33
-    cacheControl: obj.cacheControl,                                                                                    // 33
-    versions: obj.versions                                                                                             // 33
+  var o;                                                                                                               // 30
+  o = {                                                                                                                // 30
+    currentFile: obj.currentFile,                                                                                      // 31
+    search: obj.search,                                                                                                // 31
+    storagePath: obj.storagePath,                                                                                      // 31
+    collectionName: obj.collectionName,                                                                                // 31
+    downloadRoute: obj.downloadRoute,                                                                                  // 31
+    chunkSize: obj.chunkSize,                                                                                          // 31
+    debug: obj.debug,                                                                                                  // 31
+    _prefix: obj._prefix,                                                                                              // 31
+    cacheControl: obj.cacheControl,                                                                                    // 31
+    versions: obj.versions                                                                                             // 31
   };                                                                                                                   //
-  return o;                                                                                                            // 43
-};                                                                                                                     // 31
+  return o;                                                                                                            // 41
+};                                                                                                                     // 29
                                                                                                                        //
-                                                                                                                       // 45
-/*                                                                                                                     // 45
+                                                                                                                       // 43
+/*                                                                                                                     // 43
 @private                                                                                                               //
-@function                                                                                                              //
 @name cp                                                                                                               //
-@param {Object} to   - Destanation                                                                                     //
+@param {Object} to   - Destination                                                                                     //
 @param {Object} from - Source                                                                                          //
-@description Copy-Paste only needed props from one to another object                                                   //
+@summary Copy-Paste only needed props from one to another object                                                       //
  */                                                                                                                    //
                                                                                                                        //
 cp = function(to, from) {                                                                                              // 1
-  to.currentFile = from.currentFile;                                                                                   // 54
-  to.search = from.search;                                                                                             // 54
-  to.storagePath = from.storagePath;                                                                                   // 54
-  to.collectionName = from.collectionName;                                                                             // 54
-  to.downloadRoute = from.downloadRoute;                                                                               // 54
-  to.chunkSize = from.chunkSize;                                                                                       // 54
-  to.debug = from.debug;                                                                                               // 54
-  to._prefix = from._prefix;                                                                                           // 54
-  to.cacheControl = from.cacheControl;                                                                                 // 54
-  to.versions = from.versions;                                                                                         // 54
-  return to;                                                                                                           // 64
-};                                                                                                                     // 53
+  to.currentFile = from.currentFile;                                                                                   // 51
+  to.search = from.search;                                                                                             // 51
+  to.storagePath = from.storagePath;                                                                                   // 51
+  to.collectionName = from.collectionName;                                                                             // 51
+  to.downloadRoute = from.downloadRoute;                                                                               // 51
+  to.chunkSize = from.chunkSize;                                                                                       // 51
+  to.debug = from.debug;                                                                                               // 51
+  to._prefix = from._prefix;                                                                                           // 51
+  to.cacheControl = from.cacheControl;                                                                                 // 51
+  to.versions = from.versions;                                                                                         // 51
+  return to;                                                                                                           // 61
+};                                                                                                                     // 50
                                                                                                                        //
-                                                                                                                       // 66
-/*                                                                                                                     // 66
-@isomorphic                                                                                                            //
-@class                                                                                                                 //
-@namespace Meteor                                                                                                      //
-@name Files                                                                                                            //
+                                                                                                                       // 63
+/*                                                                                                                     // 63
+@locus Anywhere                                                                                                        //
+@class FilesCollection                                                                                                 //
 @param config           {Object}   - [Both]   Configuration object with next properties:                               //
 @param config.debug     {Boolean}  - [Both]   Turn on/of debugging and extra logging                                   //
 @param config.schema    {Object}   - [Both]   Collection Schema                                                        //
@@ -145,17 +135,19 @@ return `false` or `String` to abort upload                                      
 @param config.downloadCallback {Function} - [Server] Callback triggered each time file is requested, return truthy value to continue download, or falsy to abort
 @param config.interceptDownload {Function} - [Server] Intercept download request, so you can serve file from third-party resource, arguments {http: {request: {...}, response: {...}}, fileRef: {...}}
 @param config.onbeforeunloadMessage {String|Function} - [Client] Message shown to user when closing browser's window or tab while upload process is running
-@description Create new instance of Meteor.Files                                                                       //
+@summary Create new instance of FilesCollection                                                                        //
  */                                                                                                                    //
                                                                                                                        //
-Meteor.Files = (function() {                                                                                           // 1
-  function Files(config) {                                                                                             // 101
-    var _methods, cookie, self;                                                                                        // 102
-    if (config) {                                                                                                      // 102
+FilesCollection = (function() {                                                                                        // 1
+  var FileUpload, UploadInstance;                                                                                      // 96
+                                                                                                                       //
+  function FilesCollection(config) {                                                                                   // 96
+    var _methods, cookie, self;                                                                                        // 97
+    if (config) {                                                                                                      // 97
       this.storagePath = config.storagePath, this.collectionName = config.collectionName, this.downloadRoute = config.downloadRoute, this.schema = config.schema, this.chunkSize = config.chunkSize, this.namingFunction = config.namingFunction, this.debug = config.debug, this.onbeforeunloadMessage = config.onbeforeunloadMessage, this.permissions = config.permissions, this.allowClientCode = config.allowClientCode, this.onBeforeUpload = config.onBeforeUpload, this.integrityCheck = config.integrityCheck, this["protected"] = config["protected"], this["public"] = config["public"], this.strict = config.strict, this.downloadCallback = config.downloadCallback, this.cacheControl = config.cacheControl, this.throttle = config.throttle, this.onAfterUpload = config.onAfterUpload, this.interceptDownload = config.interceptDownload;
     }                                                                                                                  //
-    self = this;                                                                                                       // 102
-    cookie = new Cookies();                                                                                            // 102
+    self = this;                                                                                                       // 97
+    cookie = new Cookies();                                                                                            // 97
     if (this.debug == null) {                                                                                          //
       this.debug = false;                                                                                              //
     }                                                                                                                  //
@@ -168,11 +160,14 @@ Meteor.Files = (function() {                                                    
     if (this.chunkSize == null) {                                                                                      //
       this.chunkSize = 1024 * 512;                                                                                     //
     }                                                                                                                  //
-    this.chunkSize = Math.floor(this.chunkSize / 8) * 8;                                                               // 102
-    if (this.downloadRoute == null) {                                                                                  //
-      this.downloadRoute = this["public"] ? "/uploads/" + this.collectionName : '/cdn/storage';                        //
+    this.chunkSize = Math.floor(this.chunkSize / 8) * 8;                                                               // 97
+    if (this["public"] && !this.downloadRoute) {                                                                       // 106
+      throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "]: \"downloadRoute\" must be explicitly provided on \"public\" collections! Note: \"downloadRoute\" must be equal on be inside of your web/proxy-server (relative) root.");
     }                                                                                                                  //
-    this.downloadRoute = this.downloadRoute.replace(/\/$/, '');                                                        // 102
+    if (this.downloadRoute == null) {                                                                                  //
+      this.downloadRoute = '/cdn/storage';                                                                             //
+    }                                                                                                                  //
+    this.downloadRoute = this.downloadRoute.replace(/\/$/, '');                                                        // 97
     if (this.collectionName == null) {                                                                                 //
       this.collectionName = 'MeteorUploadFiles';                                                                       //
     }                                                                                                                  //
@@ -190,28 +185,25 @@ Meteor.Files = (function() {                                                    
     if (this.interceptDownload == null) {                                                                              //
       this.interceptDownload = false;                                                                                  //
     }                                                                                                                  //
-    if (Meteor.isClient) {                                                                                             // 119
+    if (Meteor.isClient) {                                                                                             // 116
       if (this.onbeforeunloadMessage == null) {                                                                        //
         this.onbeforeunloadMessage = 'Upload in a progress... Do you want to abort?';                                  //
       }                                                                                                                //
-      if (Worker) {                                                                                                    // 121
-        this.ReaderWorker = new Worker('/packages/ostrio_files/worker.js');                                            // 122
-      }                                                                                                                //
-      delete this.strict;                                                                                              // 120
-      delete this.throttle;                                                                                            // 120
-      delete this.storagePath;                                                                                         // 120
-      delete this.permissions;                                                                                         // 120
-      delete this.cacheControl;                                                                                        // 120
-      delete this.onAfterUpload;                                                                                       // 120
-      delete this.integrityCheck;                                                                                      // 120
-      delete this.downloadCallback;                                                                                    // 120
-      delete this.interceptDownload;                                                                                   // 120
-      if (this["protected"]) {                                                                                         // 132
-        if (!cookie.has('meteor_login_token') && Meteor._localStorage.getItem('Meteor.loginToken')) {                  // 133
-          cookie.set('meteor_login_token', Meteor._localStorage.getItem('Meteor.loginToken'), null, '/');              // 134
+      delete this.strict;                                                                                              // 117
+      delete this.throttle;                                                                                            // 117
+      delete this.storagePath;                                                                                         // 117
+      delete this.permissions;                                                                                         // 117
+      delete this.cacheControl;                                                                                        // 117
+      delete this.onAfterUpload;                                                                                       // 117
+      delete this.integrityCheck;                                                                                      // 117
+      delete this.downloadCallback;                                                                                    // 117
+      delete this.interceptDownload;                                                                                   // 117
+      if (this["protected"]) {                                                                                         // 127
+        if (!cookie.has('meteor_login_token') && Meteor._localStorage.getItem('Meteor.loginToken')) {                  // 128
+          cookie.set('meteor_login_token', Meteor._localStorage.getItem('Meteor.loginToken'), null, '/');              // 129
         }                                                                                                              //
       }                                                                                                                //
-      check(this.onbeforeunloadMessage, Match.OneOf(String, Function));                                                // 120
+      check(this.onbeforeunloadMessage, Match.OneOf(String, Function));                                                // 117
     } else {                                                                                                           //
       if (this.strict == null) {                                                                                       //
         this.strict = true;                                                                                            //
@@ -234,234 +226,239 @@ Meteor.Files = (function() {                                                    
       if (this.downloadCallback == null) {                                                                             //
         this.downloadCallback = false;                                                                                 //
       }                                                                                                                //
-      if (this.storagePath == null) {                                                                                  //
-        this.storagePath = this["public"] ? "../web.browser/app/uploads/" + this.collectionName : "assets/app/uploads/" + this.collectionName;
+      if (this["public"] && !this.storagePath) {                                                                       // 140
+        throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "] \"storagePath\" must be set on \"public\" collections! Note: \"storagePath\" must be equal on be inside of your web/proxy-server (absolute) root.");
       }                                                                                                                //
-      this.storagePath = this.storagePath.replace(/\/$/, '');                                                          // 138
-      check(this.strict, Boolean);                                                                                     // 138
-      check(this.throttle, Match.OneOf(false, Number));                                                                // 138
-      check(this.permissions, Number);                                                                                 // 138
-      check(this.storagePath, String);                                                                                 // 138
-      check(this.cacheControl, String);                                                                                // 138
-      check(this.onAfterUpload, Match.OneOf(false, Function));                                                         // 138
-      check(this.integrityCheck, Boolean);                                                                             // 138
-      check(this.downloadCallback, Match.OneOf(false, Function));                                                      // 138
-      check(this.interceptDownload, Match.OneOf(false, Function));                                                     // 138
+      if (this.storagePath == null) {                                                                                  //
+        this.storagePath = "assets/app/uploads/" + this.collectionName;                                                //
+      }                                                                                                                //
+      this.storagePath = this.storagePath.replace(/\/$/, '');                                                          // 133
+      fs.mkdirsSync(this.storagePath);                                                                                 // 133
+      check(this.strict, Boolean);                                                                                     // 133
+      check(this.throttle, Match.OneOf(false, Number));                                                                // 133
+      check(this.permissions, Number);                                                                                 // 133
+      check(this.storagePath, String);                                                                                 // 133
+      check(this.cacheControl, String);                                                                                // 133
+      check(this.onAfterUpload, Match.OneOf(false, Function));                                                         // 133
+      check(this.integrityCheck, Boolean);                                                                             // 133
+      check(this.downloadCallback, Match.OneOf(false, Function));                                                      // 133
+      check(this.interceptDownload, Match.OneOf(false, Function));                                                     // 133
     }                                                                                                                  //
-    if (!this.schema) {                                                                                                // 158
-      this.schema = {                                                                                                  // 159
-        size: {                                                                                                        // 160
-          type: Number                                                                                                 // 160
+    if (!this.schema) {                                                                                                // 157
+      this.schema = {                                                                                                  // 158
+        size: {                                                                                                        // 159
+          type: Number                                                                                                 // 159
         },                                                                                                             //
-        name: {                                                                                                        // 160
+        name: {                                                                                                        // 159
+          type: String                                                                                                 // 160
+        },                                                                                                             //
+        type: {                                                                                                        // 159
           type: String                                                                                                 // 161
         },                                                                                                             //
-        type: {                                                                                                        // 160
+        path: {                                                                                                        // 159
           type: String                                                                                                 // 162
         },                                                                                                             //
-        path: {                                                                                                        // 160
-          type: String                                                                                                 // 163
+        isVideo: {                                                                                                     // 159
+          type: Boolean                                                                                                // 163
         },                                                                                                             //
-        isVideo: {                                                                                                     // 160
+        isAudio: {                                                                                                     // 159
           type: Boolean                                                                                                // 164
         },                                                                                                             //
-        isAudio: {                                                                                                     // 160
+        isImage: {                                                                                                     // 159
           type: Boolean                                                                                                // 165
         },                                                                                                             //
-        isImage: {                                                                                                     // 160
+        isText: {                                                                                                      // 159
           type: Boolean                                                                                                // 166
         },                                                                                                             //
-        _prefix: {                                                                                                     // 160
+        _prefix: {                                                                                                     // 159
           type: String                                                                                                 // 167
         },                                                                                                             //
-        extension: {                                                                                                   // 160
+        extension: {                                                                                                   // 159
           type: String,                                                                                                // 169
           optional: true                                                                                               // 169
         },                                                                                                             //
-        _storagePath: {                                                                                                // 160
+        _storagePath: {                                                                                                // 159
           type: String                                                                                                 // 171
         },                                                                                                             //
-        _downloadRoute: {                                                                                              // 160
+        _downloadRoute: {                                                                                              // 159
           type: String                                                                                                 // 172
         },                                                                                                             //
-        _collectionName: {                                                                                             // 160
+        _collectionName: {                                                                                             // 159
           type: String                                                                                                 // 173
         },                                                                                                             //
-        meta: {                                                                                                        // 160
-          type: Object,                                                                                                // 175
-          blackbox: true,                                                                                              // 175
+        "public": {                                                                                                    // 159
+          type: Boolean,                                                                                               // 175
           optional: true                                                                                               // 175
         },                                                                                                             //
-        userId: {                                                                                                      // 160
-          type: String,                                                                                                // 179
-          optional: true                                                                                               // 179
+        meta: {                                                                                                        // 159
+          type: Object,                                                                                                // 178
+          blackbox: true,                                                                                              // 178
+          optional: true                                                                                               // 178
         },                                                                                                             //
-        updatedAt: {                                                                                                   // 160
-          type: Date,                                                                                                  // 182
-          autoValue: function() {                                                                                      // 182
+        userId: {                                                                                                      // 159
+          type: String,                                                                                                // 182
+          optional: true                                                                                               // 182
+        },                                                                                                             //
+        updatedAt: {                                                                                                   // 159
+          type: Date,                                                                                                  // 185
+          autoValue: function() {                                                                                      // 185
             return new Date();                                                                                         //
           }                                                                                                            //
         },                                                                                                             //
-        versions: {                                                                                                    // 160
-          type: Object,                                                                                                // 185
-          blackbox: true                                                                                               // 185
+        versions: {                                                                                                    // 159
+          type: Object,                                                                                                // 188
+          blackbox: true                                                                                               // 188
         }                                                                                                              //
       };                                                                                                               //
     }                                                                                                                  //
-    check(this.debug, Boolean);                                                                                        // 102
-    check(this.schema, Object);                                                                                        // 102
-    check(this["public"], Boolean);                                                                                    // 102
-    check(this["protected"], Match.OneOf(Boolean, Function));                                                          // 102
-    check(this.chunkSize, Number);                                                                                     // 102
-    check(this.downloadRoute, String);                                                                                 // 102
-    check(this.collectionName, String);                                                                                // 102
-    check(this.namingFunction, Function);                                                                              // 102
-    check(this.onBeforeUpload, Match.OneOf(false, Function));                                                          // 102
-    check(this.allowClientCode, Boolean);                                                                              // 102
-    if (this["public"] && this["protected"]) {                                                                         // 199
-      throw new Meteor.Error(500, "[Meteor.Files." + this.collectionName + "]: Files can not be public and protected at the same time!");
+    check(this.debug, Boolean);                                                                                        // 97
+    check(this.schema, Object);                                                                                        // 97
+    check(this["public"], Boolean);                                                                                    // 97
+    check(this["protected"], Match.OneOf(Boolean, Function));                                                          // 97
+    check(this.chunkSize, Number);                                                                                     // 97
+    check(this.downloadRoute, String);                                                                                 // 97
+    check(this.collectionName, String);                                                                                // 97
+    check(this.namingFunction, Function);                                                                              // 97
+    check(this.onBeforeUpload, Match.OneOf(false, Function));                                                          // 97
+    check(this.allowClientCode, Boolean);                                                                              // 97
+    if (this["public"] && this["protected"]) {                                                                         // 202
+      throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "]: Files can not be public and protected at the same time!");
     }                                                                                                                  //
-    this.cursor = null;                                                                                                // 102
-    this.search = {};                                                                                                  // 102
-    this.collection = new Mongo.Collection(this.collectionName);                                                       // 102
-    this.currentFile = null;                                                                                           // 102
-    this.collection.attachSchema(this.schema);                                                                         // 102
-    this.collection.deny({                                                                                             // 102
-      insert: function() {                                                                                             // 209
-        return true;                                                                                                   //
-      },                                                                                                               //
-      update: function() {                                                                                             // 209
-        return true;                                                                                                   //
-      },                                                                                                               //
-      remove: function() {                                                                                             // 209
-        return true;                                                                                                   //
-      }                                                                                                                //
-    });                                                                                                                //
-    this._prefix = SHA256(this.collectionName + this.downloadRoute);                                                   // 102
-    _insts[this._prefix] = this;                                                                                       // 102
-    this.checkAccess = function(http) {                                                                                // 102
-      var rc, result, text, user, userFuncs, userId;                                                                   // 217
-      if (self["protected"]) {                                                                                         // 217
-        user = false;                                                                                                  // 218
-        userFuncs = self.getUser(http);                                                                                // 218
-        user = userFuncs.user, userId = userFuncs.userId;                                                              // 218
-        user = user();                                                                                                 // 218
-        if (_.isFunction(self["protected"])) {                                                                         // 223
+    this.cursor = null;                                                                                                // 97
+    this.search = {};                                                                                                  // 97
+    this.collection = new Mongo.Collection(this.collectionName);                                                       // 97
+    this.currentFile = null;                                                                                           // 97
+    this._prefix = SHA256(this.collectionName + this.downloadRoute);                                                   // 97
+    _insts[this._prefix] = this;                                                                                       // 97
+    this.checkAccess = function(http) {                                                                                // 97
+      var rc, result, text, user, userFuncs, userId;                                                                   // 214
+      if (self["protected"]) {                                                                                         // 214
+        user = false;                                                                                                  // 215
+        userFuncs = self.getUser(http);                                                                                // 215
+        user = userFuncs.user, userId = userFuncs.userId;                                                              // 215
+        user = user();                                                                                                 // 215
+        if (_.isFunction(self["protected"])) {                                                                         // 220
           result = http ? self["protected"].call(_.extend(http, userFuncs), self.currentFile || null) : self["protected"].call(userFuncs, self.currentFile || null);
         } else {                                                                                                       //
-          result = !!user;                                                                                             // 226
+          result = !!user;                                                                                             // 223
         }                                                                                                              //
-        if ((http && result === true) || !http) {                                                                      // 228
-          return true;                                                                                                 // 229
+        if ((http && result === true) || !http) {                                                                      // 225
+          return true;                                                                                                 // 226
         } else {                                                                                                       //
-          rc = _.isNumber(result) ? result : 401;                                                                      // 231
-          if (self.debug) {                                                                                            // 232
-            console.warn('[Meteor.Files.checkAccess] WARN: Access denied!');                                           // 232
+          rc = _.isNumber(result) ? result : 401;                                                                      // 228
+          if (self.debug) {                                                                                            // 229
+            console.warn('[FilesCollection.checkAccess] WARN: Access denied!');                                        // 229
           }                                                                                                            //
-          if (http) {                                                                                                  // 233
-            text = 'Access denied!';                                                                                   // 234
-            http.response.writeHead(rc, {                                                                              // 234
-              'Content-Length': text.length,                                                                           // 236
-              'Content-Type': 'text/plain'                                                                             // 236
+          if (http) {                                                                                                  // 230
+            text = 'Access denied!';                                                                                   // 231
+            http.response.writeHead(rc, {                                                                              // 231
+              'Content-Length': text.length,                                                                           // 233
+              'Content-Type': 'text/plain'                                                                             // 233
             });                                                                                                        //
-            http.response.end(text);                                                                                   // 234
+            http.response.end(text);                                                                                   // 231
           }                                                                                                            //
-          return false;                                                                                                // 239
+          return false;                                                                                                // 236
         }                                                                                                              //
       } else {                                                                                                         //
-        return true;                                                                                                   // 241
+        return true;                                                                                                   // 238
       }                                                                                                                //
     };                                                                                                                 //
-    this.methodNames = {                                                                                               // 102
-      MeteorFileAbort: "MeteorFileAbort" + this._prefix,                                                               // 244
-      MeteorFileWrite: "MeteorFileWrite" + this._prefix,                                                               // 244
-      MeteorFileUnlink: "MeteorFileUnlink" + this._prefix                                                              // 244
+    this.methodNames = {                                                                                               // 97
+      MeteorFileAbort: "MeteorFileAbort" + this._prefix,                                                               // 241
+      MeteorFileWrite: "MeteorFileWrite" + this._prefix,                                                               // 241
+      MeteorFileUnlink: "MeteorFileUnlink" + this._prefix                                                              // 241
     };                                                                                                                 //
-    if (Meteor.isServer) {                                                                                             // 248
-      WebApp.connectHandlers.use(function(request, response, next) {                                                   // 249
-        var http, params, uri, uris, version;                                                                          // 250
-        if (!self["public"]) {                                                                                         // 250
-          if (!!~request._parsedUrl.path.indexOf(self.downloadRoute + "/" + self.collectionName)) {                    // 251
-            uri = request._parsedUrl.path.replace(self.downloadRoute + "/" + self.collectionName, '');                 // 252
-            if (uri.indexOf('/') === 0) {                                                                              // 253
-              uri = uri.substring(1);                                                                                  // 254
+    if (Meteor.isServer) {                                                                                             // 245
+      WebApp.connectHandlers.use(function(request, response, next) {                                                   // 246
+        var _file, http, params, uri, uris, version;                                                                   // 247
+        if (!self["public"]) {                                                                                         // 247
+          if (!!~request._parsedUrl.path.indexOf(self.downloadRoute + "/" + self.collectionName)) {                    // 248
+            uri = request._parsedUrl.path.replace(self.downloadRoute + "/" + self.collectionName, '');                 // 249
+            if (uri.indexOf('/') === 0) {                                                                              // 250
+              uri = uri.substring(1);                                                                                  // 251
             }                                                                                                          //
-            uris = uri.split('/');                                                                                     // 252
-            if (uris.length === 3) {                                                                                   // 257
-              params = {                                                                                               // 258
+            uris = uri.split('/');                                                                                     // 249
+            if (uris.length === 3) {                                                                                   // 254
+              params = {                                                                                               // 255
                 query: request._parsedUrl.query ? JSON.parse('{"' + decodeURI(request._parsedUrl.query).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}') : {},
-                _id: uris[0],                                                                                          // 259
-                version: uris[1],                                                                                      // 259
-                name: uris[2]                                                                                          // 259
+                _id: uris[0],                                                                                          // 256
+                version: uris[1],                                                                                      // 256
+                name: uris[2]                                                                                          // 256
               };                                                                                                       //
-              http = {                                                                                                 // 258
-                request: request,                                                                                      // 263
-                response: response,                                                                                    // 263
-                params: params                                                                                         // 263
+              http = {                                                                                                 // 255
+                request: request,                                                                                      // 260
+                response: response,                                                                                    // 260
+                params: params                                                                                         // 260
               };                                                                                                       //
-              if (self.checkAccess(http)) {                                                                            // 264
-                return self.findOne(uris[0]).download.call(self, http, uris[1]);                                       //
+              if (self.checkAccess(http)) {                                                                            // 261
+                self.findOne(uris[0]).download.call(self, http, uris[1]);                                              // 261
               }                                                                                                        //
             } else {                                                                                                   //
-              return next();                                                                                           //
+              next();                                                                                                  // 263
             }                                                                                                          //
           } else {                                                                                                     //
-            return next();                                                                                             //
+            next();                                                                                                    // 265
           }                                                                                                            //
         } else {                                                                                                       //
-          if (!!~request._parsedUrl.path.indexOf("" + self.downloadRoute)) {                                           // 270
-            uri = request._parsedUrl.path.replace("" + self.downloadRoute, '');                                        // 271
-            if (uri.indexOf('/') === 0) {                                                                              // 272
-              uri = uri.substring(1);                                                                                  // 273
+          if (!!~request._parsedUrl.path.indexOf("" + self.downloadRoute)) {                                           // 267
+            uri = request._parsedUrl.path.replace("" + self.downloadRoute, '');                                        // 268
+            if (uri.indexOf('/') === 0) {                                                                              // 269
+              uri = uri.substring(1);                                                                                  // 270
             }                                                                                                          //
-            uris = uri.split('/');                                                                                     // 271
-            if (uris.length === 1) {                                                                                   // 276
-              params = {                                                                                               // 277
-                query: request._parsedUrl.query ? JSON.parse('{"' + decodeURI(request._parsedUrl.query).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}') : {},
-                file: uris[0]                                                                                          // 278
-              };                                                                                                       //
-              http = {                                                                                                 // 277
-                request: request,                                                                                      // 280
-                response: response,                                                                                    // 280
-                params: params                                                                                         // 280
-              };                                                                                                       //
-              if (!!~params.file.indexOf('-')) {                                                                       // 282
-                version = params.file.split('-')[0];                                                                   // 283
-                return self.download.call(self, http, version);                                                        //
+            uris = uri.split('/');                                                                                     // 268
+            _file = uris[uris.length - 1];                                                                             // 268
+            if (_file) {                                                                                               // 274
+              if (!!~_file.indexOf('-')) {                                                                             // 275
+                version = _file.split('-')[0];                                                                         // 276
+                _file = _file.split('-')[1].split('?')[0];                                                             // 276
               } else {                                                                                                 //
-                return self._404(http);                                                                                //
+                version = 'original';                                                                                  // 279
+                _file = _file.split('?')[0];                                                                           // 279
               }                                                                                                        //
+              params = {                                                                                               // 275
+                query: request._parsedUrl.query ? JSON.parse('{"' + decodeURI(request._parsedUrl.query).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}') : {},
+                file: _file,                                                                                           // 283
+                _id: _file.split('.')[0],                                                                              // 283
+                version: version,                                                                                      // 283
+                name: _file                                                                                            // 283
+              };                                                                                                       //
+              http = {                                                                                                 // 275
+                request: request,                                                                                      // 288
+                response: response,                                                                                    // 288
+                params: params                                                                                         // 288
+              };                                                                                                       //
+              self.findOne(params._id).download.call(self, http, version);                                             // 275
             } else {                                                                                                   //
-              return next();                                                                                           //
+              next();                                                                                                  // 291
             }                                                                                                          //
           } else {                                                                                                     //
-            return next();                                                                                             //
+            next();                                                                                                    // 293
           }                                                                                                            //
         }                                                                                                              //
       });                                                                                                              //
-      _methods = {};                                                                                                   // 249
-      _methods[self.methodNames.MeteorFileUnlink] = function(inst) {                                                   // 249
-        check(inst, Object);                                                                                           // 294
-        if (self.debug) {                                                                                              // 295
-          console.info('[Meteor.Files] [Unlink Method]');                                                              // 295
+      _methods = {};                                                                                                   // 246
+      _methods[self.methodNames.MeteorFileUnlink] = function(inst) {                                                   // 246
+        check(inst, Object);                                                                                           // 298
+        if (self.debug) {                                                                                              // 299
+          console.info('[FilesCollection] [Unlink Method]');                                                           // 299
         }                                                                                                              //
-        if (self.allowClientCode) {                                                                                    // 296
+        if (self.allowClientCode) {                                                                                    // 300
           return self.remove.call(cp(_insts[inst._prefix], inst), inst.search);                                        //
         } else {                                                                                                       //
-          throw new Meteor.Error(401, '[Meteor.Files] [remove] Run code from client is not allowed!');                 // 299
+          throw new Meteor.Error(401, '[FilesCollection] [remove] Run code from client is not allowed!');              // 303
         }                                                                                                              //
       };                                                                                                               //
-      _methods[self.methodNames.MeteorFileWrite] = function(opts) {                                                    // 249
-        var action, e, extension, extensionWithDot, fileName, isUploadAllowed, path, pathName, pathPart, ref, result;  // 302
-        this.unblock();                                                                                                // 302
-        check(opts, {                                                                                                  // 302
-          eof: Match.Optional(Boolean),                                                                                // 303
-          meta: Match.Optional(Object),                                                                                // 303
-          file: Object,                                                                                                // 303
-          fileId: String,                                                                                              // 303
-          binData: Match.Optional(String),                                                                             // 303
-          chunkId: Match.Optional(Number),                                                                             // 303
-          fileLength: Number                                                                                           // 303
+      _methods[self.methodNames.MeteorFileWrite] = function(opts) {                                                    // 246
+        var action, e, extension, extensionWithDot, fileName, isUploadAllowed, path, pathName, pathPart, ref, result;  // 306
+        this.unblock();                                                                                                // 306
+        check(opts, {                                                                                                  // 306
+          eof: Match.Optional(Boolean),                                                                                // 307
+          meta: Match.Optional(Object),                                                                                // 307
+          file: Object,                                                                                                // 307
+          fileId: String,                                                                                              // 307
+          binData: Match.Optional(String),                                                                             // 307
+          chunkId: Match.Optional(Number),                                                                             // 307
+          fileLength: Number                                                                                           // 307
         });                                                                                                            //
         if (opts.eof == null) {                                                                                        //
           opts.eof = false;                                                                                            //
@@ -475,590 +472,594 @@ Meteor.Files = (function() {                                                    
         if (opts.chunkId == null) {                                                                                    //
           opts.chunkId = -1;                                                                                           //
         }                                                                                                              //
-        if (self.debug) {                                                                                              // 318
-          console.info("[Meteor.Files] [Write Method] Got #" + opts.chunkId + "/" + opts.fileLength + " chunks, dst: " + (opts.file.name || opts.file.fileName));
+        if (self.debug) {                                                                                              // 322
+          console.info("[FilesCollection] [Write Method] Got #" + opts.chunkId + "/" + opts.fileLength + " chunks, dst: " + (opts.file.name || opts.file.fileName));
         }                                                                                                              //
-        if (self.onBeforeUpload && _.isFunction(self.onBeforeUpload)) {                                                // 320
-          isUploadAllowed = self.onBeforeUpload.call({                                                                 // 321
-            file: opts.file                                                                                            // 321
+        if (self.onBeforeUpload && _.isFunction(self.onBeforeUpload)) {                                                // 324
+          isUploadAllowed = self.onBeforeUpload.call({                                                                 // 325
+            file: opts.file                                                                                            // 325
           }, opts.file);                                                                                               //
-          if (isUploadAllowed !== true) {                                                                              // 322
+          if (isUploadAllowed !== true) {                                                                              // 326
             throw new Meteor.Error(403, _.isString(isUploadAllowed) ? isUploadAllowed : '@onBeforeUpload() returned false');
           }                                                                                                            //
         }                                                                                                              //
-        fileName = self.getFileName(opts.file);                                                                        // 302
-        ref = self.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;               // 302
-        pathName = self["public"] ? self.storagePath + "/original-" + opts.fileId : self.storagePath + "/" + opts.fileId;
-        path = self["public"] ? self.storagePath + "/original-" + opts.fileId + extensionWithDot : self.storagePath + "/" + opts.fileId + extensionWithDot;
-        pathPart = opts.fileLength > 1 ? pathName + "_" + opts.chunkId + extensionWithDot : null;                      // 302
-        result = _.extend(self.dataToSchema(_.extend(opts.file, {                                                      // 302
-          path: path,                                                                                                  // 332
-          extension: extension,                                                                                        // 332
-          name: fileName,                                                                                              // 332
-          meta: opts.meta                                                                                              // 332
+        fileName = self.getFileName(opts.file);                                                                        // 306
+        ref = self.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;               // 306
+        pathName = self.storagePath + "/" + opts.fileId;                                                               // 306
+        path = self.storagePath + "/" + opts.fileId + extensionWithDot;                                                // 306
+        pathPart = opts.fileLength > 1 ? pathName + "_" + opts.chunkId + extensionWithDot : null;                      // 306
+        result = _.extend(self.dataToSchema(_.extend(opts.file, {                                                      // 306
+          path: path,                                                                                                  // 336
+          extension: extension,                                                                                        // 336
+          name: fileName,                                                                                              // 336
+          meta: opts.meta                                                                                              // 336
         })), {                                                                                                         //
-          _id: opts.fileId                                                                                             // 332
+          _id: opts.fileId                                                                                             // 336
         });                                                                                                            //
-        action = function(cb) {                                                                                        // 302
-          return Meteor.defer(function() {                                                                             //
-            var _path, binary, concatChunks, e, finish, tries;                                                         // 335
-            if (opts.eof) {                                                                                            // 335
-              binary = opts.binData;                                                                                   // 336
+        action = function(cb) {                                                                                        // 306
+          var _path, binary, concatChunks, e, finish, tries;                                                           // 339
+          if (opts.eof) {                                                                                              // 339
+            binary = opts.binData;                                                                                     // 340
+          } else {                                                                                                     //
+            binary = new Buffer(opts.binData, 'base64');                                                               // 342
+          }                                                                                                            //
+          tries = 0;                                                                                                   // 339
+          concatChunks = function(num, files, cb) {                                                                    // 339
+            var _path, _source, findex, sindex;                                                                        // 346
+            sindex = files.indexOf(opts.fileId + "_1" + extensionWithDot);                                             // 346
+            if (!!~sindex) {                                                                                           // 347
+              files.splice(sindex, 1);                                                                                 // 347
+            }                                                                                                          //
+            findex = files.indexOf(opts.fileId + "_" + num + extensionWithDot);                                        // 346
+            if (!!~findex) {                                                                                           // 349
+              files.splice(findex, 1);                                                                                 // 350
+            } else if (files.length <= 0) {                                                                            //
+              return finish(cb);                                                                                       // 352
             } else {                                                                                                   //
-              binary = new Buffer(opts.binData, 'base64');                                                             // 338
+              return concatChunks(++num, files, cb);                                                                   // 354
             }                                                                                                          //
-            tries = 0;                                                                                                 // 335
-            concatChunks = function(num, files, cb) {                                                                  // 335
-              var _path, _source, findex, sindex;                                                                      // 342
-              sindex = files.indexOf(opts.fileId + "_1" + extensionWithDot);                                           // 342
-              if (!!~sindex) {                                                                                         // 343
-                files.splice(sindex, 1);                                                                               // 343
-              }                                                                                                        //
-              findex = files.indexOf(opts.fileId + "_" + num + extensionWithDot);                                      // 342
-              if (!!~findex) {                                                                                         // 345
-                files.splice(findex, 1);                                                                               // 346
-              } else if (files.length <= 0) {                                                                          //
-                return finish(cb);                                                                                     // 348
-              } else {                                                                                                 //
-                return concatChunks(++num, files, cb);                                                                 // 350
-              }                                                                                                        //
-              _path = pathName + "_" + num + extensionWithDot;                                                         // 342
-              _source = pathName + '_1' + extensionWithDot;                                                            // 342
-              return fs.stat(_path, function(error, stats) {                                                           //
-                return bound(function() {                                                                              //
-                  if (error || !stats.isFile()) {                                                                      // 356
-                    if (tries >= 10) {                                                                                 // 357
-                      return cb(new Meteor.Error(500, "Chunk #" + num + " is missing!"));                              //
-                    } else {                                                                                           //
-                      tries++;                                                                                         // 360
-                      return Meteor.setTimeout(function() {                                                            //
-                        return concatChunks(num, files, cb);                                                           //
-                      }, 100);                                                                                         //
-                    }                                                                                                  //
+            _path = pathName + "_" + num + extensionWithDot;                                                           // 346
+            _source = pathName + '_1' + extensionWithDot;                                                              // 346
+            return fs.stat(_path, function(error, stats) {                                                             //
+              return bound(function() {                                                                                //
+                if (error || !stats.isFile()) {                                                                        // 360
+                  if (tries >= 10) {                                                                                   // 361
+                    return cb(new Meteor.Error(500, "Chunk #" + num + " is missing!"));                                //
                   } else {                                                                                             //
-                    return fs.readFile(_path, function(error, _chunkData) {                                            //
-                      return bound(function() {                                                                        //
-                        if (error) {                                                                                   // 366
-                          return cb(new Meteor.Error(500, "Can't read " + _path));                                     //
-                        } else {                                                                                       //
-                          return fs.appendFile(_source, _chunkData, function(error) {                                  //
-                            return bound(function() {                                                                  //
-                              if (error) {                                                                             // 370
-                                return cb(new Meteor.Error(500, "Can't append " + _path + " to " + _source));          //
-                              } else {                                                                                 //
-                                fs.unlink(_path, NOOP);                                                                // 373
-                                if (files.length <= 0) {                                                               // 374
-                                  return fs.rename(_source, path, function(error) {                                    //
-                                    return bound(function() {                                                          //
-                                      if (error) {                                                                     // 376
-                                        return cb(new Meteor.Error(500, "Can't rename " + _source + " to " + path));   //
-                                      } else {                                                                         //
-                                        return finish(cb);                                                             //
-                                      }                                                                                //
-                                    });                                                                                //
+                    tries++;                                                                                           // 364
+                    return Meteor.setTimeout(function() {                                                              //
+                      return concatChunks(num, files, cb);                                                             //
+                    }, 100);                                                                                           //
+                  }                                                                                                    //
+                } else {                                                                                               //
+                  return fs.readFile(_path, function(error, _chunkData) {                                              //
+                    return bound(function() {                                                                          //
+                      if (error) {                                                                                     // 370
+                        return cb(new Meteor.Error(500, "Can't read " + _path));                                       //
+                      } else {                                                                                         //
+                        return fs.appendFile(_source, _chunkData, function(error) {                                    //
+                          return bound(function() {                                                                    //
+                            if (error) {                                                                               // 374
+                              return cb(new Meteor.Error(500, "Can't append " + _path + " to " + _source));            //
+                            } else {                                                                                   //
+                              fs.unlink(_path, NOOP);                                                                  // 377
+                              if (files.length <= 0) {                                                                 // 378
+                                return fs.rename(_source, path, function(error) {                                      //
+                                  return bound(function() {                                                            //
+                                    if (error) {                                                                       // 380
+                                      return cb(new Meteor.Error(500, "Can't rename " + _source + " to " + path));     //
+                                    } else {                                                                           //
+                                      return finish(cb);                                                               //
+                                    }                                                                                  //
                                   });                                                                                  //
-                                } else {                                                                               //
-                                  return concatChunks(++num, files, cb);                                               //
-                                }                                                                                      //
-                              }                                                                                        //
-                            });                                                                                        //
-                          });                                                                                          //
-                        }                                                                                              //
-                      });                                                                                              //
-                    });                                                                                                //
-                  }                                                                                                    //
-                });                                                                                                    //
-              });                                                                                                      //
-            };                                                                                                         //
-            finish = function(cb) {                                                                                    // 335
-              fs.chmod(path, self.permissions, NOOP);                                                                  // 384
-              result.type = self.getMimeType(opts.file);                                                               // 384
-              return self.collection.insert(_.clone(result), function(error, _id) {                                    //
-                if (error) {                                                                                           // 388
-                  return cb(new Meteor.Error(500, error));                                                             //
-                } else {                                                                                               //
-                  result._id = _id;                                                                                    // 391
-                  if (self.debug) {                                                                                    // 392
-                    console.info("[Meteor.Files] [Write Method] [finish] " + fileName + " -> " + path);                // 392
-                  }                                                                                                    //
-                  self.onAfterUpload && self.onAfterUpload.call(self, result);                                         // 391
-                  return cb(null, result);                                                                             //
-                }                                                                                                      //
-              });                                                                                                      //
-            };                                                                                                         //
-            try {                                                                                                      // 395
-              if (opts.eof) {                                                                                          // 396
-                if (opts.fileLength > 1) {                                                                             // 397
-                  fs.readdir(self.storagePath, function(error, files) {                                                // 398
-                    return bound(function() {                                                                          //
-                      if (error) {                                                                                     // 399
-                        return cb(new Meteor.Error(500, error));                                                       //
-                      } else {                                                                                         //
-                        files = files.filter(function(f) {                                                             // 402
-                          return !!~f.indexOf(opts.fileId);                                                            //
-                        });                                                                                            //
-                        if (files.length === 1) {                                                                      // 403
-                          return fs.rename(self.storagePath + "/" + files[0], path, function(error) {                  //
-                            return bound(function() {                                                                  //
-                              if (error) {                                                                             // 405
-                                return cb(new Meteor.Error(500, "Can't rename " + _source + " to " + path));           //
+                                });                                                                                    //
                               } else {                                                                                 //
-                                return finish(cb);                                                                     //
+                                return concatChunks(++num, files, cb);                                                 //
                               }                                                                                        //
-                            });                                                                                        //
+                            }                                                                                          //
                           });                                                                                          //
-                        } else {                                                                                       //
-                          return concatChunks(2, files, cb);                                                           //
-                        }                                                                                              //
+                        });                                                                                            //
                       }                                                                                                //
                     });                                                                                                //
                   });                                                                                                  //
-                } else {                                                                                               //
-                  finish(cb);                                                                                          // 412
                 }                                                                                                      //
+              });                                                                                                      //
+            });                                                                                                        //
+          };                                                                                                           //
+          finish = function(cb) {                                                                                      // 339
+            fs.chmod(path, self.permissions, NOOP);                                                                    // 388
+            result.type = self.getMimeType(opts.file);                                                                 // 388
+            result["public"] = self["public"];                                                                         // 388
+            return self.collection.insert(_.clone(result), function(error, _id) {                                      //
+              if (error) {                                                                                             // 393
+                return cb(new Meteor.Error(500, error));                                                               //
               } else {                                                                                                 //
-                if (pathPart) {                                                                                        // 414
-                  _path = opts.fileLength > 1 ? pathName + "_" + (opts.chunkId - 1) + extensionWithDot : void 0;       // 415
-                  fs.stat(_path, function(error, stats) {                                                              // 415
-                    return bound(function() {                                                                          //
-                      if (error || !stats.isFile()) {                                                                  // 417
-                        return fs.outputFile(pathPart || path, binary, 'binary', function(error) {                     //
+                result._id = _id;                                                                                      // 396
+                if (self.debug) {                                                                                      // 397
+                  console.info("[FilesCollection] [Write Method] [finish] " + fileName + " -> " + path);               // 397
+                }                                                                                                      //
+                self.onAfterUpload && self.onAfterUpload.call(self, result);                                           // 396
+                return cb(null, result);                                                                               //
+              }                                                                                                        //
+            });                                                                                                        //
+          };                                                                                                           //
+          try {                                                                                                        // 400
+            if (opts.eof) {                                                                                            // 401
+              if (opts.fileLength > 1) {                                                                               // 402
+                fs.readdir(self.storagePath, function(error, files) {                                                  // 403
+                  return bound(function() {                                                                            //
+                    if (error) {                                                                                       // 404
+                      return cb(new Meteor.Error(500, error));                                                         //
+                    } else {                                                                                           //
+                      files = files.filter(function(f) {                                                               // 407
+                        return !!~f.indexOf(opts.fileId);                                                              //
+                      });                                                                                              //
+                      if (files.length === 1) {                                                                        // 408
+                        return fs.rename(self.storagePath + "/" + files[0], path, function(error) {                    //
                           return bound(function() {                                                                    //
-                            return cb(error, result);                                                                  //
+                            if (error) {                                                                               // 410
+                              return cb(new Meteor.Error(500, "Can't rename " + self.storagePath + "/" + files[0] + " to " + path));
+                            } else {                                                                                   //
+                              return finish(cb);                                                                       //
+                            }                                                                                          //
                           });                                                                                          //
                         });                                                                                            //
                       } else {                                                                                         //
-                        return fs.appendFile(_path, binary, function(error) {                                          //
-                          return bound(function() {                                                                    //
-                            return fs.rename(_path, pathName + "_" + opts.chunkId + extensionWithDot, function(error) {
-                              return bound(function() {                                                                //
-                                return cb(error, result);                                                              //
-                              });                                                                                      //
+                        return concatChunks(2, files, cb);                                                             //
+                      }                                                                                                //
+                    }                                                                                                  //
+                  });                                                                                                  //
+                });                                                                                                    //
+              } else {                                                                                                 //
+                finish(cb);                                                                                            // 417
+              }                                                                                                        //
+            } else {                                                                                                   //
+              if (pathPart) {                                                                                          // 419
+                _path = opts.fileLength > 1 ? pathName + "_" + (opts.chunkId - 1) + extensionWithDot : void 0;         // 420
+                fs.stat(_path, function(error, stats) {                                                                // 420
+                  return bound(function() {                                                                            //
+                    if (error || !stats.isFile()) {                                                                    // 422
+                      return fs.outputFile(pathPart || path, binary, 'binary', function(error) {                       //
+                        return bound(function() {                                                                      //
+                          return cb(error, result);                                                                    //
+                        });                                                                                            //
+                      });                                                                                              //
+                    } else {                                                                                           //
+                      return fs.appendFile(_path, binary, function(error) {                                            //
+                        return bound(function() {                                                                      //
+                          return fs.rename(_path, pathName + "_" + opts.chunkId + extensionWithDot, function(error) {  //
+                            return bound(function() {                                                                  //
+                              return cb(error, result);                                                                //
                             });                                                                                        //
                           });                                                                                          //
                         });                                                                                            //
-                      }                                                                                                //
-                    });                                                                                                //
+                      });                                                                                              //
+                    }                                                                                                  //
                   });                                                                                                  //
-                } else {                                                                                               //
-                  fs.outputFile(pathPart || path, binary, 'binary', function(error) {                                  // 425
-                    return bound(function() {                                                                          //
-                      return cb(error, result);                                                                        //
-                    });                                                                                                //
+                });                                                                                                    //
+              } else {                                                                                                 //
+                fs.outputFile(pathPart || path, binary, 'binary', function(error) {                                    // 430
+                  return bound(function() {                                                                            //
+                    return cb(error, result);                                                                          //
                   });                                                                                                  //
-                }                                                                                                      //
+                });                                                                                                    //
               }                                                                                                        //
-            } catch (_error) {                                                                                         //
-              e = _error;                                                                                              // 427
-              cb(e);                                                                                                   // 427
             }                                                                                                          //
-          });                                                                                                          //
-        };                                                                                                             //
-        if (opts.eof) {                                                                                                // 430
-          try {                                                                                                        // 431
-            return Meteor.wrapAsync(action)();                                                                         // 432
           } catch (_error) {                                                                                           //
-            e = _error;                                                                                                // 434
-            if (self.debug) {                                                                                          // 434
-              console.warn("[Meteor.Files] [Write Method] Exception:", e);                                             // 434
+            e = _error;                                                                                                // 432
+            cb(e);                                                                                                     // 432
+          }                                                                                                            //
+        };                                                                                                             //
+        if (opts.eof) {                                                                                                // 435
+          try {                                                                                                        // 436
+            return Meteor.wrapAsync(action)();                                                                         // 437
+          } catch (_error) {                                                                                           //
+            e = _error;                                                                                                // 439
+            if (self.debug) {                                                                                          // 439
+              console.warn("[FilesCollection] [Write Method] Exception:", e);                                          // 439
             }                                                                                                          //
-            throw e;                                                                                                   // 435
+            throw e;                                                                                                   // 440
           }                                                                                                            //
         } else {                                                                                                       //
-          action(NOOP);                                                                                                // 437
-          return result;                                                                                               // 438
+          process.nextTick(function() {                                                                                // 442
+            return action(NOOP);                                                                                       //
+          });                                                                                                          //
+          return result;                                                                                               // 443
         }                                                                                                              //
       };                                                                                                               //
-      _methods[self.methodNames.MeteorFileAbort] = function(opts) {                                                    // 249
-        var _path, ext, i, path;                                                                                       // 441
-        check(opts, {                                                                                                  // 441
-          fileId: String,                                                                                              // 441
-          fileData: Object,                                                                                            // 441
-          fileLength: Number                                                                                           // 441
+      _methods[self.methodNames.MeteorFileAbort] = function(opts) {                                                    // 246
+        var _path, allowed, ext, i, path;                                                                              // 446
+        check(opts, {                                                                                                  // 446
+          fileId: String,                                                                                              // 446
+          fileData: Object,                                                                                            // 446
+          fileLength: Number                                                                                           // 446
         });                                                                                                            //
-        ext = "." + opts.fileData.ext;                                                                                 // 441
-        path = self["public"] ? self.storagePath + "/original-" + opts.fileId : self.storagePath + "/" + opts.fileId;  // 441
-        if (self.debug) {                                                                                              // 450
-          console.info("[Meteor.Files] [Abort Method]: For " + path);                                                  // 450
+        ext = "." + opts.fileData.ext;                                                                                 // 446
+        path = self.storagePath + "/" + opts.fileId;                                                                   // 446
+        if (self.debug) {                                                                                              // 455
+          console.info("[FilesCollection] [Abort Method]: For " + path);                                               // 455
         }                                                                                                              //
-        if (opts.fileLength > 1) {                                                                                     // 451
-          i = 0;                                                                                                       // 452
-          while (i <= opts.fileLength) {                                                                               // 453
-            _path = path + "_" + i + ext;                                                                              // 454
-            fs.stat(_path, (function(error, stats) {                                                                   // 454
+        if (opts.fileLength > 1) {                                                                                     // 456
+          allowed = false;                                                                                             // 457
+          i = 0;                                                                                                       // 457
+          while (i <= opts.fileLength) {                                                                               // 459
+            _path = path + "_" + i + ext;                                                                              // 460
+            fs.stat(_path, (function(error, stats) {                                                                   // 460
               return bound((function(_this) {                                                                          //
                 return function() {                                                                                    //
-                  if (!error && stats.isFile()) {                                                                      // 456
+                  if (!error && stats.isFile()) {                                                                      // 462
+                    allowed = true;                                                                                    // 463
                     return fs.unlink(_this._path, NOOP);                                                               //
                   }                                                                                                    //
                 };                                                                                                     //
               })(this));                                                                                               //
             }).bind({                                                                                                  //
-              _path: _path                                                                                             // 458
+              _path: _path                                                                                             // 465
             }));                                                                                                       //
-            i++;                                                                                                       // 454
+            i++;                                                                                                       // 460
           }                                                                                                            //
+          return Meteor.setTimeout(function() {                                                                        //
+            if (allowed) {                                                                                             // 469
+              return self.remove(opts.fileId);                                                                         //
+            }                                                                                                          //
+          }, 250);                                                                                                     //
         }                                                                                                              //
-        return Meteor.setTimeout(function() {                                                                          //
-          return self.remove(opts.fileId);                                                                             //
-        }, 250);                                                                                                       //
       };                                                                                                               //
-      Meteor.methods(_methods);                                                                                        // 249
+      Meteor.methods(_methods);                                                                                        // 246
     }                                                                                                                  //
   }                                                                                                                    //
                                                                                                                        //
-                                                                                                                       // 466
-  /*                                                                                                                   // 466
-  Extend Meteor.Files with mime library                                                                                //
-  @url https://github.com/broofa/node-mime                                                                             //
-  @description Temporary removed from package due to unstability                                                       //
-   */                                                                                                                  //
-                                                                                                                       //
-                                                                                                                       // 473
-  /*                                                                                                                   // 473
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 474
+  /*                                                                                                                   // 474
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name getMimeType                                                                                                    //
   @param {Object} fileData - File Object                                                                               //
-  @description Returns file's mime-type                                                                                //
+  @summary Returns file's mime-type                                                                                    //
   @returns {String}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.getMimeType = function(fileData) {                                                                   // 101
-    var mime;                                                                                                          // 483
+  FilesCollection.prototype.getMimeType = function(fileData) {                                                         // 96
+    var br, buf, error, ext, fd, mime, ref;                                                                            // 483
     check(fileData, Object);                                                                                           // 483
     if (fileData != null ? fileData.type : void 0) {                                                                   // 484
       mime = fileData.type;                                                                                            // 484
     }                                                                                                                  //
-    if (!mime || !_.isString(mime)) {                                                                                  // 485
-      mime = 'application/octet-stream';                                                                               // 485
+    if (Meteor.isServer && fileData.path && (!mime || !_.isString(mime))) {                                            // 485
+      try {                                                                                                            // 486
+        buf = new Buffer(262);                                                                                         // 487
+        fd = fs.openSync(fileData.path, 'r');                                                                          // 487
+        br = fs.readSync(fd, buf, 0, 262, 0);                                                                          // 487
+        fs.close(fd, NOOP);                                                                                            // 487
+        if (br < 262) {                                                                                                // 491
+          buf = buf.slice(0, br);                                                                                      // 491
+        }                                                                                                              //
+        ref = fileType(buf), mime = ref.mime, ext = ref.ext;                                                           // 487
+      } catch (_error) {                                                                                               //
+        error = _error;                                                                                                // 493
+      }                                                                                                                //
+    }                                                                                                                  //
+    if (!mime || !_.isString(mime)) {                                                                                  // 494
+      mime = 'application/octet-stream';                                                                               // 495
     }                                                                                                                  //
     return mime;                                                                                                       //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 488
-  /*                                                                                                                   // 488
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 498
+  /*                                                                                                                   // 498
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name getFileName                                                                                                    //
   @param {Object} fileData - File Object                                                                               //
-  @description Returns file's name                                                                                     //
+  @summary Returns file's name                                                                                         //
   @returns {String}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.getFileName = function(fileData) {                                                                   // 101
-    var cleanName, fileName;                                                                                           // 498
-    fileName = fileData.name || fileData.fileName;                                                                     // 498
-    if (_.isString(fileName) && fileName.length > 0) {                                                                 // 499
-      cleanName = function(str) {                                                                                      // 500
+  FilesCollection.prototype.getFileName = function(fileData) {                                                         // 96
+    var cleanName, fileName;                                                                                           // 507
+    fileName = fileData.name || fileData.fileName;                                                                     // 507
+    if (_.isString(fileName) && fileName.length > 0) {                                                                 // 508
+      cleanName = function(str) {                                                                                      // 509
         return str.replace(/\.\./g, '').replace(/\//g, '');                                                            //
       };                                                                                                               //
-      return cleanName(fileData.name || fileData.fileName);                                                            // 501
+      return cleanName(fileData.name || fileData.fileName);                                                            // 510
     } else {                                                                                                           //
-      return '';                                                                                                       // 503
+      return '';                                                                                                       // 512
     }                                                                                                                  //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 505
-  /*                                                                                                                   // 505
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 514
+  /*                                                                                                                   // 514
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name getUser                                                                                                        //
-  @description Returns object with `userId` and `user()` method which return user's object                             //
+  @summary Returns object with `userId` and `user()` method which return user's object                                 //
   @returns {Object}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.getUser = function(http) {                                                                           // 101
-    var cookie, result, user;                                                                                          // 514
-    result = {                                                                                                         // 514
-      user: function() {                                                                                               // 515
-        return null;                                                                                                   // 515
+  FilesCollection.prototype.getUser = function(http) {                                                                 // 96
+    var cookie, result, user;                                                                                          // 522
+    result = {                                                                                                         // 522
+      user: function() {                                                                                               // 523
+        return null;                                                                                                   // 523
       },                                                                                                               //
-      userId: null                                                                                                     // 515
+      userId: null                                                                                                     // 523
     };                                                                                                                 //
-    if (Meteor.isServer) {                                                                                             // 518
-      if (http) {                                                                                                      // 519
-        cookie = http.request.Cookies;                                                                                 // 520
-        if (_.has(Package, 'accounts-base') && cookie.has('meteor_login_token')) {                                     // 521
-          user = Meteor.users.findOne({                                                                                // 522
-            'services.resume.loginTokens.hashedToken': Accounts._hashLoginToken(cookie.get('meteor_login_token'))      // 522
+    if (Meteor.isServer) {                                                                                             // 526
+      if (http) {                                                                                                      // 527
+        cookie = http.request.Cookies;                                                                                 // 528
+        if (_.has(Package, 'accounts-base') && cookie.has('meteor_login_token')) {                                     // 529
+          user = Meteor.users.findOne({                                                                                // 530
+            'services.resume.loginTokens.hashedToken': Accounts._hashLoginToken(cookie.get('meteor_login_token'))      // 530
           });                                                                                                          //
-          if (user) {                                                                                                  // 523
-            result.user = function() {                                                                                 // 524
-              return user;                                                                                             // 524
+          if (user) {                                                                                                  // 531
+            result.user = function() {                                                                                 // 532
+              return user;                                                                                             // 532
             };                                                                                                         //
-            result.userId = user._id;                                                                                  // 524
+            result.userId = user._id;                                                                                  // 532
           }                                                                                                            //
         }                                                                                                              //
       }                                                                                                                //
     } else {                                                                                                           //
-      if (_.has(Package, 'accounts-base') && Meteor.userId()) {                                                        // 527
-        result.user = function() {                                                                                     // 528
-          return Meteor.user();                                                                                        // 528
+      if (_.has(Package, 'accounts-base') && Meteor.userId()) {                                                        // 535
+        result.user = function() {                                                                                     // 536
+          return Meteor.user();                                                                                        // 536
         };                                                                                                             //
-        result.userId = Meteor.userId();                                                                               // 528
+        result.userId = Meteor.userId();                                                                               // 536
       }                                                                                                                //
     }                                                                                                                  //
-    return result;                                                                                                     // 531
+    return result;                                                                                                     // 539
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 533
-  /*                                                                                                                   // 533
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 541
+  /*                                                                                                                   // 541
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name getExt                                                                                                         //
   @param {String} FileName - File name                                                                                 //
-  @description Get extension from FileName                                                                             //
+  @summary Get extension from FileName                                                                                 //
   @returns {Object}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.getExt = function(fileName) {                                                                        // 101
-    var extension;                                                                                                     // 543
-    if (!!~fileName.indexOf('.')) {                                                                                    // 543
-      extension = fileName.split('.').pop();                                                                           // 544
-      return {                                                                                                         // 545
-        ext: extension,                                                                                                // 545
-        extension: extension,                                                                                          // 545
-        extensionWithDot: '.' + extension                                                                              // 545
+  FilesCollection.prototype.getExt = function(fileName) {                                                              // 96
+    var extension;                                                                                                     // 550
+    if (!!~fileName.indexOf('.')) {                                                                                    // 550
+      extension = fileName.split('.').pop();                                                                           // 551
+      return {                                                                                                         // 552
+        ext: extension,                                                                                                // 552
+        extension: extension,                                                                                          // 552
+        extensionWithDot: '.' + extension                                                                              // 552
       };                                                                                                               //
     } else {                                                                                                           //
-      return {                                                                                                         // 547
-        ext: '',                                                                                                       // 547
-        extension: '',                                                                                                 // 547
-        extensionWithDot: ''                                                                                           // 547
+      return {                                                                                                         // 554
+        ext: '',                                                                                                       // 554
+        extension: '',                                                                                                 // 554
+        extensionWithDot: ''                                                                                           // 554
       };                                                                                                               //
     }                                                                                                                  //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 549
-  /*                                                                                                                   // 549
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 556
+  /*                                                                                                                   // 556
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name dataToSchema                                                                                                   //
   @param {Object} data - File data                                                                                     //
-  @description Build object in accordance with schema from File data                                                   //
+  @summary Build object in accordance with schema from File data                                                       //
   @returns {Object}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.dataToSchema = function(data) {                                                                      // 101
-    return {                                                                                                           // 559
-      name: data.name,                                                                                                 // 559
-      extension: data.extension,                                                                                       // 559
-      path: data.path,                                                                                                 // 559
-      meta: data.meta,                                                                                                 // 559
-      type: data.type,                                                                                                 // 559
-      size: data.size,                                                                                                 // 559
-      versions: {                                                                                                      // 559
-        original: {                                                                                                    // 567
-          path: data.path,                                                                                             // 568
-          size: data.size,                                                                                             // 568
-          type: data.type,                                                                                             // 568
-          extension: data.extension                                                                                    // 568
+  FilesCollection.prototype.dataToSchema = function(data) {                                                            // 96
+    return {                                                                                                           // 565
+      name: data.name,                                                                                                 // 565
+      extension: data.extension,                                                                                       // 565
+      path: data.path,                                                                                                 // 565
+      meta: data.meta,                                                                                                 // 565
+      type: data.type,                                                                                                 // 565
+      size: data.size,                                                                                                 // 565
+      versions: {                                                                                                      // 565
+        original: {                                                                                                    // 573
+          path: data.path,                                                                                             // 574
+          size: data.size,                                                                                             // 574
+          type: data.type,                                                                                             // 574
+          extension: data.extension                                                                                    // 574
         }                                                                                                              //
       },                                                                                                               //
-      isVideo: !!~data.type.toLowerCase().indexOf('video'),                                                            // 559
-      isAudio: !!~data.type.toLowerCase().indexOf('audio'),                                                            // 559
-      isImage: !!~data.type.toLowerCase().indexOf('image'),                                                            // 559
-      _prefix: data._prefix || this._prefix,                                                                           // 559
-      _storagePath: data._storagePath || this.storagePath,                                                             // 559
-      _downloadRoute: data._downloadRoute || this.downloadRoute,                                                       // 559
-      _collectionName: data._collectionName || this.collectionName                                                     // 559
+      isVideo: !!~data.type.toLowerCase().indexOf('video'),                                                            // 565
+      isAudio: !!~data.type.toLowerCase().indexOf('audio'),                                                            // 565
+      isImage: !!~data.type.toLowerCase().indexOf('image'),                                                            // 565
+      isText: !!~data.type.toLowerCase().indexOf('text'),                                                              // 565
+      _prefix: data._prefix || this._prefix,                                                                           // 565
+      _storagePath: data._storagePath || this.storagePath,                                                             // 565
+      _downloadRoute: data._downloadRoute || this.downloadRoute,                                                       // 565
+      _collectionName: data._collectionName || this.collectionName                                                     // 565
     };                                                                                                                 //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 581
-  /*                                                                                                                   // 581
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 588
+  /*                                                                                                                   // 588
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name srch                                                                                                           //
   @param {String|Object} search - Search data                                                                          //
-  @description Build search object                                                                                     //
+  @summary Build search object                                                                                         //
   @returns {Object}                                                                                                    //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.srch = function(search) {                                                                            // 101
-    if (search && _.isString(search)) {                                                                                // 591
-      this.search = {                                                                                                  // 592
-        _id: search                                                                                                    // 593
+  FilesCollection.prototype.srch = function(search) {                                                                  // 96
+    if (search && _.isString(search)) {                                                                                // 597
+      this.search = {                                                                                                  // 598
+        _id: search                                                                                                    // 599
       };                                                                                                               //
     } else {                                                                                                           //
-      this.search = search || {};                                                                                      // 595
+      this.search = search || {};                                                                                      // 601
     }                                                                                                                  //
     return this.search;                                                                                                //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 598
-  /*                                                                                                                   // 598
-  @server                                                                                                              //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 604
+  /*                                                                                                                   // 604
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name write                                                                                                          //
   @param {Buffer} buffer - Binary File's Buffer                                                                        //
   @param {Object} opts - {fileName: '', type: '', size: 0, meta: {...}}                                                //
   @param {Function} callback - function(error, fileObj){...}                                                           //
-  @description Write buffer to FS and add to Meteor.Files Collection                                                   //
-  @returns {Files} - Returns current Meteor.Files instance                                                             //
+  @summary Write buffer to FS and add to FilesCollection Collection                                                    //
+  @returns {Files} - Returns current FilesCollection instance                                                          //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.write = Meteor.isServer ? function(buffer, opts, callback) {                                         // 101
-    var extension, extensionWithDot, fileName, path, randFileName, ref, result;                                        // 610
+  FilesCollection.prototype.write = Meteor.isServer ? function(buffer, opts, callback) {                               // 96
+    var extension, extensionWithDot, fileName, path, randFileName, ref, result;                                        // 615
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
     }                                                                                                                  //
-    if (this.debug) {                                                                                                  // 610
-      console.info("[Meteor.Files] [write()]");                                                                        // 610
+    if (this.debug) {                                                                                                  // 615
+      console.info("[FilesCollection] [write()]");                                                                     // 615
     }                                                                                                                  //
-    check(opts, Match.Optional(Object));                                                                               // 610
-    check(callback, Match.Optional(Function));                                                                         // 610
-    if (this.checkAccess()) {                                                                                          // 614
-      randFileName = this.namingFunction();                                                                            // 615
-      fileName = opts.name || opts.fileName ? opts.name || opts.fileName : randFileName;                               // 615
-      ref = this.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;                 // 615
-      path = this["public"] ? this.storagePath + "/original-" + randFileName + extensionWithDot : this.storagePath + "/" + randFileName + extensionWithDot;
-      opts.type = this.getMimeType(opts);                                                                              // 615
-      if (!opts.meta) {                                                                                                // 623
-        opts.meta = {};                                                                                                // 623
+    check(opts, Match.Optional(Object));                                                                               // 615
+    check(callback, Match.Optional(Function));                                                                         // 615
+    if (this.checkAccess()) {                                                                                          // 619
+      randFileName = this.namingFunction();                                                                            // 620
+      fileName = opts.name || opts.fileName ? opts.name || opts.fileName : randFileName;                               // 620
+      ref = this.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;                 // 620
+      path = this.storagePath + "/" + randFileName + extensionWithDot;                                                 // 620
+      opts.type = this.getMimeType(opts);                                                                              // 620
+      if (!opts.meta) {                                                                                                // 628
+        opts.meta = {};                                                                                                // 628
       }                                                                                                                //
-      if (!opts.size) {                                                                                                // 624
-        opts.size = buffer.length;                                                                                     // 624
+      if (!opts.size) {                                                                                                // 629
+        opts.size = buffer.length;                                                                                     // 629
       }                                                                                                                //
-      result = this.dataToSchema({                                                                                     // 615
-        name: fileName,                                                                                                // 627
-        path: path,                                                                                                    // 627
-        meta: opts.meta,                                                                                               // 627
-        type: opts.type,                                                                                               // 627
-        size: opts.size,                                                                                               // 627
-        extension: extension                                                                                           // 627
+      result = this.dataToSchema({                                                                                     // 620
+        name: fileName,                                                                                                // 632
+        path: path,                                                                                                    // 632
+        meta: opts.meta,                                                                                               // 632
+        type: opts.type,                                                                                               // 632
+        size: opts.size,                                                                                               // 632
+        extension: extension                                                                                           // 632
       });                                                                                                              //
-      if (this.debug) {                                                                                                // 634
-        console.info("[Meteor.Files] [write]: " + fileName + " -> " + this.collectionName);                            // 634
+      if (this.debug) {                                                                                                // 639
+        console.info("[FilesCollection] [write]: " + fileName + " -> " + this.collectionName);                         // 639
       }                                                                                                                //
-      fs.outputFile(path, buffer, 'binary', function(error) {                                                          // 615
+      fs.outputFile(path, buffer, 'binary', function(error) {                                                          // 620
         return bound(function() {                                                                                      //
-          if (error) {                                                                                                 // 637
+          if (error) {                                                                                                 // 642
             return callback && callback(error);                                                                        //
           } else {                                                                                                     //
-            result._id = this.collection.insert(_.clone(result));                                                      // 640
+            result._id = this.collection.insert(_.clone(result));                                                      // 645
             return callback && callback(null, result);                                                                 //
           }                                                                                                            //
         });                                                                                                            //
       });                                                                                                              //
-      return this;                                                                                                     // 643
+      return this;                                                                                                     // 648
     }                                                                                                                  //
   } : void 0;                                                                                                          //
                                                                                                                        //
-                                                                                                                       // 647
-  /*                                                                                                                   // 647
-  @server                                                                                                              //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 652
+  /*                                                                                                                   // 652
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name load                                                                                                           //
   @param {String} url - URL to file                                                                                    //
   @param {Object} opts - {fileName: '', meta: {...}}                                                                   //
   @param {Function} callback - function(error, fileObj){...}                                                           //
-  @description Download file, write stream to FS and add to Meteor.Files Collection                                    //
+  @summary Download file, write stream to FS and add to FilesCollection Collection                                     //
   @returns {Files} - Return this                                                                                       //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.load = Meteor.isServer ? function(url, opts, callback) {                                             // 101
-    var extension, extensionWithDot, fileName, path, randFileName, ref, self;                                          // 659
+  FilesCollection.prototype.load = Meteor.isServer ? function(url, opts, callback) {                                   // 96
+    var extension, extensionWithDot, fileName, path, randFileName, ref, self;                                          // 663
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
     }                                                                                                                  //
-    if (this.debug) {                                                                                                  // 659
-      console.info("[Meteor.Files] [load(" + url + ", " + (JSON.stringify(opts)) + ", callback)]");                    // 659
+    if (this.debug) {                                                                                                  // 663
+      console.info("[FilesCollection] [load(" + url + ", " + (JSON.stringify(opts)) + ", callback)]");                 // 663
     }                                                                                                                  //
-    check(url, String);                                                                                                // 659
-    check(opts, Match.Optional(Object));                                                                               // 659
-    check(callback, Match.Optional(Function));                                                                         // 659
-    self = this;                                                                                                       // 659
-    randFileName = this.namingFunction();                                                                              // 659
-    fileName = opts.name || opts.fileName ? opts.name || opts.fileName : randFileName;                                 // 659
-    ref = this.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;                   // 659
-    path = this["public"] ? this.storagePath + "/original-" + randFileName + extensionWithDot : this.storagePath + "/" + randFileName + extensionWithDot;
-    if (!opts.meta) {                                                                                                  // 670
-      opts.meta = {};                                                                                                  // 670
+    check(url, String);                                                                                                // 663
+    check(opts, Match.Optional(Object));                                                                               // 663
+    check(callback, Match.Optional(Function));                                                                         // 663
+    self = this;                                                                                                       // 663
+    randFileName = this.namingFunction();                                                                              // 663
+    fileName = opts.name || opts.fileName ? opts.name || opts.fileName : randFileName;                                 // 663
+    ref = this.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;                   // 663
+    path = this.storagePath + "/" + randFileName + extensionWithDot;                                                   // 663
+    if (!opts.meta) {                                                                                                  // 674
+      opts.meta = {};                                                                                                  // 674
     }                                                                                                                  //
-    request.get(url).on('error', function(error) {                                                                     // 659
+    request.get(url).on('error', function(error) {                                                                     // 663
       return bound(function() {                                                                                        //
-        throw new Meteor.Error(500, ("Error on [load(" + url + ")]:") + JSON.stringify(error));                        // 673
+        throw new Meteor.Error(500, ("Error on [load(" + url + ")]:") + JSON.stringify(error));                        // 677
       });                                                                                                              //
     }).on('response', function(response) {                                                                             //
       return bound(function() {                                                                                        //
-        var result;                                                                                                    // 676
-        if (self.debug) {                                                                                              // 676
-          console.info("[Meteor.Files] [load] Received: " + url);                                                      // 676
+        var result;                                                                                                    // 680
+        if (self.debug) {                                                                                              // 680
+          console.info("[FilesCollection] [load] Received: " + url);                                                   // 680
         }                                                                                                              //
-        result = self.dataToSchema({                                                                                   // 676
-          name: fileName,                                                                                              // 679
-          path: path,                                                                                                  // 679
-          meta: opts.meta,                                                                                             // 679
-          type: opts.type || response.headers['content-type'],                                                         // 679
-          size: opts.size || response.headers['content-length'],                                                       // 679
-          extension: extension                                                                                         // 679
+        result = self.dataToSchema({                                                                                   // 680
+          name: fileName,                                                                                              // 683
+          path: path,                                                                                                  // 683
+          meta: opts.meta,                                                                                             // 683
+          type: opts.type || response.headers['content-type'],                                                         // 683
+          size: opts.size || response.headers['content-length'],                                                       // 683
+          extension: extension                                                                                         // 683
         });                                                                                                            //
         return self.collection.insert(_.clone(result), function(error, fileRef) {                                      //
-          if (error) {                                                                                                 // 687
-            if (self.debug) {                                                                                          // 688
-              console.warn("[Meteor.Files] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
+          if (error) {                                                                                                 // 691
+            if (self.debug) {                                                                                          // 692
+              console.warn("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
             }                                                                                                          //
             return callback && callback(error);                                                                        //
           } else {                                                                                                     //
-            if (self.debug) {                                                                                          // 691
-              console.info("[Meteor.Files] [load] [insert] " + fileName + " -> " + self.collectionName);               // 691
+            if (self.debug) {                                                                                          // 695
+              console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);            // 695
             }                                                                                                          //
             return callback && callback(null, fileRef);                                                                //
           }                                                                                                            //
         });                                                                                                            //
       });                                                                                                              //
-    }).pipe(fs.createOutputStream(path));                                                                              //
-    return this;                                                                                                       // 696
+    }).pipe(fs.createWriteStream(path, {                                                                               //
+      flags: 'w'                                                                                                       // 697
+    }));                                                                                                               //
+    return this;                                                                                                       // 699
   } : void 0;                                                                                                          //
                                                                                                                        //
-                                                                                                                       // 700
-  /*                                                                                                                   // 700
-  @server                                                                                                              //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 703
+  /*                                                                                                                   // 703
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name addFile                                                                                                        //
   @param {String} path - Path to file                                                                                  //
   @param {String} path - Path to file                                                                                  //
-  @description Add file from FS to Meteor.Files                                                                        //
+  @summary Add file from FS to FilesCollection                                                                         //
   @returns {Files} - Return this                                                                                       //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.addFile = Meteor.isServer ? function(path, opts, callback) {                                         // 101
-    var self;                                                                                                          // 711
+  FilesCollection.prototype.addFile = Meteor.isServer ? function(path, opts, callback) {                               // 96
+    var self;                                                                                                          // 713
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
     }                                                                                                                  //
-    if (this.debug) {                                                                                                  // 711
-      console.info("[Meteor.Files] [addFile(" + path + ")]");                                                          // 711
+    if (this.debug) {                                                                                                  // 713
+      console.info("[FilesCollection] [addFile(" + path + ")]");                                                       // 713
     }                                                                                                                  //
-    if (this["public"]) {                                                                                              // 713
-      throw new Meteor.Error(403, 'Can not run [addFile] on public collection');                                       // 713
+    if (this["public"]) {                                                                                              // 715
+      throw new Meteor.Error(403, 'Can not run [addFile] on public collection! Just Move file to root of your server, then add record to Collection');
     }                                                                                                                  //
-    check(path, String);                                                                                               // 711
-    check(opts, Match.Optional(Object));                                                                               // 711
-    check(callback, Match.Optional(Function));                                                                         // 711
-    self = this;                                                                                                       // 711
-    fs.stat(path, function(error, stats) {                                                                             // 711
+    check(path, String);                                                                                               // 713
+    check(opts, Match.Optional(Object));                                                                               // 713
+    check(callback, Match.Optional(Function));                                                                         // 713
+    self = this;                                                                                                       // 713
+    fs.stat(path, function(error, stats) {                                                                             // 713
       return bound(function() {                                                                                        //
-        var _cn, extension, extensionWithDot, fileName, fileSize, fileStats, pathParts, ref, result;                   // 720
-        if (error) {                                                                                                   // 720
+        var _cn, extension, extensionWithDot, fileName, pathParts, ref, result;                                        // 722
+        if (error) {                                                                                                   // 722
           return callback && callback(error);                                                                          //
         } else if (stats.isFile()) {                                                                                   //
-          fileStats = util.inspect(stats);                                                                             // 723
-          fileSize = fileStats.size;                                                                                   // 723
-          pathParts = path.split('/');                                                                                 // 723
-          fileName = pathParts[pathParts.length - 1];                                                                  // 723
-          ref = self.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;             // 723
+          pathParts = path.split('/');                                                                                 // 725
+          fileName = pathParts[pathParts.length - 1];                                                                  // 725
+          ref = self.getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;             // 725
           if (!opts.type) {                                                                                            // 730
             opts.type = 'application/*';                                                                               // 730
           }                                                                                                            //
@@ -1066,9 +1067,9 @@ Meteor.Files = (function() {                                                    
             opts.meta = {};                                                                                            // 731
           }                                                                                                            //
           if (!opts.size) {                                                                                            // 732
-            opts.size = fileSize;                                                                                      // 732
+            opts.size = stats.size;                                                                                    // 732
           }                                                                                                            //
-          result = self.dataToSchema({                                                                                 // 723
+          result = self.dataToSchema({                                                                                 // 725
             name: fileName,                                                                                            // 735
             path: path,                                                                                                // 735
             meta: opts.meta,                                                                                           // 735
@@ -1077,22 +1078,22 @@ Meteor.Files = (function() {                                                    
             extension: extension,                                                                                      // 735
             _storagePath: path.replace("/" + fileName, '')                                                             // 735
           });                                                                                                          //
-          _cn = self.collectionName;                                                                                   // 723
+          _cn = self.collectionName;                                                                                   // 725
           return self.collection.insert(_.clone(result), function(error, record) {                                     //
             if (error) {                                                                                               // 745
               if (self.debug) {                                                                                        // 746
-                console.warn("[Meteor.Files] [addFile] [insert] Error: " + fileName + " -> " + _cn, error);            // 746
+                console.warn("[FilesCollection] [addFile] [insert] Error: " + fileName + " -> " + _cn, error);         // 746
               }                                                                                                        //
               return callback && callback(error);                                                                      //
             } else {                                                                                                   //
               if (self.debug) {                                                                                        // 749
-                console.info("[Meteor.Files] [addFile] [insert]: " + fileName + " -> " + _cn);                         // 749
+                console.info("[FilesCollection] [addFile] [insert]: " + fileName + " -> " + _cn);                      // 749
               }                                                                                                        //
               return callback && callback(null, result);                                                               //
             }                                                                                                          //
           });                                                                                                          //
         } else {                                                                                                       //
-          return callback && callback(new Meteor.Error(400, "[Meteor.Files] [addFile(" + path + ")]: File does not exist"));
+          return callback && callback(new Meteor.Error(400, "[FilesCollection] [addFile(" + path + ")]: File does not exist"));
         }                                                                                                              //
       });                                                                                                              //
     });                                                                                                                //
@@ -1101,101 +1102,97 @@ Meteor.Files = (function() {                                                    
                                                                                                                        //
                                                                                                                        // 758
   /*                                                                                                                   // 758
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name findOne                                                                                                        //
   @param {String|Object} search - `_id` of the file or `Object` like, {prop:'val'}                                     //
-  @description Load file                                                                                               //
+  @summary Load file                                                                                                   //
   @returns {Files} - Return this                                                                                       //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.findOne = function(search) {                                                                         // 101
-    if (this.debug) {                                                                                                  // 768
-      console.info("[Meteor.Files] [findOne(" + (JSON.stringify(search)) + ")]");                                      // 768
+  FilesCollection.prototype.findOne = function(search) {                                                               // 96
+    if (this.debug) {                                                                                                  // 767
+      console.info("[FilesCollection] [findOne(" + (JSON.stringify(search)) + ")]");                                   // 767
     }                                                                                                                  //
-    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 768
-    this.srch(search);                                                                                                 // 768
-    if (this.checkAccess()) {                                                                                          // 772
-      this.currentFile = this.collection.findOne(this.search);                                                         // 773
-      this.cursor = null;                                                                                              // 773
+    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 767
+    this.srch(search);                                                                                                 // 767
+    if (this.checkAccess()) {                                                                                          // 771
+      this.currentFile = this.collection.findOne(this.search);                                                         // 772
+      this.cursor = null;                                                                                              // 772
     }                                                                                                                  //
-    return this;                                                                                                       // 775
+    return this;                                                                                                       // 774
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 777
-  /*                                                                                                                   // 777
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 776
+  /*                                                                                                                   // 776
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name find                                                                                                           //
   @param {String|Object} search - `_id` of the file or `Object` like, {prop:'val'}                                     //
-  @description Load file or bunch of files                                                                             //
+  @summary Load file or bunch of files                                                                                 //
   @returns {Files} - Return this                                                                                       //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.find = function(search) {                                                                            // 101
-    if (this.debug) {                                                                                                  // 787
-      console.info("[Meteor.Files] [find(" + (JSON.stringify(search)) + ")]");                                         // 787
+  FilesCollection.prototype.find = function(search) {                                                                  // 96
+    if (this.debug) {                                                                                                  // 785
+      console.info("[FilesCollection] [find(" + (JSON.stringify(search)) + ")]");                                      // 785
     }                                                                                                                  //
-    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 787
-    this.srch(search);                                                                                                 // 787
-    if (this.checkAccess) {                                                                                            // 791
-      this.currentFile = null;                                                                                         // 792
-      this.cursor = this.collection.find(this.search);                                                                 // 792
+    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 785
+    this.srch(search);                                                                                                 // 785
+    if (this.checkAccess) {                                                                                            // 789
+      this.currentFile = null;                                                                                         // 790
+      this.cursor = this.collection.find(this.search);                                                                 // 790
     }                                                                                                                  //
-    return this;                                                                                                       // 794
+    return this;                                                                                                       // 792
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 796
-  /*                                                                                                                   // 796
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 794
+  /*                                                                                                                   // 794
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name get                                                                                                            //
-  @description Return value of current cursor or file                                                                  //
+  @summary Return value of current cursor or file                                                                      //
   @returns {Object|[Object]}                                                                                           //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.get = function() {                                                                                   // 101
-    if (this.debug) {                                                                                                  // 805
-      console.info('[Meteor.Files] [get()]');                                                                          // 805
+  FilesCollection.prototype.get = function() {                                                                         // 96
+    if (this.debug) {                                                                                                  // 802
+      console.info('[FilesCollection] [get()]');                                                                       // 802
     }                                                                                                                  //
-    if (this.cursor) {                                                                                                 // 806
-      return this.cursor.fetch();                                                                                      // 806
+    if (this.cursor) {                                                                                                 // 803
+      return this.cursor.fetch();                                                                                      // 803
     }                                                                                                                  //
-    return this.currentFile;                                                                                           // 807
+    return this.currentFile;                                                                                           // 804
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 809
-  /*                                                                                                                   // 809
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 806
+  /*                                                                                                                   // 806
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name fetch                                                                                                          //
-  @description Alias for `get()` method                                                                                //
+  @summary Alias for `get()` method                                                                                    //
   @returns {[Object]}                                                                                                  //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.fetch = function() {                                                                                 // 101
-    var data;                                                                                                          // 818
-    if (this.debug) {                                                                                                  // 818
-      console.info('[Meteor.Files] [fetch()]');                                                                        // 818
+  FilesCollection.prototype.fetch = function() {                                                                       // 96
+    var data;                                                                                                          // 814
+    if (this.debug) {                                                                                                  // 814
+      console.info('[FilesCollection] [fetch()]');                                                                     // 814
     }                                                                                                                  //
-    data = this.get();                                                                                                 // 818
-    if (!_.isArray(data)) {                                                                                            // 820
-      return [data];                                                                                                   // 821
+    data = this.get();                                                                                                 // 814
+    if (!_.isArray(data)) {                                                                                            // 816
+      return [data];                                                                                                   // 817
     } else {                                                                                                           //
       return data;                                                                                                     //
     }                                                                                                                  //
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 825
-  /*                                                                                                                   // 825
-  @client                                                                                                              //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 821
+  /*                                                                                                                   // 821
+  @locus Client                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name insert                                                                                                         //
+  @see https://developer.mozilla.org/en-US/docs/Web/API/FileReader                                                     //
   @param {Object} config - Configuration object with next properties:                                                  //
     {File|Object} file           - HTML5 `files` item, like in change event: `e.currentTarget.files[0]`                //
     {Object}      meta           - Additional data as object, use later for search                                     //
@@ -1208,8 +1205,7 @@ Meteor.Files = (function() {                                                    
     {Function}    onBeforeUpload - Callback triggered right before upload is started:                                  //
         return true to continue                                                                                        //
         return false to abort upload                                                                                   //
-  @description Upload file to server over DDP                                                                          //
-  @url https://developer.mozilla.org/en-US/docs/Web/API/FileReader                                                     //
+  @summary Upload file to server over DDP                                                                              //
   @returns {Object} with next properties:                                                                              //
     {ReactiveVar} onPause  - Is upload process on the pause?                                                           //
     {ReactiveVar} state    - active|paused|aborted|completed                                                           //
@@ -1221,702 +1217,879 @@ Meteor.Files = (function() {                                                    
     {Function}    readAsDataURL - Current file as data URL, use to create image preview and etc. Be aware of big files, may lead to browser crash
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.insert = Meteor.isClient ? function(config) {                                                        // 101
-    var EOFsent, beforeunload, calculateStats, createStreams, currentChunk, end, fileData, fileId, fileLength, isUploadAllowed, prepare, result, self, sendEOF, sendViaDDP, sentChunks, transferTime, upload, worker;
-    if (this.checkAccess()) {                                                                                          // 855
-      if (this.debug) {                                                                                                // 856
-        console.info('[Meteor.Files] [insert()]');                                                                     // 856
-      }                                                                                                                //
-      if (config.meta == null) {                                                                                       //
-        config.meta = {};                                                                                              //
-      }                                                                                                                //
-      if (config.streams == null) {                                                                                    //
-        config.streams = 2;                                                                                            //
-      }                                                                                                                //
-      if (config.streams < 1) {                                                                                        // 859
-        config.streams = 2;                                                                                            // 859
-      }                                                                                                                //
-      if (config.chunkSize == null) {                                                                                  //
-        config.chunkSize = this.chunkSize;                                                                             //
-      }                                                                                                                //
-      if (config.allowWebWorkers == null) {                                                                            //
-        config.allowWebWorkers = true;                                                                                 //
-      }                                                                                                                //
-      check(config, {                                                                                                  // 856
-        file: Match.Any,                                                                                               // 863
-        meta: Match.Optional(Object),                                                                                  // 863
-        onError: Match.Optional(Function),                                                                             // 863
-        onAbort: Match.Optional(Function),                                                                             // 863
-        streams: Match.OneOf('dynamic', Number),                                                                       // 863
-        chunkSize: Match.OneOf('dynamic', Number),                                                                     // 863
-        onUploaded: Match.Optional(Function),                                                                          // 863
-        onProgress: Match.Optional(Function),                                                                          // 863
-        onBeforeUpload: Match.Optional(Function),                                                                      // 863
-        allowWebWorkers: Boolean                                                                                       // 863
-      });                                                                                                              //
-      if (config.file) {                                                                                               // 876
-        if (Worker && config.allowWebWorkers) {                                                                        // 877
-          worker = this.ReaderWorker;                                                                                  // 878
-        } else {                                                                                                       //
-          worker = null;                                                                                               // 880
-        }                                                                                                              //
-        if (this.debug) {                                                                                              // 881
-          console.time('insert');                                                                                      // 881
-        }                                                                                                              //
-        if (this.debug) {                                                                                              // 882
-          console.time('loadFile');                                                                                    // 882
-        }                                                                                                              //
-        self = this;                                                                                                   // 877
-        fileLength = 1;                                                                                                // 877
-        fileId = this.namingFunction();                                                                                // 877
-        fileData = {                                                                                                   // 877
-          size: config.file.size,                                                                                      // 887
-          type: config.file.type,                                                                                      // 887
-          name: config.file.name                                                                                       // 887
-        };                                                                                                             //
-        fileData = _.extend(fileData, this.getExt(config.file.name), {                                                 // 877
-          mime: this.getMimeType(fileData)                                                                             // 891
-        });                                                                                                            //
-        fileData['mime-type'] = fileData.mime;                                                                         // 877
-        result = {                                                                                                     // 877
-          file: _.extend(config.file, fileData),                                                                       // 895
-          state: new ReactiveVar('active'),                                                                            // 895
-          onPause: new ReactiveVar(false),                                                                             // 895
-          progress: new ReactiveVar(0),                                                                                // 895
-          estimateTime: new ReactiveVar(1000),                                                                         // 895
-          estimateSpeed: new ReactiveVar(0),                                                                           // 895
-          continueFunc: function() {},                                                                                 // 895
-          pause: function() {                                                                                          // 895
-            if (!this.onPause.get()) {                                                                                 // 903
-              this.onPause.set(true);                                                                                  // 904
-              this.state.set('paused');                                                                                // 904
-            }                                                                                                          //
-          },                                                                                                           //
-          "continue": function() {                                                                                     // 895
-            if (this.onPause.get()) {                                                                                  // 908
-              this.onPause.set(false);                                                                                 // 909
-              this.state.set('active');                                                                                // 909
-              this.continueFunc.call();                                                                                // 909
-              this.continueFunc = function() {};                                                                       // 909
-            }                                                                                                          //
-          },                                                                                                           //
-          toggle: function() {                                                                                         // 895
-            if (this.onPause.get()) {                                                                                  // 915
-              this["continue"]();                                                                                      // 915
-            } else {                                                                                                   //
-              this.pause();                                                                                            // 915
-            }                                                                                                          //
-          },                                                                                                           //
-          abort: function() {                                                                                          // 895
-            window.removeEventListener('beforeunload', beforeunload, false);                                           // 918
-            config.onAbort && config.onAbort.call(this, fileData);                                                     // 918
-            this.pause();                                                                                              // 918
-            this.state.set('aborted');                                                                                 // 918
-            if (self.debug) {                                                                                          // 922
-              console.timeEnd('insert');                                                                               // 922
-            }                                                                                                          //
-            Meteor.call(self.methodNames.MeteorFileAbort, {                                                            // 918
-              fileId: fileId,                                                                                          // 923
-              fileLength: fileLength,                                                                                  // 923
-              fileData: fileData                                                                                       // 923
-            });                                                                                                        //
-            delete upload;                                                                                             // 918
-          }                                                                                                            //
-        };                                                                                                             //
-        beforeunload = function(e) {                                                                                   // 877
-          var message;                                                                                                 // 928
-          message = _.isFunction(self.onbeforeunloadMessage) ? self.onbeforeunloadMessage.call(result, fileData) : self.onbeforeunloadMessage;
-          if (e) {                                                                                                     // 929
-            e.returnValue = message;                                                                                   // 929
-          }                                                                                                            //
-          return message;                                                                                              // 930
-        };                                                                                                             //
-        window.addEventListener('beforeunload', beforeunload, false);                                                  // 877
-        Tracker.autorun(function() {                                                                                   // 877
-          if (!result.onPause.get()) {                                                                                 // 934
-            if (Meteor.status().connected) {                                                                           // 935
-              result["continue"]();                                                                                    // 936
-              if (self.debug) {                                                                                        // 937
-                console.info('[Meteor.Files] [insert] [Tracker] [continue]');                                          // 937
-              }                                                                                                        //
-            } else {                                                                                                   //
-              result.pause();                                                                                          // 939
-              if (self.debug) {                                                                                        // 940
-                console.info('[Meteor.Files] [insert] [Tracker] [pause]');                                             // 940
-              }                                                                                                        //
-            }                                                                                                          //
-          }                                                                                                            //
-        });                                                                                                            //
-        end = function(error, data) {                                                                                  // 877
-          if (self.debug) {                                                                                            // 944
-            console.timeEnd('insert');                                                                                 // 944
-          }                                                                                                            //
-          window.removeEventListener('beforeunload', beforeunload, false);                                             // 944
-          result.progress.set(0);                                                                                      // 944
-          config.onUploaded && config.onUploaded.call(result, error, data);                                            // 944
-          if (error) {                                                                                                 // 948
-            if (self.debug) {                                                                                          // 949
-              console.warn("[Meteor.Files] [insert] [end] Error: ", error);                                            // 949
-            }                                                                                                          //
-            result.state.set('aborted');                                                                               // 949
-            config.onError && config.onError.call(result, error, fileData);                                            // 949
-          } else {                                                                                                     //
-            result.state.set('completed');                                                                             // 953
-          }                                                                                                            //
-        };                                                                                                             //
-        if (config.onBeforeUpload && _.isFunction(config.onBeforeUpload)) {                                            // 956
-          isUploadAllowed = config.onBeforeUpload.call(result, fileData);                                              // 957
-          if (isUploadAllowed !== true) {                                                                              // 958
-            end(new Meteor.Error(403, _.isString(isUploadAllowed) ? isUploadAllowed : 'config.onBeforeUpload() returned false'), null);
-            return false;                                                                                              // 960
-          }                                                                                                            //
-        }                                                                                                              //
-        if (this.onBeforeUpload && _.isFunction(this.onBeforeUpload)) {                                                // 962
-          isUploadAllowed = this.onBeforeUpload.call(result, fileData);                                                // 963
-          if (isUploadAllowed !== true) {                                                                              // 964
-            end(new Meteor.Error(403, _.isString(isUploadAllowed) ? isUploadAllowed : 'this.onBeforeUpload() returned false'), null);
-            return false;                                                                                              // 966
-          }                                                                                                            //
-        }                                                                                                              //
-        currentChunk = 0;                                                                                              // 877
-        sentChunks = 0;                                                                                                // 877
-        EOFsent = false;                                                                                               // 877
-        transferTime = 0;                                                                                              // 877
-        calculateStats = _.throttle(function() {                                                                       // 877
-          var _t, progress;                                                                                            // 974
-          _t = (transferTime / sentChunks) / config.streams;                                                           // 974
-          result.estimateTime.set(_t * (fileLength - sentChunks));                                                     // 974
-          result.estimateSpeed.set(config.chunkSize / (_t / 1000));                                                    // 974
-          progress = Math.round((sentChunks / fileLength) * 100);                                                      // 974
-          result.progress.set(progress);                                                                               // 974
-          config.onProgress && config.onProgress.call(result, progress, fileData);                                     // 974
-        }, 250);                                                                                                       //
-        sendViaDDP = function(evt) {                                                                                   // 877
-          return Meteor.defer(function() {                                                                             //
-            var opts;                                                                                                  // 984
-            if (self.debug) {                                                                                          // 984
-              console.timeEnd('loadFile');                                                                             // 984
-            }                                                                                                          //
-            opts = {                                                                                                   // 984
-              file: fileData,                                                                                          // 986
-              fileId: fileId,                                                                                          // 986
-              binData: evt.data.bin,                                                                                   // 986
-              chunkId: evt.data.chunkId,                                                                               // 986
-              fileLength: fileLength                                                                                   // 986
-            };                                                                                                         //
-            if (opts.binData && opts.binData.length) {                                                                 // 992
-              Meteor.call(self.methodNames.MeteorFileWrite, opts, function(error) {                                    // 993
-                ++sentChunks;                                                                                          // 994
-                transferTime += (+(new Date)) - evt.data.start;                                                        // 994
-                if (error) {                                                                                           // 996
-                  end(error);                                                                                          // 997
-                } else {                                                                                               //
-                  if (sentChunks >= fileLength) {                                                                      // 999
-                    sendEOF(opts);                                                                                     // 1000
-                  } else if (currentChunk < fileLength) {                                                              //
-                    upload();                                                                                          // 1002
-                  }                                                                                                    //
-                  calculateStats();                                                                                    // 999
-                }                                                                                                      //
-              });                                                                                                      //
-            } else {                                                                                                   //
-              sendEOF(opts);                                                                                           // 1006
-            }                                                                                                          //
-          });                                                                                                          //
-        };                                                                                                             //
-        sendEOF = function(opts) {                                                                                     // 877
-          return Meteor.defer(function() {                                                                             //
-            if (!EOFsent) {                                                                                            // 1010
-              EOFsent = true;                                                                                          // 1011
-              opts = {                                                                                                 // 1011
-                eof: true,                                                                                             // 1013
-                meta: config.meta,                                                                                     // 1013
-                file: fileData,                                                                                        // 1013
-                fileId: fileId,                                                                                        // 1013
-                fileLength: fileLength                                                                                 // 1013
-              };                                                                                                       //
-              Meteor.call(self.methodNames.MeteorFileWrite, opts, end);                                                // 1011
-            }                                                                                                          //
-          });                                                                                                          //
-        };                                                                                                             //
-        if (worker) {                                                                                                  // 1021
-          worker.onmessage = sendViaDDP;                                                                               // 1022
-          worker.onerror = function(e) {                                                                               // 1022
-            end(e.message);                                                                                            // 1024
-          };                                                                                                           //
-        }                                                                                                              //
-        if (self.debug) {                                                                                              // 1027
-          if (worker) {                                                                                                // 1028
-            console.info("[Meteor.Files] [insert] using WebWorkers");                                                  // 1029
-          } else {                                                                                                     //
-            console.info("[Meteor.Files] [insert] using MainThread");                                                  // 1031
-          }                                                                                                            //
-        }                                                                                                              //
-        upload = function() {                                                                                          // 877
-          return Meteor.defer(function() {                                                                             //
-            var start;                                                                                                 // 1034
-            start = +(new Date);                                                                                       // 1034
-            if (result.onPause.get()) {                                                                                // 1035
-              result.continueFunc = function() {                                                                       // 1036
-                return createStreams();                                                                                //
-              };                                                                                                       //
-              return;                                                                                                  // 1037
-            }                                                                                                          //
-            ++currentChunk;                                                                                            // 1034
-            if (worker) {                                                                                              // 1040
-              worker.postMessage({                                                                                     // 1041
-                sentChunks: sentChunks,                                                                                // 1041
-                start: start,                                                                                          // 1041
-                currentChunk: currentChunk,                                                                            // 1041
-                chunkSize: config.chunkSize,                                                                           // 1041
-                file: config.file                                                                                      // 1041
-              });                                                                                                      //
-            } else {                                                                                                   //
-              (function(chunkId) {                                                                                     // 1043
-                var chunk, fileReader, readHandler;                                                                    // 1044
-                fileReader = new FileReader;                                                                           // 1044
-                chunk = config.file.slice(config.chunkSize * (chunkId - 1), config.chunkSize * chunkId);               // 1044
-                readHandler = function(evt) {                                                                          // 1044
-                  var ref, ref1;                                                                                       // 1047
-                  sendViaDDP({                                                                                         // 1047
-                    data: {                                                                                            // 1047
-                      bin: ((fileReader != null ? fileReader.result : void 0) || ((ref = evt.srcElement) != null ? ref.result : void 0) || ((ref1 = evt.target) != null ? ref1.result : void 0)).split(',')[1],
-                      chunkId: chunkId,                                                                                // 1048
-                      start: start                                                                                     // 1048
-                    }                                                                                                  //
-                  });                                                                                                  //
-                };                                                                                                     //
-                fileReader.onloadend = readHandler;                                                                    // 1044
-                fileReader.onerror = function(e) {                                                                     // 1044
-                  result.abort();                                                                                      // 1055
-                  onError && onError.call(result, (e.target || e.srcElement).error, fileData);                         // 1055
-                };                                                                                                     //
-                fileReader.readAsDataURL(chunk);                                                                       // 1044
-              })(currentChunk);                                                                                        //
-            }                                                                                                          //
-          });                                                                                                          //
-        };                                                                                                             //
-        createStreams = function() {                                                                                   // 877
-          var i;                                                                                                       // 1065
-          i = 1;                                                                                                       // 1065
-          while (i <= config.streams) {                                                                                // 1066
-            upload();                                                                                                  // 1067
-            i++;                                                                                                       // 1067
-          }                                                                                                            //
-        };                                                                                                             //
-        prepare = function() {                                                                                         // 877
-          var _len;                                                                                                    // 1072
-          if (config.chunkSize === 'dynamic') {                                                                        // 1072
-            if (config.file.size >= 104857600) {                                                                       // 1073
-              config.chunkSize = 1048576;                                                                              // 1074
-            } else if (config.file.size >= 52428800) {                                                                 //
-              config.chunkSize = 524288;                                                                               // 1076
-            } else {                                                                                                   //
-              config.chunkSize = 262144;                                                                               // 1078
-            }                                                                                                          //
-          }                                                                                                            //
-          _len = Math.ceil(config.file.size / config.chunkSize);                                                       // 1072
-          if (config.streams === 'dynamic') {                                                                          // 1081
-            config.streams = _.clone(_len);                                                                            // 1082
-            if (config.streams > 32) {                                                                                 // 1083
-              config.streams = 32;                                                                                     // 1083
-            }                                                                                                          //
-          }                                                                                                            //
-          fileLength = _len <= 0 ? 1 : _len;                                                                           // 1072
-          if (config.streams > fileLength) {                                                                           // 1086
-            config.streams = fileLength;                                                                               // 1086
-          }                                                                                                            //
-          createStreams();                                                                                             // 1072
-        };                                                                                                             //
-        prepare();                                                                                                     // 877
-        return result;                                                                                                 // 1090
-      } else {                                                                                                         //
-        return console.warn("[Meteor.Files] [insert] Have you forget to pass a File itself?");                         //
-      }                                                                                                                //
+  FilesCollection.prototype.insert = Meteor.isClient ? function(config) {                                              // 96
+    if (this.checkAccess()) {                                                                                          // 850
+      return (new this._UploadInstance(config, this)).start();                                                         // 851
+    } else {                                                                                                           //
+      throw new Meteor.Error(401, "[FilesCollection] [insert] Access Denied");                                         // 853
     }                                                                                                                  //
   } : void 0;                                                                                                          //
                                                                                                                        //
-                                                                                                                       // 1096
-  /*                                                                                                                   // 1096
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 856
+  /*                                                                                                                   // 856
+  @locus Client                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name _UploadInstance                                                                                                //
+  @class UploadInstance                                                                                                //
+  @summary Internal Class, used in upload                                                                              //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype._UploadInstance = Meteor.isClient ? UploadInstance = (function() {                         // 96
+    function UploadInstance(config1, collection) {                                                                     // 864
+      var base, base1, base2, base3, self;                                                                             // 865
+      this.config = config1;                                                                                           // 865
+      this.collection = collection;                                                                                    // 865
+      if (this.collection.debug) {                                                                                     // 865
+        console.info('[FilesCollection] [insert()]');                                                                  // 865
+      }                                                                                                                //
+      self = this;                                                                                                     // 865
+      if ((base = this.config).meta == null) {                                                                         //
+        base.meta = {};                                                                                                //
+      }                                                                                                                //
+      if ((base1 = this.config).streams == null) {                                                                     //
+        base1.streams = 2;                                                                                             //
+      }                                                                                                                //
+      if (this.config.streams < 1) {                                                                                   // 869
+        this.config.streams = 2;                                                                                       // 869
+      }                                                                                                                //
+      if ((base2 = this.config).chunkSize == null) {                                                                   //
+        base2.chunkSize = this.collection.chunkSize;                                                                   //
+      }                                                                                                                //
+      if ((base3 = this.config).allowWebWorkers == null) {                                                             //
+        base3.allowWebWorkers = true;                                                                                  //
+      }                                                                                                                //
+      check(this.config, {                                                                                             // 865
+        file: Match.Any,                                                                                               // 873
+        meta: Match.Optional(Object),                                                                                  // 873
+        onError: Match.Optional(Function),                                                                             // 873
+        onAbort: Match.Optional(Function),                                                                             // 873
+        streams: Match.OneOf('dynamic', Number),                                                                       // 873
+        chunkSize: Match.OneOf('dynamic', Number),                                                                     // 873
+        onUploaded: Match.Optional(Function),                                                                          // 873
+        onProgress: Match.Optional(Function),                                                                          // 873
+        onBeforeUpload: Match.Optional(Function),                                                                      // 873
+        allowWebWorkers: Boolean                                                                                       // 873
+      });                                                                                                              //
+      if (this.config.file) {                                                                                          // 886
+        if (this.collection.debug) {                                                                                   // 887
+          console.time('insert ' + this.config.file.name);                                                             // 887
+        }                                                                                                              //
+        if (this.collection.debug) {                                                                                   // 888
+          console.time('loadFile ' + this.config.file.name);                                                           // 888
+        }                                                                                                              //
+        if (Worker && this.config.allowWebWorkers) {                                                                   // 890
+          this.worker = new Worker('/packages/ostrio_files/worker.js');                                                // 891
+        } else {                                                                                                       //
+          this.worker = null;                                                                                          // 893
+        }                                                                                                              //
+        this.trackerComp = null;                                                                                       // 887
+        this.currentChunk = 0;                                                                                         // 887
+        this.sentChunks = 0;                                                                                           // 887
+        this.EOFsent = false;                                                                                          // 887
+        this.transferTime = 0;                                                                                         // 887
+        this.fileLength = 1;                                                                                           // 887
+        this.fileId = this.collection.namingFunction();                                                                // 887
+        this.fileData = {                                                                                              // 887
+          size: this.config.file.size,                                                                                 // 903
+          type: this.config.file.type,                                                                                 // 903
+          name: this.config.file.name                                                                                  // 903
+        };                                                                                                             //
+        this.fileData = _.extend(this.fileData, this.collection.getExt(self.config.file.name), {                       // 887
+          mime: this.collection.getMimeType(this.fileData)                                                             // 907
+        });                                                                                                            //
+        this.fileData['mime-type'] = this.fileData.mime;                                                               // 887
+        this.result = new this.collection._FileUpload(_.extend(self.config, {                                          // 887
+          fileData: this.fileData,                                                                                     // 910
+          fileId: this.fileId,                                                                                         // 910
+          MeteorFileAbort: this.collection.methodNames.MeteorFileAbort                                                 // 910
+        }));                                                                                                           //
+        this.beforeunload = function(e) {                                                                              // 887
+          var message;                                                                                                 // 913
+          message = _.isFunction(self.onbeforeunloadMessage) ? self.onbeforeunloadMessage.call(this.result, this.fileData) : self.onbeforeunloadMessage;
+          if (e) {                                                                                                     // 914
+            e.returnValue = message;                                                                                   // 914
+          }                                                                                                            //
+          return message;                                                                                              // 915
+        };                                                                                                             //
+        this.result.config.beforeunload = this.beforeunload;                                                           // 887
+        window.addEventListener('beforeunload', this.beforeunload, false);                                             // 887
+        this.calculateStats = _.throttle(function() {                                                                  // 887
+          var _t, progress;                                                                                            // 920
+          _t = (self.transferTime / self.sentChunks) / self.config.streams;                                            // 920
+          self.result.estimateTime.set(_t * (self.fileLength - self.sentChunks));                                      // 920
+          self.result.estimateSpeed.set(self.config.chunkSize / (_t / 1000));                                          // 920
+          progress = Math.round((self.sentChunks / self.fileLength) * 100);                                            // 920
+          self.result.progress.set(progress);                                                                          // 920
+          self.config.onProgress && self.config.onProgress.call(self.result, progress, self.fileData);                 // 920
+        }, 250);                                                                                                       //
+        this._onEnd = function() {                                                                                     // 887
+          if (self.worker) {                                                                                           // 930
+            self.worker.terminate();                                                                                   // 930
+          }                                                                                                            //
+          if (self.trackerComp) {                                                                                      // 931
+            self.trackerComp.stop();                                                                                   // 931
+          }                                                                                                            //
+          if (self.beforeunload) {                                                                                     // 932
+            window.removeEventListener('beforeunload', self.beforeunload, false);                                      // 932
+          }                                                                                                            //
+          if (self.result) {                                                                                           // 933
+            return self.result.progress.set(0);                                                                        //
+          }                                                                                                            //
+        };                                                                                                             //
+        this.result.config._onEnd = this._onEnd;                                                                       // 887
+      } else {                                                                                                         //
+        throw new Meteor.Error(500, "[FilesCollection] [insert] Have you forget to pass a File itself?");              // 936
+      }                                                                                                                //
+    }                                                                                                                  //
+                                                                                                                       //
+    UploadInstance.prototype.end = function(error, data) {                                                             // 864
+      if (this.collection.debug) {                                                                                     // 939
+        console.timeEnd('insert ' + this.config.file.name);                                                            // 939
+      }                                                                                                                //
+      this._onEnd();                                                                                                   // 939
+      this.config.onUploaded && this.config.onUploaded.call(this.result, error, data);                                 // 939
+      if (error) {                                                                                                     // 942
+        if (this.collection.debug) {                                                                                   // 943
+          console.warn("[FilesCollection] [insert] [end] Error: ", error);                                             // 943
+        }                                                                                                              //
+        this.result.state.set('aborted');                                                                              // 943
+        this.config.onError && this.config.onError.call(this.result, error, this.fileData);                            // 943
+      } else {                                                                                                         //
+        this.result.state.set('completed');                                                                            // 947
+      }                                                                                                                //
+      return this.result;                                                                                              // 948
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.sendViaDDP = function(evt) {                                                              // 864
+      return Meteor.defer((function(_this) {                                                                           //
+        return function() {                                                                                            //
+          var opts, self;                                                                                              // 951
+          self = _this;                                                                                                // 951
+          if (_this.collection.debug) {                                                                                // 952
+            console.timeEnd('loadFile ' + _this.config.file.name);                                                     // 952
+          }                                                                                                            //
+          opts = {                                                                                                     // 951
+            file: _this.fileData,                                                                                      // 954
+            fileId: _this.fileId,                                                                                      // 954
+            binData: evt.data.bin,                                                                                     // 954
+            chunkId: evt.data.chunkId,                                                                                 // 954
+            fileLength: _this.fileLength                                                                               // 954
+          };                                                                                                           //
+          if (opts.binData && opts.binData.length) {                                                                   // 960
+            Meteor.call(_this.collection.methodNames.MeteorFileWrite, opts, function(error) {                          // 961
+              ++self.sentChunks;                                                                                       // 962
+              self.transferTime += (+(new Date)) - evt.data.start;                                                     // 962
+              if (error) {                                                                                             // 964
+                self.end(error);                                                                                       // 965
+              } else {                                                                                                 //
+                if (self.sentChunks >= self.fileLength) {                                                              // 967
+                  self.sendEOF(opts);                                                                                  // 968
+                } else if (self.currentChunk < self.fileLength) {                                                      //
+                  self.upload();                                                                                       // 970
+                }                                                                                                      //
+                self.calculateStats();                                                                                 // 967
+              }                                                                                                        //
+            });                                                                                                        //
+          } else {                                                                                                     //
+            _this.sendEOF(opts);                                                                                       // 974
+          }                                                                                                            //
+        };                                                                                                             //
+      })(this));                                                                                                       //
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.sendEOF = function(opts) {                                                                // 864
+      return Meteor.defer((function(_this) {                                                                           //
+        return function() {                                                                                            //
+          var self;                                                                                                    // 978
+          if (!_this.EOFsent) {                                                                                        // 978
+            _this.EOFsent = true;                                                                                      // 979
+            self = _this;                                                                                              // 979
+            opts = {                                                                                                   // 979
+              eof: true,                                                                                               // 982
+              meta: _this.config.meta,                                                                                 // 982
+              file: _this.fileData,                                                                                    // 982
+              fileId: _this.fileId,                                                                                    // 982
+              fileLength: _this.fileLength                                                                             // 982
+            };                                                                                                         //
+            Meteor.call(_this.collection.methodNames.MeteorFileWrite, opts, function() {                               // 979
+              return self.end.apply(self, arguments);                                                                  //
+            });                                                                                                        //
+          }                                                                                                            //
+        };                                                                                                             //
+      })(this));                                                                                                       //
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.proceedChunk = function(chunkId, start) {                                                 // 864
+      var chunk, fileReader, self;                                                                                     // 991
+      self = this;                                                                                                     // 991
+      chunk = this.config.file.slice(this.config.chunkSize * (chunkId - 1), this.config.chunkSize * chunkId);          // 991
+      fileReader = new FileReader;                                                                                     // 991
+      fileReader.onloadend = function(evt) {                                                                           // 991
+        var ref, ref1;                                                                                                 // 996
+        self.sendViaDDP({                                                                                              // 996
+          data: {                                                                                                      // 996
+            bin: ((fileReader != null ? fileReader.result : void 0) || ((ref = evt.srcElement) != null ? ref.result : void 0) || ((ref1 = evt.target) != null ? ref1.result : void 0)).split(',')[1],
+            chunkId: chunkId,                                                                                          // 997
+            start: start                                                                                               // 997
+          }                                                                                                            //
+        });                                                                                                            //
+      };                                                                                                               //
+      fileReader.onerror = function(e) {                                                                               // 991
+        self.result.abort();                                                                                           // 1002
+        self.config.onError && self.config.onError.call(self.result, (e.target || e.srcElement).error, self.fileData);
+      };                                                                                                               //
+      fileReader.readAsDataURL(chunk);                                                                                 // 991
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.upload = function() {                                                                     // 864
+      var self, start;                                                                                                 // 1010
+      start = +(new Date);                                                                                             // 1010
+      if (this.result.onPause.get()) {                                                                                 // 1011
+        self = this;                                                                                                   // 1012
+        this.result.continueFunc = function() {                                                                        // 1012
+          return self.createStreams();                                                                                 //
+        };                                                                                                             //
+        return;                                                                                                        // 1014
+      }                                                                                                                //
+      if (this.result.state.get() === 'aborted') {                                                                     // 1016
+        return this;                                                                                                   // 1017
+      }                                                                                                                //
+      ++this.currentChunk;                                                                                             // 1010
+      if (this.worker) {                                                                                               // 1020
+        this.worker.postMessage({                                                                                      // 1021
+          sentChunks: this.sentChunks,                                                                                 // 1021
+          start: start,                                                                                                // 1021
+          currentChunk: this.currentChunk,                                                                             // 1021
+          chunkSize: this.config.chunkSize,                                                                            // 1021
+          file: this.config.file                                                                                       // 1021
+        });                                                                                                            //
+      } else {                                                                                                         //
+        this.proceedChunk(this.currentChunk, start);                                                                   // 1023
+      }                                                                                                                //
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.createStreams = function() {                                                              // 864
+      var i, self;                                                                                                     // 1027
+      i = 1;                                                                                                           // 1027
+      self = this;                                                                                                     // 1027
+      while (i <= this.config.streams) {                                                                               // 1029
+        Meteor.defer(function() {                                                                                      // 1030
+          return self.upload();                                                                                        //
+        });                                                                                                            //
+        i++;                                                                                                           // 1030
+      }                                                                                                                //
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.prepare = function() {                                                                    // 864
+      var _len, self;                                                                                                  // 1035
+      self = this;                                                                                                     // 1035
+      if (this.config.chunkSize === 'dynamic') {                                                                       // 1036
+        if (this.config.file.size >= 104857600) {                                                                      // 1037
+          this.config.chunkSize = 1048576;                                                                             // 1038
+        } else if (this.config.file.size >= 52428800) {                                                                //
+          this.config.chunkSize = 524288;                                                                              // 1040
+        } else {                                                                                                       //
+          this.config.chunkSize = 262144;                                                                              // 1042
+        }                                                                                                              //
+      }                                                                                                                //
+      _len = Math.ceil(this.config.file.size / this.config.chunkSize);                                                 // 1035
+      if (this.config.streams === 'dynamic') {                                                                         // 1045
+        this.config.streams = _.clone(_len);                                                                           // 1046
+        if (this.config.streams > 32) {                                                                                // 1047
+          this.config.streams = 32;                                                                                    // 1047
+        }                                                                                                              //
+      }                                                                                                                //
+      this.fileLength = _len <= 0 ? 1 : _len;                                                                          // 1035
+      if (this.config.streams > this.fileLength) {                                                                     // 1050
+        this.config.streams = this.fileLength;                                                                         // 1050
+      }                                                                                                                //
+      this.result.config.fileLength = this.fileLength;                                                                 // 1035
+      Meteor.defer(function() {                                                                                        // 1035
+        return self.createStreams();                                                                                   //
+      });                                                                                                              //
+    };                                                                                                                 //
+                                                                                                                       //
+    UploadInstance.prototype.start = function() {                                                                      // 864
+      var isUploadAllowed, self;                                                                                       // 1056
+      self = this;                                                                                                     // 1056
+      if (this.config.onBeforeUpload && _.isFunction(this.config.onBeforeUpload)) {                                    // 1057
+        isUploadAllowed = this.config.onBeforeUpload.call(this.result, this.fileData);                                 // 1058
+        if (isUploadAllowed !== true) {                                                                                // 1059
+          return this.end(new Meteor.Error(403, _.isString(isUploadAllowed) ? isUploadAllowed : 'config.onBeforeUpload() returned false'), null);
+        }                                                                                                              //
+      }                                                                                                                //
+      if (this.collection.onBeforeUpload && _.isFunction(this.collection.onBeforeUpload)) {                            // 1062
+        isUploadAllowed = this.collection.onBeforeUpload.call(this.result, this.fileData);                             // 1063
+        if (isUploadAllowed !== true) {                                                                                // 1064
+          return this.end(new Meteor.Error(403, _.isString(isUploadAllowed) ? isUploadAllowed : 'collection.onBeforeUpload() returned false'), null);
+        }                                                                                                              //
+      }                                                                                                                //
+      Tracker.autorun(function(computation) {                                                                          // 1056
+        self.trackerComp = computation;                                                                                // 1068
+        if (!self.result.onPause.get()) {                                                                              // 1069
+          if (Meteor.status().connected) {                                                                             // 1070
+            self.result["continue"]();                                                                                 // 1071
+            if (self.collection.debug) {                                                                               // 1072
+              console.info('[FilesCollection] [insert] [Tracker] [continue]');                                         // 1072
+            }                                                                                                          //
+          } else {                                                                                                     //
+            self.result.pause();                                                                                       // 1074
+            if (self.collection.debug) {                                                                               // 1075
+              console.info('[FilesCollection] [insert] [Tracker] [pause]');                                            // 1075
+            }                                                                                                          //
+          }                                                                                                            //
+        }                                                                                                              //
+      });                                                                                                              //
+      if (this.worker) {                                                                                               // 1078
+        this.worker.onmessage = function(evt) {                                                                        // 1079
+          if (evt.data.error) {                                                                                        // 1080
+            if (self.collection.debug) {                                                                               // 1081
+              console.warn(evt.data.error);                                                                            // 1081
+            }                                                                                                          //
+            self.proceedChunk(evt.data.chunkId, evt.data.start);                                                       // 1081
+          } else {                                                                                                     //
+            self.sendViaDDP(evt);                                                                                      // 1084
+          }                                                                                                            //
+        };                                                                                                             //
+        this.worker.onerror = function(e) {                                                                            // 1079
+          self.end(e.message);                                                                                         // 1087
+        };                                                                                                             //
+      }                                                                                                                //
+      if (this.collection.debug) {                                                                                     // 1090
+        if (this.worker) {                                                                                             // 1091
+          console.info("[FilesCollection] [insert] using WebWorkers");                                                 // 1092
+        } else {                                                                                                       //
+          console.info("[FilesCollection] [insert] using MainThread");                                                 // 1094
+        }                                                                                                              //
+      }                                                                                                                //
+      Meteor.defer(function() {                                                                                        // 1056
+        return self.prepare();                                                                                         //
+      });                                                                                                              //
+      return this.result;                                                                                              // 1097
+    };                                                                                                                 //
+                                                                                                                       //
+    return UploadInstance;                                                                                             //
+                                                                                                                       //
+  })() : void 0;                                                                                                       //
+                                                                                                                       //
+                                                                                                                       // 1100
+  /*                                                                                                                   // 1100
+  @locus Client                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name _FileUpload                                                                                                    //
+  @class FileUpload                                                                                                    //
+  @summary Internal Class, instance of this class is returned from `insert()` method                                   //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype._FileUpload = Meteor.isClient ? FileUpload = (function() {                                 // 96
+    function FileUpload(config1) {                                                                                     // 1108
+      this.config = config1;                                                                                           // 1109
+      this.file = _.extend(this.config.file, this.config.fileData);                                                    // 1109
+      this.state = new ReactiveVar('active');                                                                          // 1109
+      this.onPause = new ReactiveVar(false);                                                                           // 1109
+      this.progress = new ReactiveVar(0);                                                                              // 1109
+      this.estimateTime = new ReactiveVar(1000);                                                                       // 1109
+      this.estimateSpeed = new ReactiveVar(0);                                                                         // 1109
+    }                                                                                                                  //
+                                                                                                                       //
+    FileUpload.prototype.continueFunc = function() {};                                                                 // 1108
+                                                                                                                       //
+    FileUpload.prototype.pause = function() {                                                                          // 1108
+      if (!this.onPause.get()) {                                                                                       // 1117
+        this.onPause.set(true);                                                                                        // 1118
+        this.state.set('paused');                                                                                      // 1118
+      }                                                                                                                //
+    };                                                                                                                 //
+                                                                                                                       //
+    FileUpload.prototype["continue"] = function() {                                                                    // 1108
+      if (this.onPause.get()) {                                                                                        // 1122
+        this.onPause.set(false);                                                                                       // 1123
+        this.state.set('active');                                                                                      // 1123
+        this.continueFunc.call();                                                                                      // 1123
+        this.continueFunc = function() {};                                                                             // 1123
+      }                                                                                                                //
+    };                                                                                                                 //
+                                                                                                                       //
+    FileUpload.prototype.toggle = function() {                                                                         // 1108
+      if (this.onPause.get()) {                                                                                        // 1129
+        this["continue"]();                                                                                            // 1129
+      } else {                                                                                                         //
+        this.pause();                                                                                                  // 1129
+      }                                                                                                                //
+    };                                                                                                                 //
+                                                                                                                       //
+    FileUpload.prototype.abort = function() {                                                                          // 1108
+      window.removeEventListener('beforeunload', this.config.beforeunload, false);                                     // 1132
+      this.config.onAbort && this.config.onAbort.call(this, this.fileData);                                            // 1132
+      this.pause();                                                                                                    // 1132
+      this.config._onEnd();                                                                                            // 1132
+      this.state.set('aborted');                                                                                       // 1132
+      if (this.config.debug) {                                                                                         // 1137
+        console.timeEnd('insert ' + this.config.file.name);                                                            // 1137
+      }                                                                                                                //
+      Meteor.call(this.config.MeteorFileAbort, {                                                                       // 1132
+        fileId: this.config.fileId,                                                                                    // 1138
+        fileLength: this.config.fileLength,                                                                            // 1138
+        fileData: this.config.fileData                                                                                 // 1138
+      });                                                                                                              //
+    };                                                                                                                 //
+                                                                                                                       //
+    return FileUpload;                                                                                                 //
+                                                                                                                       //
+  })() : void 0;                                                                                                       //
+                                                                                                                       //
+                                                                                                                       // 1142
+  /*                                                                                                                   // 1142
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name remove                                                                                                         //
   @param {String|Object} search - `_id` of the file or `Object` like, {prop:'val'}                                     //
-  @description Remove file(s) on cursor or find and remove file(s) if search is set                                    //
+  @summary Remove file(s) on cursor or find and remove file(s) if search is set                                        //
   @returns {undefined}                                                                                                 //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.remove = function(search) {                                                                          // 101
-    var files, self;                                                                                                   // 1106
-    if (this.debug) {                                                                                                  // 1106
-      console.info("[Meteor.Files] [remove(" + (JSON.stringify(search)) + ")]");                                       // 1106
+  FilesCollection.prototype.remove = function(search) {                                                                // 96
+    var files, self;                                                                                                   // 1151
+    if (this.debug) {                                                                                                  // 1151
+      console.info("[FilesCollection] [remove(" + (JSON.stringify(search)) + ")]");                                    // 1151
     }                                                                                                                  //
-    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 1106
-    if (this.checkAccess()) {                                                                                          // 1109
-      this.srch(search);                                                                                               // 1110
-      if (Meteor.isClient) {                                                                                           // 1111
-        Meteor.call(this.methodNames.MeteorFileUnlink, rcp(this));                                                     // 1112
+    check(search, Match.Optional(Match.OneOf(Object, String)));                                                        // 1151
+    if (this.checkAccess()) {                                                                                          // 1154
+      this.srch(search);                                                                                               // 1155
+      if (Meteor.isClient) {                                                                                           // 1156
+        Meteor.call(this.methodNames.MeteorFileUnlink, rcp(this));                                                     // 1157
       }                                                                                                                //
-      if (Meteor.isServer) {                                                                                           // 1114
-        files = this.collection.find(this.search);                                                                     // 1115
-        if (files.count() > 0) {                                                                                       // 1116
-          self = this;                                                                                                 // 1117
-          files.forEach(function(file) {                                                                               // 1117
+      if (Meteor.isServer) {                                                                                           // 1159
+        files = this.collection.find(this.search);                                                                     // 1160
+        if (files.count() > 0) {                                                                                       // 1161
+          self = this;                                                                                                 // 1162
+          files.forEach(function(file) {                                                                               // 1162
             return self.unlink(file);                                                                                  //
           });                                                                                                          //
         }                                                                                                              //
-        this.collection.remove(this.search);                                                                           // 1115
+        this.collection.remove(this.search);                                                                           // 1160
       }                                                                                                                //
     }                                                                                                                  //
-    return this;                                                                                                       // 1120
+    return this;                                                                                                       // 1165
   };                                                                                                                   //
                                                                                                                        //
-                                                                                                                       // 1122
-  /*                                                                                                                   // 1122
-  @sever                                                                                                               //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 1167
+  /*                                                                                                                   // 1167
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
+  @name update                                                                                                         //
+  @see http://docs.meteor.com/#/full/update                                                                            //
+  @summary link Mongo.Collection update method                                                                         //
+  @returns {Mongo.Collection} Instance                                                                                 //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype.update = function() {                                                                      // 96
+    this.collection.update.apply(this.collection, arguments);                                                          // 1176
+    return this.collection;                                                                                            // 1177
+  };                                                                                                                   //
+                                                                                                                       //
+                                                                                                                       // 1179
+  /*                                                                                                                   // 1179
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name deny                                                                                                           //
+  @name allow                                                                                                          //
+  @param {Object} rules                                                                                                //
+  @see http://docs.meteor.com/#/full/allow                                                                             //
+  @summary link Mongo.Collection allow/deny methods                                                                    //
+  @returns {Mongo.Collection} Instance                                                                                 //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype.deny = Meteor.isServer ? function(rules) {                                                 // 96
+    this.collection.deny(rules);                                                                                       // 1190
+    return this.collection;                                                                                            // 1191
+  } : void 0;                                                                                                          //
+                                                                                                                       //
+  FilesCollection.prototype.allow = Meteor.isServer ? function(rules) {                                                // 96
+    this.collection.allow(rules);                                                                                      // 1194
+    return this.collection;                                                                                            // 1195
+  } : void 0;                                                                                                          //
+                                                                                                                       //
+                                                                                                                       // 1198
+  /*                                                                                                                   // 1198
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name denyClient                                                                                                     //
+  @name allowClient                                                                                                    //
+  @see http://docs.meteor.com/#/full/allow                                                                             //
+  @summary Shorthands for Mongo.Collection allow/deny methods                                                          //
+  @returns {Mongo.Collection} Instance                                                                                 //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype.denyClient = Meteor.isServer ? function() {                                                // 96
+    this.collection.deny({                                                                                             // 1208
+      insert: function() {                                                                                             // 1209
+        return true;                                                                                                   //
+      },                                                                                                               //
+      update: function() {                                                                                             // 1209
+        return true;                                                                                                   //
+      },                                                                                                               //
+      remove: function() {                                                                                             // 1209
+        return true;                                                                                                   //
+      }                                                                                                                //
+    });                                                                                                                //
+    return this.collection;                                                                                            // 1212
+  } : void 0;                                                                                                          //
+                                                                                                                       //
+  FilesCollection.prototype.allowClient = Meteor.isServer ? function() {                                               // 96
+    this.collection.allow({                                                                                            // 1215
+      insert: function() {                                                                                             // 1216
+        return true;                                                                                                   //
+      },                                                                                                               //
+      update: function() {                                                                                             // 1216
+        return true;                                                                                                   //
+      },                                                                                                               //
+      remove: function() {                                                                                             // 1216
+        return true;                                                                                                   //
+      }                                                                                                                //
+    });                                                                                                                //
+    return this.collection;                                                                                            // 1219
+  } : void 0;                                                                                                          //
+                                                                                                                       //
+                                                                                                                       // 1223
+  /*                                                                                                                   // 1223
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name unlink                                                                                                         //
   @param {Object} file - fileObj                                                                                       //
-  @description Unlink files and it's versions from FS                                                                  //
+  @summary Unlink files and it's versions from FS                                                                      //
   @returns {undefined}                                                                                                 //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.unlink = Meteor.isServer ? function(file) {                                                          // 101
-    if (this.debug) {                                                                                                  // 1132
-      console.log("[Meteor.Files] [unlink(" + file._id + ")]");                                                        // 1132
+  FilesCollection.prototype.unlink = Meteor.isServer ? function(file) {                                                // 96
+    if (this.debug) {                                                                                                  // 1232
+      console.info("[FilesCollection] [unlink(" + file._id + ")]");                                                    // 1232
     }                                                                                                                  //
-    if (file.versions && !_.isEmpty(file.versions)) {                                                                  // 1133
-      _.each(file.versions, function(version) {                                                                        // 1134
+    if (file.versions && !_.isEmpty(file.versions)) {                                                                  // 1233
+      _.each(file.versions, function(version) {                                                                        // 1234
         return bound(function() {                                                                                      //
           return fs.unlink(version.path, NOOP);                                                                        //
         });                                                                                                            //
       });                                                                                                              //
     }                                                                                                                  //
-    fs.unlink(file.path, NOOP);                                                                                        // 1132
-    return this;                                                                                                       // 1137
+    fs.unlink(file.path, NOOP);                                                                                        // 1232
+    return this;                                                                                                       // 1237
   } : void 0;                                                                                                          //
                                                                                                                        //
-  Files.prototype._404 = Meteor.isServer ? function(http) {                                                            // 101
-    var text;                                                                                                          // 1142
-    if (this.debug) {                                                                                                  // 1142
-      console.warn("[Meteor.Files] [download(" + http.request.originalUrl + ")] [_404] File not found");               // 1142
+                                                                                                                       // 1240
+  /*                                                                                                                   // 1240
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name _404                                                                                                           //
+  @summary Internal method, used to return 404 error                                                                   //
+   */                                                                                                                  //
+                                                                                                                       //
+  FilesCollection.prototype._404 = Meteor.isServer ? function(http) {                                                  // 96
+    var text;                                                                                                          // 1247
+    if (this.debug) {                                                                                                  // 1247
+      console.warn("[FilesCollection] [download(" + http.request.originalUrl + ")] [_404] File not found");            // 1247
     }                                                                                                                  //
-    text = 'File Not Found :(';                                                                                        // 1142
-    http.response.writeHead(404, {                                                                                     // 1142
-      'Content-Length': text.length,                                                                                   // 1145
-      'Content-Type': 'text/plain'                                                                                     // 1145
+    text = 'File Not Found :(';                                                                                        // 1247
+    http.response.writeHead(404, {                                                                                     // 1247
+      'Content-Length': text.length,                                                                                   // 1250
+      'Content-Type': 'text/plain'                                                                                     // 1250
     });                                                                                                                //
-    return http.response.end(text);                                                                                    //
+    http.response.end(text);                                                                                           // 1247
   } : void 0;                                                                                                          //
                                                                                                                        //
-                                                                                                                       // 1150
-  /*                                                                                                                   // 1150
-  @server                                                                                                              //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 1256
+  /*                                                                                                                   // 1256
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
   @name download                                                                                                       //
-  @param {Object|Files} self - Instance of MEteor.Files                                                                //
-  @description Initiates the HTTP response                                                                             //
+  @param {Object|Files} self - Instance of FilesCollection                                                             //
+  @summary Initiates the HTTP response                                                                                 //
   @returns {undefined}                                                                                                 //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.download = Meteor.isServer ? function(http, version) {                                               // 101
-    var _idres, fileRef, responseType, self;                                                                           // 1160
+  FilesCollection.prototype.download = Meteor.isServer ? function(http, version) {                                     // 96
+    var _idres, fileRef, responseType, self;                                                                           // 1265
     if (version == null) {                                                                                             //
       version = 'original';                                                                                            //
     }                                                                                                                  //
-    if (this.debug) {                                                                                                  // 1160
-      console.info("[Meteor.Files] [download(" + http.request.originalUrl + ", " + version + ")]");                    // 1160
+    if (this.debug) {                                                                                                  // 1265
+      console.info("[FilesCollection] [download(" + http.request.originalUrl + ", " + version + ")]");                 // 1265
     }                                                                                                                  //
-    responseType = '200';                                                                                              // 1160
-    if (!this["public"]) {                                                                                             // 1162
-      if (this.currentFile) {                                                                                          // 1163
-        if (_.has(this.currentFile, 'versions') && _.has(this.currentFile.versions, version)) {                        // 1164
-          fileRef = this.currentFile.versions[version];                                                                // 1165
-        } else {                                                                                                       //
-          fileRef = this.currentFile;                                                                                  // 1167
-        }                                                                                                              //
+    responseType = '200';                                                                                              // 1265
+    if (this.currentFile) {                                                                                            // 1267
+      if (_.has(this.currentFile, 'versions') && _.has(this.currentFile.versions, version)) {                          // 1268
+        fileRef = this.currentFile.versions[version];                                                                  // 1269
       } else {                                                                                                         //
-        fileRef = false;                                                                                               // 1169
+        fileRef = this.currentFile;                                                                                    // 1271
       }                                                                                                                //
+    } else {                                                                                                           //
+      fileRef = false;                                                                                                 // 1273
     }                                                                                                                  //
-    if (this["public"]) {                                                                                              // 1171
-      fileRef = {                                                                                                      // 1172
-        path: this.storagePath + "/" + http.params.file                                                                // 1173
-      };                                                                                                               //
-    }                                                                                                                  //
-    if (!fileRef || !_.isObject(fileRef)) {                                                                            // 1175
-      return this._404(http);                                                                                          // 1176
+    if (!fileRef || !_.isObject(fileRef)) {                                                                            // 1275
+      return this._404(http);                                                                                          // 1276
     } else if (this.currentFile) {                                                                                     //
-      self = this;                                                                                                     // 1178
-      if (this.interceptDownload && _.isFunction(this.interceptDownload)) {                                            // 1180
-        _idres = this.interceptDownload(http, this.currentFile);                                                       // 1181
-        if (_idres === true) {                                                                                         // 1182
-          return;                                                                                                      // 1183
+      self = this;                                                                                                     // 1278
+      if (this.interceptDownload && _.isFunction(this.interceptDownload)) {                                            // 1280
+        _idres = this.interceptDownload(http, this.currentFile);                                                       // 1281
+        if (_idres === true) {                                                                                         // 1282
+          return;                                                                                                      // 1283
         }                                                                                                              //
       }                                                                                                                //
-      if (this.downloadCallback) {                                                                                     // 1185
-        if (!this.downloadCallback.call(_.extend(http, this.getUser(http)), this.currentFile)) {                       // 1186
-          return this._404(http);                                                                                      // 1187
+      if (this.downloadCallback) {                                                                                     // 1285
+        if (!this.downloadCallback.call(_.extend(http, this.getUser(http)), this.currentFile)) {                       // 1286
+          return this._404(http);                                                                                      // 1287
         }                                                                                                              //
       }                                                                                                                //
-      return fs.stat(fileRef.path, function(statErr, stats) {                                                          //
+      fs.stat(fileRef.path, function(statErr, stats) {                                                                 // 1278
         return bound(function() {                                                                                      //
-          var array, dispositionEncoding, dispositionName, dispositionType, end, fileStats, partiral, ref, ref1, ref2, ref3, reqRange, start, stream, streamErrorHandler, take, text;
-          if (statErr || !stats.isFile()) {                                                                            // 1190
-            return self._404(http);                                                                                    // 1191
+          var array, dispositionEncoding, dispositionName, dispositionType, end, partiral, ref, ref1, ref2, ref3, reqRange, start, stream, streamErrorHandler, take, text;
+          if (statErr || !stats.isFile()) {                                                                            // 1290
+            return self._404(http);                                                                                    // 1291
           }                                                                                                            //
-          fileStats = util.inspect(stats);                                                                             // 1190
-          if (fileStats.size !== fileRef.size && !self.integrityCheck) {                                               // 1194
-            fileRef.size = fileStats.size;                                                                             // 1194
+          if (stats.size !== fileRef.size && !self.integrityCheck) {                                                   // 1293
+            fileRef.size = stats.size;                                                                                 // 1293
           }                                                                                                            //
-          if (fileStats.size !== fileRef.size && self.integrityCheck) {                                                // 1195
-            responseType = '400';                                                                                      // 1195
+          if (stats.size !== fileRef.size && self.integrityCheck) {                                                    // 1294
+            responseType = '400';                                                                                      // 1294
           }                                                                                                            //
-          partiral = false;                                                                                            // 1190
-          reqRange = false;                                                                                            // 1190
-          if (http.params.query.download && http.params.query.download === 'true') {                                   // 1199
-            dispositionType = 'attachment; ';                                                                          // 1200
+          partiral = false;                                                                                            // 1290
+          reqRange = false;                                                                                            // 1290
+          if (http.params.query.download && http.params.query.download === 'true') {                                   // 1298
+            dispositionType = 'attachment; ';                                                                          // 1299
           } else {                                                                                                     //
-            dispositionType = 'inline; ';                                                                              // 1202
+            dispositionType = 'inline; ';                                                                              // 1301
           }                                                                                                            //
           dispositionName = "filename=\"" + (encodeURIComponent(self.currentFile.name)) + "\"; filename=*UTF-8\"" + (encodeURIComponent(self.currentFile.name)) + "\"; ";
-          dispositionEncoding = 'charset=utf-8';                                                                       // 1190
-          http.response.setHeader('Content-Type', fileRef.type);                                                       // 1190
-          http.response.setHeader('Content-Disposition', dispositionType + dispositionName + dispositionEncoding);     // 1190
-          http.response.setHeader('Accept-Ranges', 'bytes');                                                           // 1190
+          dispositionEncoding = 'charset=utf-8';                                                                       // 1290
+          http.response.setHeader('Content-Type', fileRef.type);                                                       // 1290
+          http.response.setHeader('Content-Disposition', dispositionType + dispositionName + dispositionEncoding);     // 1290
+          http.response.setHeader('Accept-Ranges', 'bytes');                                                           // 1290
           if ((ref = self.currentFile) != null ? (ref1 = ref.updatedAt) != null ? ref1.toUTCString() : void 0 : void 0) {
             http.response.setHeader('Last-Modified', (ref2 = self.currentFile) != null ? (ref3 = ref2.updatedAt) != null ? ref3.toUTCString() : void 0 : void 0);
           }                                                                                                            //
-          http.response.setHeader('Connection', 'keep-alive');                                                         // 1190
-          if (http.request.headers.range) {                                                                            // 1213
-            partiral = true;                                                                                           // 1214
-            array = http.request.headers.range.split(/bytes=([0-9]*)-([0-9]*)/);                                       // 1214
-            start = parseInt(array[1]);                                                                                // 1214
-            end = parseInt(array[2]);                                                                                  // 1214
-            if (isNaN(end)) {                                                                                          // 1218
-              end = fileRef.size - 1;                                                                                  // 1219
+          http.response.setHeader('Connection', 'keep-alive');                                                         // 1290
+          if (http.request.headers.range) {                                                                            // 1312
+            partiral = true;                                                                                           // 1313
+            array = http.request.headers.range.split(/bytes=([0-9]*)-([0-9]*)/);                                       // 1313
+            start = parseInt(array[1]);                                                                                // 1313
+            end = parseInt(array[2]);                                                                                  // 1313
+            if (isNaN(end)) {                                                                                          // 1317
+              end = fileRef.size - 1;                                                                                  // 1318
             }                                                                                                          //
-            take = end - start;                                                                                        // 1214
+            take = end - start;                                                                                        // 1313
           } else {                                                                                                     //
-            start = 0;                                                                                                 // 1222
-            end = fileRef.size - 1;                                                                                    // 1222
-            take = fileRef.size;                                                                                       // 1222
+            start = 0;                                                                                                 // 1321
+            end = fileRef.size - 1;                                                                                    // 1321
+            take = fileRef.size;                                                                                       // 1321
           }                                                                                                            //
-          if (partiral || (http.params.query.play && http.params.query.play === 'true')) {                             // 1226
-            reqRange = {                                                                                               // 1227
-              start: start,                                                                                            // 1227
-              end: end                                                                                                 // 1227
+          if (partiral || (http.params.query.play && http.params.query.play === 'true')) {                             // 1325
+            reqRange = {                                                                                               // 1326
+              start: start,                                                                                            // 1326
+              end: end                                                                                                 // 1326
             };                                                                                                         //
-            if (isNaN(start) && !isNaN(end)) {                                                                         // 1228
-              reqRange.start = end - take;                                                                             // 1229
-              reqRange.end = end;                                                                                      // 1229
+            if (isNaN(start) && !isNaN(end)) {                                                                         // 1327
+              reqRange.start = end - take;                                                                             // 1328
+              reqRange.end = end;                                                                                      // 1328
             }                                                                                                          //
-            if (!isNaN(start) && isNaN(end)) {                                                                         // 1231
-              reqRange.start = start;                                                                                  // 1232
-              reqRange.end = start + take;                                                                             // 1232
+            if (!isNaN(start) && isNaN(end)) {                                                                         // 1330
+              reqRange.start = start;                                                                                  // 1331
+              reqRange.end = start + take;                                                                             // 1331
             }                                                                                                          //
-            if ((start + take) >= fileRef.size) {                                                                      // 1235
-              reqRange.end = fileRef.size - 1;                                                                         // 1235
+            if ((start + take) >= fileRef.size) {                                                                      // 1334
+              reqRange.end = fileRef.size - 1;                                                                         // 1334
             }                                                                                                          //
-            http.response.setHeader('Pragma', 'private');                                                              // 1227
-            http.response.setHeader('Expires', new Date(+(new Date) + 1000 * 32400).toUTCString());                    // 1227
-            http.response.setHeader('Cache-Control', 'private, maxage=10800, s-maxage=32400');                         // 1227
-            if (self.strict && (reqRange.start >= (fileRef.size - 1) || reqRange.end > (fileRef.size - 1))) {          // 1240
-              responseType = '416';                                                                                    // 1241
+            http.response.setHeader('Pragma', 'private');                                                              // 1326
+            http.response.setHeader('Expires', new Date(+(new Date) + 1000 * 32400).toUTCString());                    // 1326
+            http.response.setHeader('Cache-Control', 'private, maxage=10800, s-maxage=32400');                         // 1326
+            if (self.strict && (reqRange.start >= (fileRef.size - 1) || reqRange.end > (fileRef.size - 1))) {          // 1339
+              responseType = '416';                                                                                    // 1340
             } else {                                                                                                   //
-              responseType = '206';                                                                                    // 1243
+              responseType = '206';                                                                                    // 1342
             }                                                                                                          //
           } else {                                                                                                     //
-            http.response.setHeader('Cache-Control', self.cacheControl);                                               // 1245
-            responseType = '200';                                                                                      // 1245
+            http.response.setHeader('Cache-Control', self.cacheControl);                                               // 1344
+            responseType = '200';                                                                                      // 1344
           }                                                                                                            //
-          streamErrorHandler = function(error) {                                                                       // 1190
-            http.response.writeHead(500);                                                                              // 1249
+          streamErrorHandler = function(error) {                                                                       // 1290
+            http.response.writeHead(500);                                                                              // 1348
             return http.response.end(error.toString());                                                                //
           };                                                                                                           //
-          switch (responseType) {                                                                                      // 1252
-            case '400':                                                                                                // 1252
-              if (self.debug) {                                                                                        // 1254
-                console.warn("[Meteor.Files] [download(" + fileRef.path + ", " + version + ")] [400] Content-Length mismatch!");
+          switch (responseType) {                                                                                      // 1351
+            case '400':                                                                                                // 1351
+              if (self.debug) {                                                                                        // 1353
+                console.warn("[FilesCollection] [download(" + fileRef.path + ", " + version + ")] [400] Content-Length mismatch!");
               }                                                                                                        //
-              text = 'Content-Length mismatch!';                                                                       // 1254
-              http.response.writeHead(400, {                                                                           // 1254
-                'Content-Type': 'text/plain',                                                                          // 1257
-                'Cache-Control': 'no-cache',                                                                           // 1257
-                'Content-Length': text.length                                                                          // 1257
+              text = 'Content-Length mismatch!';                                                                       // 1353
+              http.response.writeHead(400, {                                                                           // 1353
+                'Content-Type': 'text/plain',                                                                          // 1356
+                'Cache-Control': 'no-cache',                                                                           // 1356
+                'Content-Length': text.length                                                                          // 1356
               });                                                                                                      //
-              http.response.end(text);                                                                                 // 1254
-              break;                                                                                                   // 1261
-            case '404':                                                                                                // 1252
-              return self._404(http);                                                                                  // 1263
-              break;                                                                                                   // 1264
-            case '416':                                                                                                // 1252
-              if (self.debug) {                                                                                        // 1266
-                console.info("[Meteor.Files] [download(" + fileRef.path + ", " + version + ")] [416] Content-Range is not specified!");
+              http.response.end(text);                                                                                 // 1353
+              break;                                                                                                   // 1360
+            case '404':                                                                                                // 1351
+              return self._404(http);                                                                                  // 1362
+              break;                                                                                                   // 1363
+            case '416':                                                                                                // 1351
+              if (self.debug) {                                                                                        // 1365
+                console.info("[FilesCollection] [download(" + fileRef.path + ", " + version + ")] [416] Content-Range is not specified!");
               }                                                                                                        //
-              http.response.writeHead(416, {                                                                           // 1266
-                'Content-Range': "bytes */" + fileRef.size                                                             // 1268
+              http.response.writeHead(416, {                                                                           // 1365
+                'Content-Range': "bytes */" + fileRef.size                                                             // 1367
               });                                                                                                      //
-              http.response.end();                                                                                     // 1266
-              break;                                                                                                   // 1270
-            case '200':                                                                                                // 1252
-              if (self.debug) {                                                                                        // 1272
-                console.info("[Meteor.Files] [download(" + fileRef.path + ", " + version + ")] [200]");                // 1272
+              http.response.end();                                                                                     // 1365
+              break;                                                                                                   // 1369
+            case '200':                                                                                                // 1351
+              if (self.debug) {                                                                                        // 1371
+                console.info("[FilesCollection] [download(" + fileRef.path + ", " + version + ")] [200]");             // 1371
               }                                                                                                        //
-              stream = fs.createReadStream(fileRef.path);                                                              // 1272
-              stream.on('open', (function(_this) {                                                                     // 1272
+              stream = fs.createReadStream(fileRef.path);                                                              // 1371
+              stream.on('open', (function(_this) {                                                                     // 1371
                 return function() {                                                                                    //
-                  http.response.writeHead(200);                                                                        // 1275
-                  if (self.throttle) {                                                                                 // 1276
+                  http.response.writeHead(200);                                                                        // 1374
+                  if (self.throttle) {                                                                                 // 1375
                     return stream.pipe(new Throttle({                                                                  //
-                      bps: self.throttle,                                                                              // 1277
-                      chunksize: self.chunkSize                                                                        // 1277
+                      bps: self.throttle,                                                                              // 1376
+                      chunksize: self.chunkSize                                                                        // 1376
                     })).pipe(http.response);                                                                           //
                   } else {                                                                                             //
                     return stream.pipe(http.response);                                                                 //
                   }                                                                                                    //
                 };                                                                                                     //
               })(this)).on('error', streamErrorHandler);                                                               //
-              break;                                                                                                   // 1282
-            case '206':                                                                                                // 1252
-              if (self.debug) {                                                                                        // 1284
-                console.info("[Meteor.Files] [download(" + fileRef.path + ", " + version + ")] [206]");                // 1284
+              break;                                                                                                   // 1381
+            case '206':                                                                                                // 1351
+              if (self.debug) {                                                                                        // 1383
+                console.info("[FilesCollection] [download(" + fileRef.path + ", " + version + ")] [206]");             // 1383
               }                                                                                                        //
               http.response.setHeader('Content-Range', "bytes " + reqRange.start + "-" + reqRange.end + "/" + fileRef.size);
-              http.response.setHeader('Trailer', 'expires');                                                           // 1284
-              http.response.setHeader('Transfer-Encoding', 'chunked');                                                 // 1284
-              if (self.throttle) {                                                                                     // 1288
-                stream = fs.createReadStream(fileRef.path, {                                                           // 1289
-                  start: reqRange.start,                                                                               // 1289
-                  end: reqRange.end                                                                                    // 1289
+              http.response.setHeader('Trailer', 'expires');                                                           // 1383
+              http.response.setHeader('Transfer-Encoding', 'chunked');                                                 // 1383
+              if (self.throttle) {                                                                                     // 1387
+                stream = fs.createReadStream(fileRef.path, {                                                           // 1388
+                  start: reqRange.start,                                                                               // 1388
+                  end: reqRange.end                                                                                    // 1388
                 });                                                                                                    //
-                stream.on('open', function() {                                                                         // 1289
+                stream.on('open', function() {                                                                         // 1388
                   return http.response.writeHead(206);                                                                 //
                 }).on('error', streamErrorHandler).on('end', function() {                                              //
                   return http.response.end();                                                                          //
                 }).pipe(new Throttle({                                                                                 //
-                  bps: self.throttle,                                                                                  // 1293
-                  chunksize: self.chunkSize                                                                            // 1293
+                  bps: self.throttle,                                                                                  // 1392
+                  chunksize: self.chunkSize                                                                            // 1392
                 })).pipe(http.response);                                                                               //
               } else {                                                                                                 //
-                stream = fs.createReadStream(fileRef.path, {                                                           // 1296
-                  start: reqRange.start,                                                                               // 1296
-                  end: reqRange.end                                                                                    // 1296
+                stream = fs.createReadStream(fileRef.path, {                                                           // 1395
+                  start: reqRange.start,                                                                               // 1395
+                  end: reqRange.end                                                                                    // 1395
                 });                                                                                                    //
-                stream.on('open', function() {                                                                         // 1296
+                stream.on('open', function() {                                                                         // 1395
                   return http.response.writeHead(206);                                                                 //
                 }).on('error', streamErrorHandler).on('end', function() {                                              //
                   return http.response.end();                                                                          //
                 }).pipe(http.response);                                                                                //
               }                                                                                                        //
-              break;                                                                                                   // 1301
-          }                                                                                                            // 1252
+              break;                                                                                                   // 1400
+          }                                                                                                            // 1351
         });                                                                                                            //
       });                                                                                                              //
     } else {                                                                                                           //
-      return this._404(http);                                                                                          // 1303
+      return this._404(http);                                                                                          // 1403
     }                                                                                                                  //
   } : void 0;                                                                                                          //
                                                                                                                        //
-                                                                                                                       // 1306
-  /*                                                                                                                   // 1306
-  @isomorphic                                                                                                          //
-  @function                                                                                                            //
-  @class Meteor.Files                                                                                                  //
+                                                                                                                       // 1406
+  /*                                                                                                                   // 1406
+  @locus Anywhere                                                                                                      //
+  @memberOf FilesCollection                                                                                            //
   @name link                                                                                                           //
   @param {Object}   fileRef - File reference object                                                                    //
   @param {String}   version - [Optional] Version of file you would like to request                                     //
   @param {Boolean}  pub     - [Optional] is file located in publicity available folder?                                //
-  @description Returns URL to file                                                                                     //
+  @summary Returns downloadable URL                                                                                    //
   @returns {String} Empty string returned in case if file not found in DB                                              //
    */                                                                                                                  //
                                                                                                                        //
-  Files.prototype.link = function(fileRef, version, pub) {                                                             // 101
+  FilesCollection.prototype.link = function(fileRef, version, pub) {                                                   // 96
     if (version == null) {                                                                                             //
       version = 'original';                                                                                            //
     }                                                                                                                  //
     if (pub == null) {                                                                                                 //
       pub = false;                                                                                                     //
     }                                                                                                                  //
-    if (this.debug) {                                                                                                  // 1318
-      console.info('[Meteor.Files] [link()]');                                                                         // 1318
+    if (this.debug) {                                                                                                  // 1417
+      console.info('[FilesCollection] [link()]');                                                                      // 1417
     }                                                                                                                  //
-    if (_.isString(fileRef)) {                                                                                         // 1319
-      version = fileRef;                                                                                               // 1320
-      fileRef = null;                                                                                                  // 1320
+    if (_.isString(fileRef)) {                                                                                         // 1418
+      version = fileRef;                                                                                               // 1419
+      fileRef = null;                                                                                                  // 1419
     }                                                                                                                  //
-    if (!fileRef && !this.currentFile) {                                                                               // 1322
-      return '';                                                                                                       // 1322
+    if (!fileRef && !this.currentFile) {                                                                               // 1421
+      return '';                                                                                                       // 1421
     }                                                                                                                  //
-    return formatFleURL(fileRef || this.currentFile, version, this["public"]);                                         // 1323
+    return formatFleURL(fileRef || this.currentFile, version, this["public"]);                                         // 1422
   };                                                                                                                   //
                                                                                                                        //
-  return Files;                                                                                                        //
+  return FilesCollection;                                                                                              //
                                                                                                                        //
 })();                                                                                                                  //
                                                                                                                        //
-                                                                                                                       // 1325
-/*                                                                                                                     // 1325
-@isomorphic                                                                                                            //
+                                                                                                                       // 1424
+/*                                                                                                                     // 1424
+@locus Anywhere                                                                                                        //
 @private                                                                                                               //
-@function                                                                                                              //
 @name formatFleURL                                                                                                     //
 @param {Object} fileRef - File reference object                                                                        //
 @param {String} version - [Optional] Version of file you would like build URL for                                      //
 @param {Boolean}  pub   - [Optional] is file located in publicity available folder?                                    //
-@description Returns formatted URL for file                                                                            //
+@summary Returns formatted URL for file                                                                                //
 @returns {String}                                                                                                      //
  */                                                                                                                    //
                                                                                                                        //
-formatFleURL = function(fileRef, version, pub) {                                                                       // 1
-  var ext, ref, root;                                                                                                  // 1337
+formatFleURL = function(fileRef, version) {                                                                            // 1
+  var ext, ref, root;                                                                                                  // 1435
   if (version == null) {                                                                                               //
     version = 'original';                                                                                              //
   }                                                                                                                    //
-  if (pub == null) {                                                                                                   //
-    pub = false;                                                                                                       //
-  }                                                                                                                    //
-  root = __meteor_runtime_config__.ROOT_URL.replace(/\/+$/, '');                                                       // 1337
-  if ((fileRef != null ? (ref = fileRef.extension) != null ? ref.length : void 0 : void 0) > 0) {                      // 1339
-    ext = '.' + fileRef.extension;                                                                                     // 1340
+  root = __meteor_runtime_config__.ROOT_URL.replace(/\/+$/, '');                                                       // 1435
+  if ((fileRef != null ? (ref = fileRef.extension) != null ? ref.length : void 0 : void 0) > 0) {                      // 1437
+    ext = '.' + fileRef.extension;                                                                                     // 1438
   } else {                                                                                                             //
-    ext = '';                                                                                                          // 1342
+    ext = '';                                                                                                          // 1440
   }                                                                                                                    //
-  if (pub) {                                                                                                           // 1344
-    return root + (fileRef._downloadRoute + "/" + version + "-" + fileRef._id + ext);                                  // 1345
+  if (fileRef["public"] === true) {                                                                                    // 1442
+    return root + (version === 'original' ? fileRef._downloadRoute + "/" + fileRef._id + ext : fileRef._downloadRoute + "/" + version + "-" + fileRef._id + ext);
   } else {                                                                                                             //
     return root + (fileRef._downloadRoute + "/" + fileRef._collectionName + "/" + fileRef._id + "/" + version + "/" + fileRef._id + ext);
   }                                                                                                                    //
-};                                                                                                                     // 1336
+};                                                                                                                     // 1434
                                                                                                                        //
-if (Meteor.isClient) {                                                                                                 // 1349
-                                                                                                                       // 1350
-  /*                                                                                                                   // 1350
-  @client                                                                                                              //
+if (Meteor.isClient) {                                                                                                 // 1447
+                                                                                                                       // 1448
+  /*                                                                                                                   // 1448
+  @locus Client                                                                                                        //
   @TemplateHelper                                                                                                      //
   @name fileURL                                                                                                        //
   @param {Object} fileRef - File reference object                                                                      //
   @param {String} version - [Optional] Version of file you would like to request                                       //
-  @description Get download URL for file by fileRef, even without subscription                                         //
+  @summary Get download URL for file by fileRef, even without subscription                                             //
   @example {{fileURL fileRef}}                                                                                         //
   @returns {String}                                                                                                    //
    */                                                                                                                  //
-  Template.registerHelper('fileURL', function(fileRef, version) {                                                      // 1350
-    var ref;                                                                                                           // 1361
-    if (!fileRef || !_.isObject(fileRef)) {                                                                            // 1361
-      return void 0;                                                                                                   // 1361
+  Template.registerHelper('fileURL', function(fileRef, version) {                                                      // 1448
+    if (!fileRef || !_.isObject(fileRef)) {                                                                            // 1459
+      return void 0;                                                                                                   // 1459
     }                                                                                                                  //
-    version = !version || !_.isString(version) ? 'original' : version;                                                 // 1361
-    if (fileRef._id) {                                                                                                 // 1363
-      return formatFleURL(fileRef, version, !!~((ref = fileRef._storagePath) != null ? typeof ref.indexOf === "function" ? ref.indexOf('../web.browser') : void 0 : void 0));
+    version = !version || !_.isString(version) ? 'original' : version;                                                 // 1459
+    if (fileRef._id) {                                                                                                 // 1461
+      return formatFleURL(fileRef, version);                                                                           // 1462
     } else {                                                                                                           //
-      return '';                                                                                                       // 1366
+      return '';                                                                                                       // 1464
     }                                                                                                                  //
   });                                                                                                                  //
 }                                                                                                                      //
+                                                                                                                       //
+Meteor.Files = FilesCollection;                                                                                        // 1
                                                                                                                        //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1925,7 +2098,12 @@ if (Meteor.isClient) {                                                          
 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
-Package['ostrio:files'] = {};
+(function (pkg, symbols) {
+  for (var s in symbols)
+    (s in pkg) || (pkg[s] = symbols[s]);
+})(Package['ostrio:files'] = {}, {
+  FilesCollection: FilesCollection
+});
 
 })();
 

@@ -3,10 +3,12 @@
   "arch": "os",
   "load": [
     {
+      "sourceMap": "packages/underscore.js.map",
       "path": "packages/underscore.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/meteor/node_modules",
+      "sourceMap": "packages/meteor.js.map",
       "path": "packages/meteor.js"
     },
     {
@@ -17,19 +19,12 @@
     },
     {
       "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
+      "sourceMap": "packages/npm-mongo.js.map",
       "path": "packages/npm-mongo.js"
     },
     {
-      "path": "packages/base64.js"
-    },
-    {
-      "path": "packages/ejson.js"
-    },
-    {
-      "path": "packages/check.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/babel-compiler/node_modules",
+      "sourceMap": "packages/babel-compiler.js.map",
       "path": "packages/babel-compiler.js"
     },
     {
@@ -37,31 +32,47 @@
       "path": "packages/ecmascript.js"
     },
     {
+      "sourceMap": "packages/base64.js.map",
+      "path": "packages/base64.js"
+    },
+    {
+      "sourceMap": "packages/ejson.js.map",
+      "path": "packages/ejson.js"
+    },
+    {
+      "sourceMap": "packages/id-map.js.map",
       "path": "packages/id-map.js"
     },
     {
+      "sourceMap": "packages/ordered-dict.js.map",
       "path": "packages/ordered-dict.js"
     },
     {
+      "sourceMap": "packages/tracker.js.map",
       "path": "packages/tracker.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/modules-runtime/node_modules",
+      "sourceMap": "packages/modules-runtime.js.map",
       "path": "packages/modules-runtime.js"
     },
     {
+      "sourceMap": "packages/modules.js.map",
       "path": "packages/modules.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "sourceMap": "packages/promise.js.map",
       "path": "packages/promise.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime/node_modules",
+      "sourceMap": "packages/ecmascript-runtime.js.map",
       "path": "packages/ecmascript-runtime.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
+      "sourceMap": "packages/babel-runtime.js.map",
       "path": "packages/babel-runtime.js"
     },
     {
@@ -69,68 +80,90 @@
       "path": "packages/random.js"
     },
     {
+      "sourceMap": "packages/mongo-id.js.map",
       "path": "packages/mongo-id.js"
     },
     {
+      "sourceMap": "packages/diff-sequence.js.map",
       "path": "packages/diff-sequence.js"
     },
     {
+      "sourceMap": "packages/geojson-utils.js.map",
       "path": "packages/geojson-utils.js"
     },
     {
+      "sourceMap": "packages/minimongo.js.map",
       "path": "packages/minimongo.js"
     },
     {
+      "sourceMap": "packages/check.js.map",
+      "path": "packages/check.js"
+    },
+    {
+      "sourceMap": "packages/retry.js.map",
       "path": "packages/retry.js"
     },
     {
+      "sourceMap": "packages/ddp-common.js.map",
       "path": "packages/ddp-common.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
+      "sourceMap": "packages/ddp-client.js.map",
       "path": "packages/ddp-client.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
+      "sourceMap": "packages/logging.js.map",
       "path": "packages/logging.js"
     },
     {
+      "sourceMap": "packages/routepolicy.js.map",
       "path": "packages/routepolicy.js"
     },
     {
       "path": "packages/deps.js"
     },
     {
+      "sourceMap": "packages/htmljs.js.map",
       "path": "packages/htmljs.js"
     },
     {
+      "sourceMap": "packages/html-tools.js.map",
       "path": "packages/html-tools.js"
     },
     {
+      "sourceMap": "packages/blaze-tools.js.map",
       "path": "packages/blaze-tools.js"
     },
     {
+      "sourceMap": "packages/spacebars-compiler.js.map",
       "path": "packages/spacebars-compiler.js"
     },
     {
       "path": "packages/jquery.js"
     },
     {
+      "sourceMap": "packages/observe-sequence.js.map",
       "path": "packages/observe-sequence.js"
     },
     {
+      "sourceMap": "packages/reactive-var.js.map",
       "path": "packages/reactive-var.js"
     },
     {
+      "sourceMap": "packages/blaze.js.map",
       "path": "packages/blaze.js"
     },
     {
+      "sourceMap": "packages/spacebars.js.map",
       "path": "packages/spacebars.js"
     },
     {
       "path": "packages/ui.js"
     },
     {
+      "sourceMap": "packages/boilerplate-generator.js.map",
       "path": "packages/boilerplate-generator.js",
       "assets": {
         "boilerplate_web.browser.html": "assets/packages/boilerplate-generator/boilerplate_web.browser.html",
@@ -150,6 +183,7 @@
       "path": "packages/audit-argument-checks.js"
     },
     {
+      "sourceMap": "packages/callback-hook.js.map",
       "path": "packages/callback-hook.js"
     },
     {
@@ -165,6 +199,7 @@
       "path": "packages/allow-deny.js"
     },
     {
+      "sourceMap": "packages/binary-heap.js.map",
       "path": "packages/binary-heap.js"
     },
     {
@@ -191,18 +226,23 @@
       "path": "packages/templating.js"
     },
     {
+      "sourceMap": "packages/iron_core.js.map",
       "path": "packages/iron_core.js"
     },
     {
+      "sourceMap": "packages/iron_dynamic-template.js.map",
       "path": "packages/iron_dynamic-template.js"
     },
     {
+      "sourceMap": "packages/iron_layout.js.map",
       "path": "packages/iron_layout.js"
     },
     {
+      "sourceMap": "packages/iron_url.js.map",
       "path": "packages/iron_url.js"
     },
     {
+      "sourceMap": "packages/iron_middleware-stack.js.map",
       "path": "packages/iron_middleware-stack.js"
     },
     {
@@ -213,36 +253,21 @@
       "path": "packages/reactive-dict.js"
     },
     {
+      "sourceMap": "packages/iron_controller.js.map",
       "path": "packages/iron_controller.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/iron_router/node_modules",
+      "sourceMap": "packages/iron_router.js.map",
       "path": "packages/iron_router.js"
     },
     {
+      "sourceMap": "packages/sha.js.map",
       "path": "packages/sha.js"
     },
     {
       "sourceMap": "packages/ostrio_cookies.js.map",
       "path": "packages/ostrio_cookies.js"
-    },
-    {
-      "path": "packages/aldeed_simple-schema.js"
-    },
-    {
-      "path": "packages/raix_eventemitter.js"
-    },
-    {
-      "path": "packages/aldeed_collection2-core.js"
-    },
-    {
-      "path": "packages/aldeed_schema-index.js"
-    },
-    {
-      "path": "packages/aldeed_schema-deny.js"
-    },
-    {
-      "path": "packages/aldeed_collection2.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
@@ -253,9 +278,34 @@
       "path": "packages/ostrio_iron-router-title.js"
     },
     {
+      "sourceMap": "packages/meteorhacks_subs-manager.js.map",
       "path": "packages/meteorhacks_subs-manager.js"
     },
     {
+      "sourceMap": "packages/aldeed_simple-schema.js.map",
+      "path": "packages/aldeed_simple-schema.js"
+    },
+    {
+      "sourceMap": "packages/raix_eventemitter.js.map",
+      "path": "packages/raix_eventemitter.js"
+    },
+    {
+      "sourceMap": "packages/aldeed_collection2-core.js.map",
+      "path": "packages/aldeed_collection2-core.js"
+    },
+    {
+      "sourceMap": "packages/aldeed_schema-index.js.map",
+      "path": "packages/aldeed_schema-index.js"
+    },
+    {
+      "sourceMap": "packages/aldeed_schema-deny.js.map",
+      "path": "packages/aldeed_schema-deny.js"
+    },
+    {
+      "path": "packages/aldeed_collection2.js"
+    },
+    {
+      "sourceMap": "packages/momentjs_moment.js.map",
       "path": "packages/momentjs_moment.js"
     },
     {
@@ -268,6 +318,7 @@
       "path": "packages/fortawesome_fontawesome.js"
     },
     {
+      "sourceMap": "packages/mrt_filesize.js.map",
       "path": "packages/mrt_filesize.js"
     },
     {
@@ -275,6 +326,19 @@
     },
     {
       "path": "packages/standard-minifier-js.js"
+    },
+    {
+      "sourceMap": "packages/markdown.js.map",
+      "path": "packages/markdown.js"
+    },
+    {
+      "sourceMap": "packages/perak_markdown.js.map",
+      "path": "packages/perak_markdown.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/simple_highlight.js/node_modules",
+      "sourceMap": "packages/simple_highlight.js.js.map",
+      "path": "packages/simple_highlight.js.js"
     },
     {
       "path": "packages/livedata.js"
@@ -286,12 +350,7 @@
       "path": "packages/launch-screen.js"
     },
     {
-      "path": "packages/ostrio_iron-router-helper-class.js",
-      "assets": {
-        "iron-router-helper-class.coffee": "assets/packages/ostrio_iron-router-helper-class/iron-router-helper-class.coffee"
-      }
-    },
-    {
+      "sourceMap": "packages/autoupdate.js.map",
       "path": "packages/autoupdate.js"
     },
     {
@@ -315,6 +374,10 @@
     {
       "sourceMap": "app/lib/routes.coffee.js.map",
       "path": "app/lib/routes.coffee.js"
+    },
+    {
+      "sourceMap": "app/server/methods.coffee.js.map",
+      "path": "app/server/methods.coffee.js"
     },
     {
       "sourceMap": "packages/mdg_validation-error.js.map",

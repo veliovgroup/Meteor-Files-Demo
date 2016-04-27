@@ -4,8 +4,6 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
-var check = Package.check.check;
-var Match = Package.check.Match;
 
 /* Package-scope variables */
 var Babel, BabelCompiler;
@@ -20,23 +18,10 @@ var Babel, BabelCompiler;
                                                                               //
 var meteorBabel = Npm.require('meteor-babel');
 
-function validateExtraFeatures(extraFeatures) {
-  if (extraFeatures) {
-    check(extraFeatures, {
-      // Modify options to enable React/JSX syntax.
-      react: Match.Optional(Boolean),
-      // Improve compatibility in older versions of Internet Explorer.
-      jscript: Match.Optional(Boolean)
-    });
-  }
-}
-
 /**
  * Returns a new object containing default options appropriate for
  */
 function getDefaultOptions(extraFeatures) {
-  validateExtraFeatures(extraFeatures);
-
   // See https://github.com/meteor/babel/blob/master/options.js for more
   // information about what the default options are.
   var options = meteorBabel.getDefaultOptions(extraFeatures);
@@ -51,7 +36,8 @@ function getDefaultOptions(extraFeatures) {
 Babel = {
   getDefaultOptions: getDefaultOptions,
 
-  validateExtraFeatures: validateExtraFeatures,
+  // Deprecated, now a no-op.
+  validateExtraFeatures: Function.prototype,
 
   compile: function (source, options) {
     options = options || getDefaultOptions();
@@ -86,7 +72,6 @@ Babel = {
  * @param {Object} extraFeatures The same object that getDefaultOptions takes
  */
 BabelCompiler = function BabelCompiler(extraFeatures) {
-  Babel.validateExtraFeatures(extraFeatures);
   this.extraFeatures = extraFeatures;
 };
 
@@ -195,3 +180,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=babel-compiler.js.map

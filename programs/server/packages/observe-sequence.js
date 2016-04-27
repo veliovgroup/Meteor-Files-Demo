@@ -385,3 +385,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=observe-sequence.js.map

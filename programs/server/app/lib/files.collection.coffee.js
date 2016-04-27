@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////
                                                                        //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-Collections.files = new Meteor.Files({                                 // 13
+Collections.files = new FilesCollection({                              // 13
   debug: false,                                                        // 14
   throttle: false,                                                     // 14
   chunkSize: 1024 * 1024,                                              // 14
@@ -35,27 +35,18 @@ Collections.files = new Meteor.Files({                                 // 13
 });                                                                    //
                                                                        //
 if (Meteor.isServer) {                                                 // 59
-  Collections.files.collection.deny({                                  // 60
-    insert: function() {                                               // 61
-      return true;                                                     //
-    },                                                                 //
-    update: function() {                                               // 61
-      return true;                                                     //
-    },                                                                 //
-    remove: function() {                                               // 61
-      return true;                                                     //
-    }                                                                  //
-  });                                                                  //
+  Collections.files.denyClient();                                      // 60
+  Collections.files.collection.attachSchema(Collections.files.schema);
   Collections.files.collection._ensureIndex({                          // 60
-    'meta.expireAt': 1                                                 // 65
+    'meta.expireAt': 1                                                 // 62
   }, {                                                                 //
-    expireAfterSeconds: 0,                                             // 65
-    background: true                                                   // 65
+    expireAfterSeconds: 0,                                             // 62
+    background: true                                                   // 62
   });                                                                  //
   Meteor.setInterval(function() {                                      // 60
     return Collections.files.remove({                                  //
-      'meta.expireAt': {                                               // 88
-        $lte: new Date((+(new Date)) + 120000)                         // 88
+      'meta.expireAt': {                                               // 85
+        $lte: new Date((+(new Date)) + 120000)                         // 85
       }                                                                //
     });                                                                //
   }, 120000);                                                          //
@@ -63,29 +54,31 @@ if (Meteor.isServer) {                                                 // 59
     if (take == null) {                                                //
       take = 50;                                                       //
     }                                                                  //
-    check(take, Number);                                               // 93
+    check(take, Number);                                               // 90
     return Collections.files.collection.find({}, {                     //
-      limit: take,                                                     // 96
-      sort: {                                                          // 96
-        'meta.created_at': -1                                          // 97
+      limit: take,                                                     // 93
+      sort: {                                                          // 93
+        'meta.created_at': -1                                          // 94
       },                                                               //
-      fields: {                                                        // 96
-        _id: 1,                                                        // 99
-        name: 1,                                                       // 99
-        size: 1,                                                       // 99
-        meta: 1,                                                       // 99
-        isVideo: 1,                                                    // 99
-        isAudio: 1,                                                    // 99
-        isImage: 1                                                     // 99
+      fields: {                                                        // 93
+        _id: 1,                                                        // 96
+        name: 1,                                                       // 96
+        size: 1,                                                       // 96
+        meta: 1,                                                       // 96
+        isVideo: 1,                                                    // 96
+        isAudio: 1,                                                    // 96
+        isImage: 1,                                                    // 96
+        isText: 1,                                                     // 96
+        extension: 1                                                   // 96
       }                                                                //
     });                                                                //
   });                                                                  //
   Meteor.publish('file', function(_id) {                               // 60
-    check(_id, String);                                                // 108
+    check(_id, String);                                                // 107
     return Collections.files.collection.find(_id);                     //
   });                                                                  //
   Meteor.methods({                                                     // 60
-    'filesLenght': function() {                                        // 112
+    'filesLenght': function() {                                        // 111
       return Collections.files.collection.find({}).count();            //
     }                                                                  //
   });                                                                  //

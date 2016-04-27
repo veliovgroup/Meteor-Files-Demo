@@ -693,3 +693,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=aldeed_collection2-core.js.map

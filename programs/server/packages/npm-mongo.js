@@ -35,3 +35,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=npm-mongo.js.map

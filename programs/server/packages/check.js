@@ -4,98 +4,16 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
+var meteorInstall = Package.modules.meteorInstall;
+var Buffer = Package.modules.Buffer;
+var process = Package.modules.process;
 var _ = Package.underscore._;
 var EJSON = Package.ejson.EJSON;
 
 /* Package-scope variables */
-var jQuery, check, Match;
+var check, Match;
 
-(function(){
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                       //
-// packages/check/jquery.js                                                                              //
-//                                                                                                       //
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                         //
-// Copy of jQuery.isPlainObject for the server side from jQuery v1.11.2.
-
-var class2type = {};
-
-var toString = class2type.toString;
-
-var hasOwn = class2type.hasOwnProperty;
-
-var support = {};
-
-// Populate the class2type map
-_.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(name, i) {
-  class2type[ "[object " + name + "]" ] = name.toLowerCase();
-});
-
-jQuery = {
-  isPlainObject: function( obj ) {
-    var key;
-
-    // Must be an Object.
-    // Because of IE, we also have to check the presence of the constructor property.
-    // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
-      return false;
-    }
-
-    try {
-      // Not own constructor property must be Object
-      if ( obj.constructor &&
-        !hasOwn.call(obj, "constructor") &&
-        !hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
-        return false;
-      }
-    } catch ( e ) {
-      // IE8,9 Will throw exceptions on certain host objects #9897
-      return false;
-    }
-
-    // Support: IE<9
-    // Handle iteration over inherited properties before own properties.
-    if ( support.ownLast ) {
-      for ( key in obj ) {
-        return hasOwn.call( obj, key );
-      }
-    }
-
-    // Own properties are enumerated firstly, so to speed up,
-    // if last one is own, then all properties are own.
-    for ( key in obj ) {}
-
-    return key === undefined || hasOwn.call( obj, key );
-  },
-
-  type: function( obj ) {
-    if ( obj == null ) {
-      return obj + "";
-    }
-    return typeof obj === "object" || typeof obj === "function" ?
-      class2type[ toString.call(obj) ] || "object" :
-      typeof obj;
-  },
-
-  isWindow: function( obj ) {
-    /* jshint eqeqeq: false */
-    return obj != null && obj == obj.window;
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}).call(this);
-
-
-
-
-
-
-(function(){
+var require = meteorInstall({"node_modules":{"meteor":{"check":{"match.js":["./isPlainObject.js",function(require,exports){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                       //
@@ -109,6 +27,7 @@ jQuery = {
 //    - heterogenous arrays
 
 var currentArgumentChecker = new Meteor.EnvironmentVariable;
+var isPlainObject = require("./isPlainObject.js").isPlainObject;
 
 /**
  * @summary Check that a value matches a [pattern](#matchpatterns).
@@ -121,7 +40,7 @@ var currentArgumentChecker = new Meteor.EnvironmentVariable;
  * @param {MatchPattern} pattern The pattern to match
  * `value` against
  */
-check = function (value, pattern) {
+var check = exports.check = function (value, pattern) {
   // Record that check got called, if somebody cared.
   //
   // We use getOrNullIfOutsideFiber so that it's OK to call check()
@@ -148,7 +67,7 @@ check = function (value, pattern) {
  * @namespace Match
  * @summary The namespace for all Match types and methods.
  */
-Match = {
+var Match = exports.Match = {
   Optional: function (pattern) {
     return new Optional(pattern);
   },
@@ -220,7 +139,9 @@ var Optional = function (pattern) {
   this.pattern = pattern;
 };
 
-var Maybe = Optional;
+var Maybe = function (pattern) {
+  this.pattern = pattern;
+};
 
 var OneOf = function (choices) {
   if (_.isEmpty(choices))
@@ -423,7 +344,7 @@ var testSubtree = function (value, pattern) {
       path: ""
     };
   }
-  if (! jQuery.isPlainObject(value)) {
+  if (! isPlainObject(value)) {
     return {
       message: "Expected plain object",
       path: ""
@@ -560,17 +481,95 @@ var _prependPath = function (key, base) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}).call(this);
+}],"isPlainObject.js":function(require,exports){
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                       //
+// packages/check/isPlainObject.js                                                                       //
+//                                                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                         //
+// Copy of jQuery.isPlainObject for the server side from jQuery v1.11.2.
+
+var class2type = {};
+
+var toString = class2type.toString;
+
+var hasOwn = class2type.hasOwnProperty;
+
+var support = {};
+
+// Populate the class2type map
+_.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(name, i) {
+  class2type[ "[object " + name + "]" ] = name.toLowerCase();
+});
+
+function type( obj ) {
+  if ( obj == null ) {
+    return obj + "";
+  }
+  return typeof obj === "object" || typeof obj === "function" ?
+    class2type[ toString.call(obj) ] || "object" :
+    typeof obj;
+}
+
+function isWindow( obj ) {
+  /* jshint eqeqeq: false */
+  return obj != null && obj == obj.window;
+}
+
+exports.isPlainObject = function( obj ) {
+  var key;
+
+  // Must be an Object.
+  // Because of IE, we also have to check the presence of the constructor property.
+  // Make sure that DOM nodes and window objects don't pass through, as well
+  if ( !obj || type(obj) !== "object" || obj.nodeType || isWindow( obj ) ) {
+    return false;
+  }
+
+  try {
+    // Not own constructor property must be Object
+    if ( obj.constructor &&
+         !hasOwn.call(obj, "constructor") &&
+         !hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
+      return false;
+    }
+  } catch ( e ) {
+    // IE8,9 Will throw exceptions on certain host objects #9897
+    return false;
+  }
+
+  // Support: IE<9
+  // Handle iteration over inherited properties before own properties.
+  if ( support.ownLast ) {
+    for ( key in obj ) {
+      return hasOwn.call( obj, key );
+    }
+  }
+
+  // Own properties are enumerated firstly, so to speed up,
+  // if last one is own, then all properties are own.
+  for ( key in obj ) {}
+
+  return key === undefined || hasOwn.call( obj, key );
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}}}}},{"extensions":[".js",".json"]});
+var exports = require("./node_modules/meteor/check/match.js");
 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
 (function (pkg, symbols) {
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.check = {}, {
+})(Package.check = exports, {
   check: check,
   Match: Match
 });
 
 })();
+
+//# sourceMappingURL=check.js.map

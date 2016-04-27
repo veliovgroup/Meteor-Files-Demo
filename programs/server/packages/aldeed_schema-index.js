@@ -99,3 +99,5 @@ if (typeof Package === 'undefined') Package = {};
 Package['aldeed:schema-index'] = {};
 
 })();
+
+//# sourceMappingURL=aldeed_schema-index.js.map
