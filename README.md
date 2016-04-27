@@ -22,11 +22,12 @@ Deploy to Heroku
 git clone https://github.com/VeliovGroup/Meteor-Files-Demo.git
 cd Meteor-Files-Demo
 heroku create <your-app-name> --buildpack https://github.com/heroku/heroku-buildpack-nodejs
-# This command will output something like: https://<your-app-name>.herokuapp.com/ | https://git.heroku.com/<your-app-name>.git
-
+# This command will output something like: 
+# - https://<your-app-name>.herokuapp.com/
+# - https://git.heroku.com/<your-app-name>.git
 heroku git:remote -a <your-app-name>
 
-# Copy this: `https://<your-app-name>.herokuapp.com`, note use only `https://` protocol!
+# Copy this: `https://<your-app-name>.herokuapp.com`, note `http(s)://` protocol
 heroku config:set ROOT_URL=https://<your-app-name>.herokuapp.com
 # To have a MongoDB, you can create one at https://mlab.com/
 # After creating MongoDB instance create user, then copy URL to your MongoDB
@@ -38,6 +39,6 @@ git commit -m "initial"
 git push heroku master
 ```
  - Go to `https://<your-app-name>.herokuapp.com`
- - If you app has errors:
+ - If your app has errors:
    * Check logs: `heroku logs --tail`
    * Try to run locally and debug: `heroku run node`
