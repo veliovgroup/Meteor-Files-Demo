@@ -41,21 +41,6 @@ Deploy to Heroku
 ```shell
 git clone https://github.com/VeliovGroup/Meteor-Files-Demo.git
 cd Meteor-Files-Demo
-# Available architectures:
-# os.osx.x86_64
-# os.linux.x86_64
-# os.linux.x86_32
-# os.windows.x86_32
-meteor build ../build-<your-app-name> --architecture os.linux.x86_64
-cd ../build-<your-app-name>
-tar xzf <name-of-archive> -C ./
-cd bundle/
-cp -Rf * ../
-cd ../
-rm -Rf bundle/
-rm -Rf <name-of-archive>
-touch Procfile
-echo "web: node main.js" > Procfile
 
 heroku create <your-app-name> --buildpack https://github.com/heroku/heroku-buildpack-nodejs
 # This command will output something like: 
