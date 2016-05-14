@@ -2,76 +2,22 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "fb34d833e4aa93191a9ef182b23c96d95b0ab9ce.js",
+      "path": "ec9440967bccd8b1bd380ad021d9a5aff2790495.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/fb34d833e4aa93191a9ef182b23c96d95b0ab9ce.js?meteor_js_resource=true",
-      "size": 732537,
-      "hash": "fb34d833e4aa93191a9ef182b23c96d95b0ab9ce"
+      "url": "/ec9440967bccd8b1bd380ad021d9a5aff2790495.js?meteor_js_resource=true",
+      "size": 720442,
+      "hash": "ec9440967bccd8b1bd380ad021d9a5aff2790495"
     },
     {
-      "path": "74b4bd9608d350145d16e2dfc9e7ac3131617a5b.css",
+      "path": "2ac3316803382d3bef980330fbe4cbab21f832a5.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/74b4bd9608d350145d16e2dfc9e7ac3131617a5b.css?meteor_css_resource=true",
-      "size": 153064,
-      "hash": "74b4bd9608d350145d16e2dfc9e7ac3131617a5b"
-    },
-    {
-      "path": "packages/ostrio_files/worker.js",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/ostrio_files/worker.js",
-      "size": 1016,
-      "hash": "10daa6a791385709be5103ef304ca5e10b0d4a81"
-    },
-    {
-      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
-      "size": 20127,
-      "hash": "86b6f62b7853e67d3e635f6512a5a5efc58ea3c3"
-    },
-    {
-      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.svg",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.svg",
-      "size": 108738,
-      "hash": "de51a8494180a6db074af2dee2383f0a363c5b08"
-    },
-    {
-      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.ttf",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.ttf",
-      "size": 45404,
-      "hash": "44bc1850f570972267b169ae18f1cb06b611ffa2"
-    },
-    {
-      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff",
-      "size": 23424,
-      "hash": "278e49a86e634da6f2a02f3b47dd9d2a8f26210f"
-    },
-    {
-      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff2",
-      "where": "client",
-      "type": "asset",
-      "cacheable": false,
-      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff2",
-      "size": 18028,
-      "hash": "ca35b697d99cae4d1b60f2d60fcd37771987eb07"
+      "url": "/2ac3316803382d3bef980330fbe4cbab21f832a5.css?meteor_css_resource=true",
+      "size": 153535,
+      "hash": "2ac3316803382d3bef980330fbe4cbab21f832a5"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",
@@ -128,13 +74,229 @@
       "hash": "42c179eef588854b5ec151bcf6a3f58aa8b79b11"
     },
     {
-      "path": "app/favicon-128.png",
+      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/favicon-128.png",
-      "size": 20407,
-      "hash": "555fcf08fd540e8514233755d68cb654670fe767"
+      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.eot",
+      "size": 20127,
+      "hash": "86b6f62b7853e67d3e635f6512a5a5efc58ea3c3"
+    },
+    {
+      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.svg",
+      "size": 108738,
+      "hash": "de51a8494180a6db074af2dee2383f0a363c5b08"
+    },
+    {
+      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.ttf",
+      "size": 45404,
+      "hash": "44bc1850f570972267b169ae18f1cb06b611ffa2"
+    },
+    {
+      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff",
+      "size": 23424,
+      "hash": "278e49a86e634da6f2a02f3b47dd9d2a8f26210f"
+    },
+    {
+      "path": "packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/twbs_bootstrap/dist/fonts/glyphicons-halflings-regular.woff2",
+      "size": 18028,
+      "hash": "ca35b697d99cae4d1b60f2d60fcd37771987eb07"
+    },
+    {
+      "path": "packages/ostrio_files/worker.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/ostrio_files/worker.js",
+      "size": 1016,
+      "hash": "53238fc1bf43ee5d1426ba830c8b2ea00deb90bf"
+    },
+    {
+      "path": "app/android-chrome-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-144x144.png",
+      "size": 4477,
+      "hash": "0a90886e79f7855b2a2f8d60d6da6dfc7e56a212"
+    },
+    {
+      "path": "app/android-chrome-192x192.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-192x192.png",
+      "size": 7188,
+      "hash": "f6d785c41ea69ea4f3540d1207ff004b1f1e7d79"
+    },
+    {
+      "path": "app/android-chrome-36x36.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-36x36.png",
+      "size": 816,
+      "hash": "e808ca48ef4560af73efc7fe3686e8b912571cf0"
+    },
+    {
+      "path": "app/android-chrome-48x48.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-48x48.png",
+      "size": 1121,
+      "hash": "0c793ca060fccb9cd8c07223ef1f0e3c2add194b"
+    },
+    {
+      "path": "app/android-chrome-72x72.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-72x72.png",
+      "size": 1865,
+      "hash": "dc0aab64ae96e6e42c70aa1d0aaf12862a76e7c2"
+    },
+    {
+      "path": "app/android-chrome-96x96.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-96x96.png",
+      "size": 2704,
+      "hash": "8de78bb71e31d547224e6cd2fc5837702f042362"
+    },
+    {
+      "path": "app/apple-touch-icon-114x114.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-114x114.png",
+      "size": 3461,
+      "hash": "dd4e19b33d90c88c2121a67512f06a7a8d01f4f6"
+    },
+    {
+      "path": "app/apple-touch-icon-120x120.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-120x120.png",
+      "size": 3585,
+      "hash": "288f602c258d6dd0f39843440dca7c2a5aef170a"
+    },
+    {
+      "path": "app/apple-touch-icon-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-144x144.png",
+      "size": 4910,
+      "hash": "0b85c8605d2eb9a7f8d0340ad30bb3ba989af1ef"
+    },
+    {
+      "path": "app/apple-touch-icon-152x152.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-152x152.png",
+      "size": 5103,
+      "hash": "a5504291087013180ab13b92926b53da04682135"
+    },
+    {
+      "path": "app/apple-touch-icon-180x180.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-180x180.png",
+      "size": 6811,
+      "hash": "dc020bbe2fdda8cb3b55a042b62aec5b46346656"
+    },
+    {
+      "path": "app/apple-touch-icon-57x57.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-57x57.png",
+      "size": 1494,
+      "hash": "844037d32027878d8c3934b80afd8253bd1d9a50"
+    },
+    {
+      "path": "app/apple-touch-icon-60x60.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-60x60.png",
+      "size": 1574,
+      "hash": "36bf2e0cba73d5e0173709dde8195083a5de2df2"
+    },
+    {
+      "path": "app/apple-touch-icon-72x72.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-72x72.png",
+      "size": 2019,
+      "hash": "50aab78cc7e3aa4e28ec2e0b6bf56483328603c2"
+    },
+    {
+      "path": "app/apple-touch-icon-76x76.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-76x76.png",
+      "size": 2107,
+      "hash": "8a81c520d0d2649879f2fa2de7385d9ea2ee0e11"
+    },
+    {
+      "path": "app/apple-touch-icon-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-precomposed.png",
+      "size": 7512,
+      "hash": "a766cf8934891a770eb5cc4ad70684c87641a107"
+    },
+    {
+      "path": "app/apple-touch-icon.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon.png",
+      "size": 6809,
+      "hash": "f11d04eaffb2aba95ed20b4274ee7dea22dbe9ec"
+    },
+    {
+      "path": "app/browserconfig.xml",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/browserconfig.xml",
+      "size": 387,
+      "hash": "b1a8ba03d10f7034ab73e083c5584db22ef7dfd3"
+    },
+    {
+      "path": "app/dnd.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/dnd.png",
+      "size": 934,
+      "hash": "60e04693e5d25919e190f71a4e2e2f9c812bcade"
     },
     {
       "path": "app/favicon-16x16.png",
@@ -142,17 +304,17 @@
       "type": "asset",
       "cacheable": false,
       "url": "/favicon-16x16.png",
-      "size": 880,
-      "hash": "09e00a19aa6e5a827931722d1b26652d4b2a45a1"
+      "size": 479,
+      "hash": "39617461b414c4c7fd252ff261ec8e6344d1f448"
     },
     {
-      "path": "app/favicon-196x196.png",
+      "path": "app/favicon-194x194.png",
       "where": "client",
       "type": "asset",
       "cacheable": false,
-      "url": "/favicon-196x196.png",
-      "size": 44887,
-      "hash": "89a579cb4867ff71a0af5cbcca2aac5d9611045d"
+      "url": "/favicon-194x194.png",
+      "size": 9397,
+      "hash": "6c1a27664c203477d34d52361514a06b8fa5c31f"
     },
     {
       "path": "app/favicon-32x32.png",
@@ -160,8 +322,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/favicon-32x32.png",
-      "size": 2683,
-      "hash": "7e1b1d5ba5a5dd6ae12538759cae6db37e14dd27"
+      "size": 1087,
+      "hash": "b194cbe04688ef52ec93548dea7bbf097d6fe3c0"
     },
     {
       "path": "app/favicon-96x96.png",
@@ -169,8 +331,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/favicon-96x96.png",
-      "size": 13395,
-      "hash": "b6d5505cb3c6694301de2b3c673c3b21a62d2dbf"
+      "size": 3752,
+      "hash": "5cf2a6208eabe8a89d23acbb612f3ea1d51f2aee"
     },
     {
       "path": "app/favicon.ico",
@@ -178,8 +340,26 @@
       "type": "asset",
       "cacheable": false,
       "url": "/favicon.ico",
-      "size": 34494,
-      "hash": "1ef63a23b8fb531495613344f13885e3bfd35458"
+      "size": 15086,
+      "hash": "ef613e389aeb81ec8dfa0123bde73576afabc363"
+    },
+    {
+      "path": "app/logo-bw.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/logo-bw.png",
+      "size": 6806,
+      "hash": "79d01d6cc3644513db1eb780d0dd14e70daf22ef"
+    },
+    {
+      "path": "app/manifest.json",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/manifest.json",
+      "size": 776,
+      "hash": "230fc370c795fd7d6acccf03c9066f6cb07cb35f"
     },
     {
       "path": "app/mstile-144x144.png",
@@ -187,8 +367,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/mstile-144x144.png",
-      "size": 27458,
-      "hash": "cb13f81b8be3ef5fa64eb66f22bb550190ae7342"
+      "size": 5927,
+      "hash": "37ae34a6a189a485aa161361eff2f036eb2faab3"
     },
     {
       "path": "app/mstile-150x150.png",
@@ -196,8 +376,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/mstile-150x150.png",
-      "size": 71162,
-      "hash": "1e214ae614bba98de096ba7ac9b59b34ae308893"
+      "size": 4610,
+      "hash": "48ffb0df52218d73b22ac1e7f25fc81a7751011c"
     },
     {
       "path": "app/mstile-310x150.png",
@@ -205,8 +385,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/mstile-310x150.png",
-      "size": 97106,
-      "hash": "ac57c69ee8d6fb984b0344a361d530743721adb5"
+      "size": 4839,
+      "hash": "3af792fb98a75cbdd611c92a509eb46f9a53547c"
     },
     {
       "path": "app/mstile-310x310.png",
@@ -214,8 +394,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/mstile-310x310.png",
-      "size": 155708,
-      "hash": "5c0a89e5569cd266e0eb2933e29e5bfe103d6a6f"
+      "size": 8754,
+      "hash": "f8bfac16681ea1c84e715016a9f9ed596663fe4b"
     },
     {
       "path": "app/mstile-70x70.png",
@@ -223,8 +403,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/mstile-70x70.png",
-      "size": 20407,
-      "hash": "555fcf08fd540e8514233755d68cb654670fe767"
+      "size": 3497,
+      "hash": "ad5ab371445bd6f5ffe8294d10b04ad1b630a595"
     },
     {
       "path": "app/robots.txt",
@@ -236,10 +416,19 @@
       "hash": "6dfc427fe73587726797f47c981e2f24f5dcc61f"
     },
     {
+      "path": "app/safari-pinned-tab.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/safari-pinned-tab.svg",
+      "size": 14108,
+      "hash": "d2897f149a9f3cfba6b117760d3dafc7d4829436"
+    },
+    {
       "path": "head.html",
       "where": "internal",
       "type": "head",
-      "hash": "4c8c96b012adc9ea4bebdbed2da199e87734133f"
+      "hash": "73fce2c2d5ea7565a5cd772a06bae985ee69a0d7"
     }
   ]
 }

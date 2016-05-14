@@ -214,68 +214,58 @@
       "path": "packages/session.js"
     },
     {
-      "path": "packages/fourseven_scss.js"
+      "path": "packages/standard-minifier-css.js"
     },
     {
-      "path": "packages/mquandalle_jade.js"
+      "path": "packages/standard-minifier-js.js"
     },
     {
       "path": "packages/coffeescript.js"
     },
     {
+      "sourceMap": "packages/markdown.js.map",
+      "path": "packages/markdown.js"
+    },
+    {
+      "sourceMap": "packages/url.js.map",
+      "path": "packages/url.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/http/node_modules",
+      "sourceMap": "packages/http.js.map",
+      "path": "packages/http.js"
+    },
+    {
+      "path": "packages/fortawesome_fontawesome.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/simple_highlight.js/node_modules",
+      "sourceMap": "packages/simple_highlight.js.js.map",
+      "path": "packages/simple_highlight.js.js"
+    },
+    {
+      "path": "packages/mquandalle_jade.js"
+    },
+    {
+      "path": "packages/fourseven_scss.js"
+    },
+    {
+      "sourceMap": "packages/momentjs_moment.js.map",
+      "path": "packages/momentjs_moment.js"
+    },
+    {
+      "path": "packages/twbs_bootstrap.js"
+    },
+    {
       "path": "packages/templating.js"
     },
     {
-      "sourceMap": "packages/iron_core.js.map",
-      "path": "packages/iron_core.js"
+      "sourceMap": "packages/perak_markdown.js.map",
+      "path": "packages/perak_markdown.js"
     },
     {
-      "sourceMap": "packages/iron_dynamic-template.js.map",
-      "path": "packages/iron_dynamic-template.js"
-    },
-    {
-      "sourceMap": "packages/iron_layout.js.map",
-      "path": "packages/iron_layout.js"
-    },
-    {
-      "sourceMap": "packages/iron_url.js.map",
-      "path": "packages/iron_url.js"
-    },
-    {
-      "sourceMap": "packages/iron_middleware-stack.js.map",
-      "path": "packages/iron_middleware-stack.js"
-    },
-    {
-      "path": "packages/iron_location.js"
-    },
-    {
-      "sourceMap": "packages/reactive-dict.js.map",
-      "path": "packages/reactive-dict.js"
-    },
-    {
-      "sourceMap": "packages/iron_controller.js.map",
-      "path": "packages/iron_controller.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/iron_router/node_modules",
-      "sourceMap": "packages/iron_router.js.map",
-      "path": "packages/iron_router.js"
-    },
-    {
-      "sourceMap": "packages/sha.js.map",
-      "path": "packages/sha.js"
-    },
-    {
-      "sourceMap": "packages/ostrio_cookies.js.map",
-      "path": "packages/ostrio_cookies.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
-      "sourceMap": "packages/ostrio_files.js.map",
-      "path": "packages/ostrio_files.js"
-    },
-    {
-      "path": "packages/ostrio_iron-router-title.js"
+      "sourceMap": "packages/mrt_filesize.js.map",
+      "path": "packages/mrt_filesize.js"
     },
     {
       "sourceMap": "packages/meteorhacks_subs-manager.js.map",
@@ -305,40 +295,45 @@
       "path": "packages/aldeed_collection2.js"
     },
     {
-      "sourceMap": "packages/momentjs_moment.js.map",
-      "path": "packages/momentjs_moment.js"
+      "node_modules": "npm/node_modules/meteor/cfs_graphicsmagick/node_modules",
+      "sourceMap": "packages/cfs_graphicsmagick.js.map",
+      "path": "packages/cfs_graphicsmagick.js"
+    },
+    {
+      "sourceMap": "packages/sha.js.map",
+      "path": "packages/sha.js"
+    },
+    {
+      "sourceMap": "packages/ostrio_cookies.js.map",
+      "path": "packages/ostrio_cookies.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
+      "sourceMap": "packages/ostrio_files.js.map",
+      "path": "packages/ostrio_files.js"
+    },
+    {
+      "sourceMap": "packages/reactive-dict.js.map",
+      "path": "packages/reactive-dict.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ostrio_flow-router-extra/node_modules",
+      "sourceMap": "packages/ostrio_flow-router-extra.js.map",
+      "path": "packages/ostrio_flow-router-extra.js"
+    },
+    {
+      "path": "packages/ostrio_flow-router-title.js"
+    },
+    {
+      "sourceMap": "packages/zimme_active-route.js.map",
+      "path": "packages/zimme_active-route.js"
+    },
+    {
+      "sourceMap": "packages/arillo_flow-router-helpers.js.map",
+      "path": "packages/arillo_flow-router-helpers.js"
     },
     {
       "path": "packages/ostrio_templatehelpers.js"
-    },
-    {
-      "path": "packages/twbs_bootstrap.js"
-    },
-    {
-      "path": "packages/fortawesome_fontawesome.js"
-    },
-    {
-      "sourceMap": "packages/mrt_filesize.js.map",
-      "path": "packages/mrt_filesize.js"
-    },
-    {
-      "path": "packages/standard-minifier-css.js"
-    },
-    {
-      "path": "packages/standard-minifier-js.js"
-    },
-    {
-      "sourceMap": "packages/markdown.js.map",
-      "path": "packages/markdown.js"
-    },
-    {
-      "sourceMap": "packages/perak_markdown.js.map",
-      "path": "packages/perak_markdown.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/simple_highlight.js/node_modules",
-      "sourceMap": "packages/simple_highlight.js.js.map",
-      "path": "packages/simple_highlight.js.js"
     },
     {
       "path": "packages/livedata.js"
@@ -357,27 +352,23 @@
       "path": "packages/reload.js"
     },
     {
+      "node_modules": "npm/node_modules",
       "path": "packages/global-imports.js"
     },
     {
+      "node_modules": "npm/node_modules",
       "sourceMap": "app/lib/__compatability/__globals.coffee.js.map",
       "path": "app/lib/__compatability/__globals.coffee.js"
     },
     {
+      "node_modules": "npm/node_modules",
       "sourceMap": "app/lib/files.collection.coffee.js.map",
       "path": "app/lib/files.collection.coffee.js"
     },
     {
-      "sourceMap": "app/lib/router.coffee.js.map",
-      "path": "app/lib/router.coffee.js"
-    },
-    {
-      "sourceMap": "app/lib/routes.coffee.js.map",
-      "path": "app/lib/routes.coffee.js"
-    },
-    {
-      "sourceMap": "app/server/methods.coffee.js.map",
-      "path": "app/server/methods.coffee.js"
+      "node_modules": "npm/node_modules",
+      "sourceMap": "app/server/image-processing.coffee.js.map",
+      "path": "app/server/image-processing.coffee.js"
     },
     {
       "sourceMap": "packages/mdg_validation-error.js.map",
