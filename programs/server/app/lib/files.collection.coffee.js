@@ -98,18 +98,22 @@ if (Meteor.isServer) {                                                 // 47
                       }, function(error, xml) {                        //
                         return bound(function() {                      //
                           var upd;                                     // 67
-                          upd = {                                      // 67
-                            $set: {}                                   // 67
-                          };                                           //
-                          upd['$set']["versions." + version + ".meta.pipeFrom"] = xml.url;
-                          upd['$set']["versions." + version + ".meta.pipePath"] = stat.path;
-                          Collections.files.collection.update({        // 67
-                            _id: fileRef._id                           // 70
-                          }, upd, function(error) {                    //
-                            if (error) {                               // 71
-                              console.error(error);                    // 72
-                            }                                          //
-                          });                                          //
+                          if (error) {                                 // 67
+                            console.error(error);                      // 68
+                          } else if (xml) {                            //
+                            upd = {                                    // 70
+                              $set: {}                                 // 70
+                            };                                         //
+                            upd['$set']["versions." + version + ".meta.pipeFrom"] = xml.url;
+                            upd['$set']["versions." + version + ".meta.pipePath"] = stat.path;
+                            Collections.files.collection.update({      // 70
+                              _id: fileRef._id                         // 73
+                            }, upd, function(error) {                  //
+                              if (error) {                             // 74
+                                console.error(error);                  // 75
+                              }                                        //
+                            });                                        //
+                          }                                            //
                         });                                            //
                       });                                              //
                     }                                                  //
@@ -123,30 +127,30 @@ if (Meteor.isServer) {                                                 // 47
       };                                                               //
     }                                                                  //
     return Meteor.setTimeout(function() {                              //
-      if (!!~fileRef.type.indexOf('image')) {                          // 82
+      if (!!~fileRef.type.indexOf('image')) {                          // 85
         _app.createThumbnails(Collections.files, fileRef, function(fileRef) {
-          if (useDropBox) {                                            // 84
+          if (useDropBox) {                                            // 87
             sendToDB(Collections.files.collection.findOne(fileRef._id));
           }                                                            //
         });                                                            //
       } else {                                                         //
-        if (useDropBox) {                                              // 88
-          sendToDB(fileRef);                                           // 89
+        if (useDropBox) {                                              // 91
+          sendToDB(fileRef);                                           // 92
         }                                                              //
       }                                                                //
     }, 1024);                                                          //
   });                                                                  //
-  if (useDropBox) {                                                    // 97
-    _origRemove = Collections.files.remove;                            // 100
-    Collections.files.remove = function(search) {                      // 100
-      var cursor;                                                      // 102
-      cursor = this.collection.find(search);                           // 102
-      cursor.forEach(function(fileRef) {                               // 102
-        var ref2;                                                      // 104
+  if (useDropBox) {                                                    // 100
+    _origRemove = Collections.files.remove;                            // 103
+    Collections.files.remove = function(search) {                      // 103
+      var cursor;                                                      // 105
+      cursor = this.collection.find(search);                           // 105
+      cursor.forEach(function(fileRef) {                               // 105
+        var ref2;                                                      // 107
         if (fileRef != null ? (ref2 = fileRef.meta) != null ? ref2.pipePath : void 0 : void 0) {
           return client.remove(fileRef.meta.pipePath, function(error) {
-            if (error) {                                               // 106
-              console.error(error);                                    // 107
+            if (error) {                                               // 109
+              console.error(error);                                    // 110
             }                                                          //
           });                                                          //
         }                                                              //
@@ -156,8 +160,8 @@ if (Meteor.isServer) {                                                 // 47
   }                                                                    //
   Meteor.setInterval(function() {                                      // 48
     return Collections.files.remove({                                  //
-      'meta.expireAt': {                                               // 119
-        $lte: new Date((+(new Date)) + 120000)                         // 119
+      'meta.expireAt': {                                               // 122
+        $lte: new Date((+(new Date)) + 120000)                         // 122
       }                                                                //
     }, _app.NOOP);                                                     //
   }, 120000);                                                          //
@@ -165,34 +169,34 @@ if (Meteor.isServer) {                                                 // 47
     if (take == null) {                                                //
       take = 50;                                                       //
     }                                                                  //
-    check(take, Number);                                               // 124
+    check(take, Number);                                               // 127
     return Collections.files.collection.find({}, {                     //
-      limit: take,                                                     // 127
-      sort: {                                                          // 127
-        'meta.created_at': -1                                          // 128
+      limit: take,                                                     // 130
+      sort: {                                                          // 130
+        'meta.created_at': -1                                          // 131
       },                                                               //
-      fields: {                                                        // 127
-        _id: 1,                                                        // 130
-        name: 1,                                                       // 130
-        size: 1,                                                       // 130
-        meta: 1,                                                       // 130
-        isText: 1,                                                     // 130
-        isJSON: 1,                                                     // 130
-        isVideo: 1,                                                    // 130
-        isAudio: 1,                                                    // 130
-        isImage: 1,                                                    // 130
-        extension: 1,                                                  // 130
-        _collectionName: 1,                                            // 130
-        _downloadRoute: 1                                              // 130
+      fields: {                                                        // 130
+        _id: 1,                                                        // 133
+        name: 1,                                                       // 133
+        size: 1,                                                       // 133
+        meta: 1,                                                       // 133
+        isText: 1,                                                     // 133
+        isJSON: 1,                                                     // 133
+        isVideo: 1,                                                    // 133
+        isAudio: 1,                                                    // 133
+        isImage: 1,                                                    // 133
+        extension: 1,                                                  // 133
+        _collectionName: 1,                                            // 133
+        _downloadRoute: 1                                              // 133
       }                                                                //
     });                                                                //
   });                                                                  //
   Meteor.publish('file', function(_id) {                               // 48
-    check(_id, String);                                                // 144
+    check(_id, String);                                                // 147
     return Collections.files.collection.find(_id);                     //
   });                                                                  //
   Meteor.methods({                                                     // 48
-    'filesLenght': function() {                                        // 148
+    'filesLenght': function() {                                        // 151
       return Collections.files.collection.find({}).count();            //
     }                                                                  //
   });                                                                  //
