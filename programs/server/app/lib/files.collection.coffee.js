@@ -78,79 +78,126 @@ if (Meteor.isServer) {                                                 // 47
   Collections.files.denyClient();                                      // 48
   Collections.files.collection.attachSchema(Collections.files.schema);
   Collections.files.on('afterUpload', function(fileRef) {              // 48
-    var sendToDB;                                                      // 52
+    var makeUrl, readFile, sendToDB, writeToDB;                        // 52
     if (useDropBox) {                                                  // 52
-      sendToDB = function(fileRef) {                                   // 53
-        _.each(fileRef.versions, function(vRef, version) {             // 54
-          fs.readFile(vRef.path, function(error, data) {               // 55
-            return bound(function() {                                  //
-              if (error) {                                             // 56
-                console.error(error);                                  // 57
+      makeUrl = function(stat, fileRef, version, triesUrl) {           // 53
+        if (triesUrl == null) {                                        //
+          triesUrl = 0;                                                //
+        }                                                              //
+        client.makeUrl(stat.path, {                                    // 54
+          long: true,                                                  // 54
+          downloadHack: true                                           // 54
+        }, function(error, xml) {                                      //
+          return bound(function() {                                    //
+            var upd;                                                   // 56
+            if (error) {                                               // 56
+              if (triesUrl < 10) {                                     // 57
+                Meteor.setTimeout(function() {                         // 58
+                  return makeUrl(stat, fileRef, version, ++triesUrl);  //
+                }, 2048);                                              //
               } else {                                                 //
-                client.writeFile(fileRef._id + "-" + version + "." + fileRef.extension, data, function(error, stat) {
-                  return bound(function() {                            //
-                    if (error) {                                       // 61
-                      console.error(error);                            // 62
-                    } else {                                           //
-                      client.makeUrl(stat.path, {                      // 65
-                        long: true,                                    // 65
-                        downloadHack: true                             // 65
-                      }, function(error, xml) {                        //
-                        return bound(function() {                      //
-                          var upd;                                     // 67
-                          if (error) {                                 // 67
-                            console.error(error);                      // 68
-                          } else if (xml) {                            //
-                            upd = {                                    // 70
-                              $set: {}                                 // 70
-                            };                                         //
-                            upd['$set']["versions." + version + ".meta.pipeFrom"] = xml.url;
-                            upd['$set']["versions." + version + ".meta.pipePath"] = stat.path;
-                            Collections.files.collection.update({      // 70
-                              _id: fileRef._id                         // 73
-                            }, upd, function(error) {                  //
-                              if (error) {                             // 74
-                                console.error(error);                  // 75
-                              }                                        //
-                            });                                        //
-                          }                                            //
-                        });                                            //
-                      });                                              //
-                    }                                                  //
-                  });                                                  //
+                console.error(error, {                                 // 62
+                  triesUrl: triesUrl                                   // 62
                 });                                                    //
               }                                                        //
-            });                                                        //
+            } else if (xml) {                                          //
+              upd = {                                                  // 64
+                $set: {}                                               // 64
+              };                                                       //
+              upd['$set']["versions." + version + ".meta.pipeFrom"] = xml.url;
+              upd['$set']["versions." + version + ".meta.pipePath"] = stat.path;
+              Collections.files.collection.update({                    // 64
+                _id: fileRef._id                                       // 67
+              }, upd, function(error) {                                //
+                if (error) {                                           // 68
+                  console.error(error);                                // 69
+                } else {                                               //
+                  Collections.files.unlink(Collections.files.collection.findOne(fileRef._id), version);
+                }                                                      //
+              });                                                      //
+            } else {                                                   //
+              if (triesUrl < 10) {                                     // 74
+                Meteor.setTimeout(function() {                         // 75
+                  return makeUrl(stat, fileRef, version, ++triesUrl);  //
+                }, 2048);                                              //
+              } else {                                                 //
+                console.error("client.makeUrl doesn't returns xml", {  // 79
+                  triesUrl: triesUrl                                   // 79
+                });                                                    //
+              }                                                        //
+            }                                                          //
           });                                                          //
         });                                                            //
-        Collections.files.unlink(fileRef);                             // 54
+      };                                                               //
+      writeToDB = function(fileRef, version, data, triesSend) {        // 53
+        if (triesSend == null) {                                       //
+          triesSend = 0;                                               //
+        }                                                              //
+        client.writeFile(fileRef._id + "-" + version + "." + fileRef.extension, data, function(error, stat) {
+          return bound(function() {                                    //
+            if (error) {                                               // 85
+              if (triesSend < 10) {                                    // 86
+                Meteor.setTimeout(function() {                         // 87
+                  return writeToDB(fileRef, version, data, ++triesSend);
+                }, 2048);                                              //
+              } else {                                                 //
+                console.error(error, {                                 // 91
+                  triesSend: triesSend                                 // 91
+                });                                                    //
+              }                                                        //
+            } else {                                                   //
+              makeUrl(stat, fileRef, version);                         // 94
+            }                                                          //
+          });                                                          //
+        });                                                            //
+      };                                                               //
+      readFile = function(fileRef, vRef, version, triesRead) {         // 53
+        if (triesRead == null) {                                       //
+          triesRead = 0;                                               //
+        }                                                              //
+        fs.readFile(vRef.path, function(error, data) {                 // 99
+          return bound(function() {                                    //
+            if (error) {                                               // 100
+              if (triesRead < 10) {                                    // 101
+                readFile(fileRef, vRef, version, ++triesRead);         // 102
+              } else {                                                 //
+                console.error(error);                                  // 104
+              }                                                        //
+            } else {                                                   //
+              writeToDB(fileRef, version, data);                       // 107
+            }                                                          //
+          });                                                          //
+        });                                                            //
+      };                                                               //
+      sendToDB = function(fileRef) {                                   // 53
+        _.each(fileRef.versions, function(vRef, version) {             // 112
+          readFile(fileRef, vRef, version);                            // 113
+        });                                                            //
       };                                                               //
     }                                                                  //
-    return Meteor.setTimeout(function() {                              //
-      if (!!~fileRef.type.indexOf('image')) {                          // 85
-        _app.createThumbnails(Collections.files, fileRef, function(fileRef) {
-          if (useDropBox) {                                            // 87
-            sendToDB(Collections.files.collection.findOne(fileRef._id));
-          }                                                            //
-        });                                                            //
-      } else {                                                         //
-        if (useDropBox) {                                              // 91
-          sendToDB(fileRef);                                           // 92
+    if (!!~fileRef.type.indexOf('image')) {                            // 117
+      _app.createThumbnails(Collections.files, fileRef, function(fileRef) {
+        if (useDropBox) {                                              // 119
+          sendToDB(Collections.files.collection.findOne(fileRef._id));
         }                                                              //
+      });                                                              //
+    } else {                                                           //
+      if (useDropBox) {                                                // 123
+        sendToDB(fileRef);                                             // 124
       }                                                                //
-    }, 1024);                                                          //
+    }                                                                  //
   });                                                                  //
-  if (useDropBox) {                                                    // 100
-    _origRemove = Collections.files.remove;                            // 103
-    Collections.files.remove = function(search) {                      // 103
-      var cursor;                                                      // 105
-      cursor = this.collection.find(search);                           // 105
-      cursor.forEach(function(fileRef) {                               // 105
-        var ref2;                                                      // 107
+  if (useDropBox) {                                                    // 131
+    _origRemove = Collections.files.remove;                            // 134
+    Collections.files.remove = function(search) {                      // 134
+      var cursor;                                                      // 136
+      cursor = this.collection.find(search);                           // 136
+      cursor.forEach(function(fileRef) {                               // 136
+        var ref2;                                                      // 138
         if (fileRef != null ? (ref2 = fileRef.meta) != null ? ref2.pipePath : void 0 : void 0) {
           return client.remove(fileRef.meta.pipePath, function(error) {
-            if (error) {                                               // 109
-              console.error(error);                                    // 110
+            if (error) {                                               // 140
+              console.error(error);                                    // 141
             }                                                          //
           });                                                          //
         }                                                              //
@@ -160,8 +207,8 @@ if (Meteor.isServer) {                                                 // 47
   }                                                                    //
   Meteor.setInterval(function() {                                      // 48
     return Collections.files.remove({                                  //
-      'meta.expireAt': {                                               // 122
-        $lte: new Date((+(new Date)) + 120000)                         // 122
+      'meta.expireAt': {                                               // 153
+        $lte: new Date((+(new Date)) + 120000)                         // 153
       }                                                                //
     }, _app.NOOP);                                                     //
   }, 120000);                                                          //
@@ -169,34 +216,34 @@ if (Meteor.isServer) {                                                 // 47
     if (take == null) {                                                //
       take = 50;                                                       //
     }                                                                  //
-    check(take, Number);                                               // 127
+    check(take, Number);                                               // 158
     return Collections.files.collection.find({}, {                     //
-      limit: take,                                                     // 130
-      sort: {                                                          // 130
-        'meta.created_at': -1                                          // 131
+      limit: take,                                                     // 161
+      sort: {                                                          // 161
+        'meta.created_at': -1                                          // 162
       },                                                               //
-      fields: {                                                        // 130
-        _id: 1,                                                        // 133
-        name: 1,                                                       // 133
-        size: 1,                                                       // 133
-        meta: 1,                                                       // 133
-        isText: 1,                                                     // 133
-        isJSON: 1,                                                     // 133
-        isVideo: 1,                                                    // 133
-        isAudio: 1,                                                    // 133
-        isImage: 1,                                                    // 133
-        extension: 1,                                                  // 133
-        _collectionName: 1,                                            // 133
-        _downloadRoute: 1                                              // 133
+      fields: {                                                        // 161
+        _id: 1,                                                        // 164
+        name: 1,                                                       // 164
+        size: 1,                                                       // 164
+        meta: 1,                                                       // 164
+        isText: 1,                                                     // 164
+        isJSON: 1,                                                     // 164
+        isVideo: 1,                                                    // 164
+        isAudio: 1,                                                    // 164
+        isImage: 1,                                                    // 164
+        extension: 1,                                                  // 164
+        _collectionName: 1,                                            // 164
+        _downloadRoute: 1                                              // 164
       }                                                                //
     });                                                                //
   });                                                                  //
   Meteor.publish('file', function(_id) {                               // 48
-    check(_id, String);                                                // 147
+    check(_id, String);                                                // 178
     return Collections.files.collection.find(_id);                     //
   });                                                                  //
   Meteor.methods({                                                     // 48
-    'filesLenght': function() {                                        // 151
+    'filesLenght': function() {                                        // 182
       return Collections.files.collection.find({}).count();            //
     }                                                                  //
   });                                                                  //
