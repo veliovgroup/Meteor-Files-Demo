@@ -152,6 +152,7 @@ install("ostrio:flow-router-title");
 install("zimme:active-route");
 install("arillo:flow-router-helpers");
 install("ostrio:templatehelpers");
+install("ostrio:cstorage");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");

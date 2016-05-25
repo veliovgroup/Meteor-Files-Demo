@@ -336,6 +336,9 @@
       "path": "packages/ostrio_templatehelpers.js"
     },
     {
+      "path": "packages/ostrio_cstorage.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {
