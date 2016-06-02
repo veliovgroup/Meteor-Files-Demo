@@ -256,7 +256,7 @@ if (Meteor.isServer) {                                                 // 48
     return Collections.files.collection.find(_id);                     // 187
   });                                                                  //
   Meteor.methods({                                                     // 49
-    'filesLenght': function() {                                        // 190
+    filesLenght: function() {                                          // 190
       return Collections.files.collection.find({                       // 191
         $or: [                                                         // 191
           {                                                            //
@@ -271,16 +271,27 @@ if (Meteor.isServer) {                                                 // 48
         ]                                                              //
       }).count();                                                      //
     },                                                                 //
-    'blame': function(_id) {                                           // 190
+    unblame: function(_id) {                                           // 190
       check(_id, String);                                              // 199
       Collections.files.collection.update({                            // 199
         _id: _id                                                       // 200
       }, {                                                             //
         $inc: {                                                        // 200
-          'meta.blamed': 1                                             // 200
+          'meta.blamed': -1                                            // 200
         }                                                              //
       }, _app.NOOP);                                                   //
       return true;                                                     // 201
+    },                                                                 //
+    blame: function(_id) {                                             // 190
+      check(_id, String);                                              // 204
+      Collections.files.collection.update({                            // 204
+        _id: _id                                                       // 205
+      }, {                                                             //
+        $inc: {                                                        // 205
+          'meta.blamed': 1                                             // 205
+        }                                                              //
+      }, _app.NOOP);                                                   //
+      return true;                                                     // 206
     }                                                                  //
   });                                                                  //
 }                                                                      //
