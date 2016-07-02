@@ -13,80 +13,80 @@ bound = Meteor.bindEnvironment(function(callback) {                    // 1
   return callback();                                                   // 1
 });                                                                    // 1
                                                                        //
-fs = Npm.require('fs-extra');                                          // 1
+fs = Npm.require('fs-extra');                                          // 2
                                                                        //
-_app.createThumbnails = function(collection, fileRef, cb) {            // 1
+_app.createThumbnails = function(collection, fileRef, cb) {            // 4
   var finish, isLast;                                                  // 5
-  check(fileRef, Object);                                              // 5
-  isLast = false;                                                      // 5
-  finish = function(error) {                                           // 5
+  check(fileRef, Object);                                              //
+  isLast = false;                                                      //
+  finish = function(error) {                                           //
     return bound(function() {                                          //
-      if (error) {                                                     // 9
-        console.error("[_app.createThumbnails] [finish]", error);      // 10
+      if (error) {                                                     //
+        console.error("[_app.createThumbnails] [finish]", error);      //
       } else {                                                         //
-        if (isLast) {                                                  // 12
-          cb && cb(fileRef);                                           // 13
+        if (isLast) {                                                  //
+          cb && cb(fileRef);                                           //
         }                                                              //
       }                                                                //
       return true;                                                     // 14
     });                                                                //
   };                                                                   //
-  fs.exists(fileRef.path, function(exists) {                           // 5
+  fs.exists(fileRef.path, function(exists) {                           //
     return bound(function() {                                          //
       var image, sizes;                                                // 17
-      if (!exists) {                                                   // 17
+      if (!exists) {                                                   //
         throw Meteor.log.error("File " + fileRef.path + " not found in [createThumbnails] Method");
       }                                                                //
-      image = gm(fileRef.path);                                        // 17
-      sizes = {                                                        // 17
-        preview: {                                                     // 22
-          width: 640                                                   // 23
+      image = gm(fileRef.path);                                        //
+      sizes = {                                                        //
+        preview: {                                                     //
+          width: 400                                                   //
         },                                                             //
-        thumbnail40: {                                                 // 22
-          width: 40,                                                   // 25
-          square: true                                                 // 25
+        thumbnail40: {                                                 //
+          width: 40,                                                   //
+          square: true                                                 //
         }                                                              //
       };                                                               //
       return image.size(function(error, features) {                    //
         return bound(function() {                                      //
           var i;                                                       // 29
-          if (error) {                                                 // 29
+          if (error) {                                                 //
             throw new Meteor.Error("[_app.createThumbnails] [_.each sizes]", error);
           }                                                            //
-          i = 0;                                                       // 29
-          collection.collection.update(fileRef._id, {                  // 29
-            $set: {                                                    // 32
-              'meta.width': features.width,                            // 34
-              'meta.height': features.height                           // 34
+          i = 0;                                                       //
+          collection.collection.update(fileRef._id, {                  //
+            $set: {                                                    //
+              'meta.width': features.width,                            //
+              'meta.height': features.height                           //
             }                                                          //
           }, _app.NOOP);                                               //
           return _.each(sizes, function(size, name) {                  //
             var copyPaste, heightNew, heightRatio, img, path, updateAndSave, widthNew, widthRatio, x, y;
             path = collection.storagePath + "/" + name + "-" + fileRef._id + "." + fileRef.extension;
-            copyPaste = function() {                                   // 39
-              fs.copy(fileRef.path, path, function(error) {            // 42
+            copyPaste = function() {                                   //
+              fs.copy(fileRef.path, path, function(error) {            //
                 return bound(function() {                              //
                   var upd;                                             // 43
-                  if (error) {                                         // 43
+                  if (error) {                                         //
                     console.error("[_app.createThumbnails] [_.each sizes] [fs.copy]", error);
                   } else {                                             //
-                    upd = {                                            // 46
-                      $set: {}                                         // 47
+                    upd = {                                            //
+                      $set: {}                                         //
                     };                                                 //
-                    upd['$set']['versions.' + name] = {                // 46
-                      path: path,                                      // 49
-                      size: fileRef.size,                              // 49
-                      type: fileRef.type,                              // 49
-                      extension: fileRef.extension,                    // 49
-                      meta: {                                          // 49
-                        width: features.width,                         // 54
-                        height: features.height                        // 54
+                    upd['$set']['versions.' + name] = {                //
+                      path: path,                                      //
+                      size: fileRef.size,                              //
+                      type: fileRef.type,                              //
+                      extension: fileRef.extension,                    //
+                      meta: {                                          //
+                        width: features.width,                         //
+                        height: features.height                        //
                       }                                                //
                     };                                                 //
                     collection.collection.update(fileRef._id, upd, function(error) {
-                      ++i;                                             // 57
-                      if (i === Object.keys(sizes).length) {           // 58
-                        isLast = true;                                 // 58
+                      ++i;                                             //
+                      if (i === Object.keys(sizes).length) {           //
+                        isLast = true;                                 //
                       }                                                //
                       return finish(error);                            //
                     });                                                //
@@ -96,36 +96,36 @@ _app.createThumbnails = function(collection, fileRef, cb) {            // 1
             };                                                         //
             if (!!~['jpg', 'jpeg', 'png'].indexOf(fileRef.extension.toLowerCase())) {
               img = gm(fileRef.path).define('filter:support=2').define('jpeg:fancy-upsampling=false').define('jpeg:fancy-upsampling=off').define('png:compression-filter=5').define('png:compression-level=9').define('png:compression-strategy=1').define('png:exclude-chunk=all').noProfile().strip().dither(false).filter('Triangle');
-              updateAndSave = function(error) {                        // 64
+              updateAndSave = function(error) {                        //
                 return bound(function() {                              //
-                  if (error) {                                         // 66
+                  if (error) {                                         //
                     console.error("[_app.createThumbnails] [_.each sizes] [img.resize]", error);
                   } else {                                             //
-                    fs.stat(path, function(err, stat) {                // 69
+                    fs.stat(path, function(err, stat) {                //
                       return bound(function() {                        //
-                        gm(path).size(function(error, imgInfo) {       // 70
+                        gm(path).size(function(error, imgInfo) {       //
                           return bound(function() {                    //
                             var upd;                                   // 71
-                            if (error) {                               // 71
+                            if (error) {                               //
                               console.error("[_app.createThumbnails] [_.each sizes] [img.resize] [fs.stat] [gm(path).size]", error);
                             } else {                                   //
-                              upd = {                                  // 74
-                                $set: {}                               // 74
+                              upd = {                                  //
+                                $set: {}                               //
                               };                                       //
-                              upd['$set']['versions.' + name] = {      // 74
-                                path: path,                            // 76
-                                size: stat.size,                       // 76
-                                type: fileRef.type,                    // 76
-                                extension: fileRef.extension,          // 76
-                                meta: {                                // 76
-                                  width: imgInfo.width,                // 81
-                                  height: imgInfo.height               // 81
+                              upd['$set']['versions.' + name] = {      //
+                                path: path,                            //
+                                size: stat.size,                       //
+                                type: fileRef.type,                    //
+                                extension: fileRef.extension,          //
+                                meta: {                                //
+                                  width: imgInfo.width,                //
+                                  height: imgInfo.height               //
                                 }                                      //
                               };                                       //
                               collection.collection.update(fileRef._id, upd, function(error) {
-                                ++i;                                   // 84
+                                ++i;                                   //
                                 if (i === Object.keys(sizes).length) {
-                                  isLast = true;                       // 85
+                                  isLast = true;                       //
                                 }                                      //
                                 return finish(error);                  //
                               });                                      //
@@ -137,31 +137,31 @@ _app.createThumbnails = function(collection, fileRef, cb) {            // 1
                   }                                                    //
                 });                                                    //
               };                                                       //
-              if (!size.square) {                                      // 91
-                if (features.width > size.width) {                     // 92
+              if (!size.square) {                                      //
+                if (features.width > size.width) {                     //
                   img.resize(size.width).interlace('Line').write(path, updateAndSave);
                 } else {                                               //
-                  copyPaste();                                         // 95
+                  copyPaste();                                         //
                 }                                                      //
               } else {                                                 //
-                x = 0;                                                 // 97
-                y = 0;                                                 // 97
-                widthRatio = features.width / size.width;              // 97
-                heightRatio = features.height / size.width;            // 97
-                widthNew = size.width;                                 // 97
-                heightNew = size.width;                                // 97
-                if (heightRatio < widthRatio) {                        // 105
+                x = 0;                                                 //
+                y = 0;                                                 //
+                widthRatio = features.width / size.width;              //
+                heightRatio = features.height / size.width;            //
+                widthNew = size.width;                                 //
+                heightNew = size.width;                                //
+                if (heightRatio < widthRatio) {                        //
                   widthNew = (size.width * features.width) / features.height;
-                  x = (widthNew - size.width) / 2;                     // 106
+                  x = (widthNew - size.width) / 2;                     //
                 }                                                      //
-                if (heightRatio > widthRatio) {                        // 109
+                if (heightRatio > widthRatio) {                        //
                   heightNew = (size.width * features.height) / features.width;
-                  y = (heightNew - size.width) / 2;                    // 110
+                  y = (heightNew - size.width) / 2;                    //
                 }                                                      //
                 img.resize(widthNew, heightNew).crop(size.width, size.width, x, y).interlace('Line').write(path, updateAndSave);
               }                                                        //
             } else {                                                   //
-              copyPaste();                                             // 115
+              copyPaste();                                             //
             }                                                          //
           });                                                          //
         });                                                            //

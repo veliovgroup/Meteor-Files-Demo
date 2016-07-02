@@ -9,9 +9,9 @@ var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
 
 /* Package-scope variables */
-var exports, Promise;
+var Promise;
 
-var require = meteorInstall({"node_modules":{"meteor":{"promise":{"server.js":["meteor-promise","fibers",function(require,exports){
+var require = meteorInstall({"node_modules":{"meteor":{"promise":{"server.js":["meteor-promise","./common.js","fibers",function(require,exports){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
@@ -19,11 +19,44 @@ var require = meteorInstall({"node_modules":{"meteor":{"promise":{"server.js":["
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
-exports.Promise = require("meteor-promise");
+require("meteor-promise").makeCompatible(
+  exports.Promise = require("./common.js").Promise,
+  // Allow every Promise callback to run in a Fiber drawn from a pool of
+  // reusable Fibers.
+  require("fibers")
+);
 
-// Define MeteorPromise.Fiber so that every Promise callback can run in a
-// Fiber drawn from a pool of reusable Fibers.
-exports.Promise.Fiber = require("fibers");
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}],"common.js":["promise/lib/es6-extensions",function(require,exports){
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                  //
+// packages/promise/common.js                                                                                       //
+//                                                                                                                  //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                    //
+var global = this;
+
+if (typeof global.Promise === "function") {
+  exports.Promise = global.Promise;
+} else {
+  exports.Promise = require("promise/lib/es6-extensions");
+}
+
+exports.Promise.prototype.done = function (onFulfilled, onRejected) {
+  var self = this;
+
+  if (arguments.length > 0) {
+    self = this.then.apply(this, arguments);
+  }
+
+  self.then(null, function (err) {
+    Meteor._setImmediate(function () {
+      throw err;
+    });
+  });
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,12 +69,12 @@ exports.Promise.Fiber = require("fibers");
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 exports.name = "meteor-promise";
-exports.version = "0.6.3";
+exports.version = "0.7.2";
 exports.main = "promise_server.js";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"promise_server.js":["assert","./fiber_pool.js","./promise.js",function(require,exports,module){
+},"promise_server.js":["assert","./fiber_pool.js",function(require,exports){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
@@ -51,26 +84,111 @@ exports.main = "promise_server.js";
                                                                                                                     //
 var assert = require("assert");
 var fiberPool = require("./fiber_pool.js").makePool();
-var MeteorPromise = require("./promise.js");
 
-// Replace MeteorPromise.prototype.then with a wrapper that ensures the
-// onResolved and onRejected callbacks always run in a Fiber.
-var es6PromiseThen = MeteorPromise.prototype.then;
-MeteorPromise.prototype.then = function (onResolved, onRejected) {
-  var Promise = this.constructor;
+exports.makeCompatible = function (Promise, Fiber) {
+  var es6PromiseThen = Promise.prototype.then;
 
-  if (typeof Promise.Fiber === "function") {
-    var fiber = Promise.Fiber.current;
-    var dynamics = cloneFiberOwnProperties(fiber);
-
-    return es6PromiseThen.call(
-      this,
-      wrapCallback(onResolved, Promise, dynamics),
-      wrapCallback(onRejected, Promise, dynamics)
-    );
+  if (typeof Fiber === "function") {
+    Promise.Fiber = Fiber;
   }
 
-  return es6PromiseThen.call(this, onResolved, onRejected);
+  // Replace Promise.prototype.then with a wrapper that ensures the
+  // onResolved and onRejected callbacks always run in a Fiber.
+  Promise.prototype.then = function (onResolved, onRejected) {
+    var P = this.constructor;
+
+    if (typeof P.Fiber === "function") {
+      var fiber = P.Fiber.current;
+      var dynamics = cloneFiberOwnProperties(fiber);
+
+      return es6PromiseThen.call(
+        this,
+        wrapCallback(onResolved, P, dynamics),
+        wrapCallback(onRejected, P, dynamics)
+      );
+    }
+
+    return es6PromiseThen.call(this, onResolved, onRejected);
+  };
+
+  Promise.awaitAll = function (args) {
+    return awaitPromise(this.all(args));
+  };
+
+  Promise.await = function (arg) {
+    return awaitPromise(this.resolve(arg));
+  };
+
+  Promise.prototype.await = function () {
+    return awaitPromise(this);
+  };
+
+  // Yield the current Fiber until the given Promise has been fulfilled.
+  function awaitPromise(promise) {
+    var Promise = promise.constructor;
+    var Fiber = Promise.Fiber;
+
+    assert.strictEqual(
+      typeof Fiber, "function",
+      "Cannot await unless Promise.Fiber is defined"
+    );
+
+    var fiber = Fiber.current;
+
+    assert.ok(
+      fiber instanceof Fiber,
+      "Cannot await without a Fiber"
+    );
+
+    var run = fiber.run;
+    var throwInto = fiber.throwInto;
+
+    if (process.domain) {
+      run = process.domain.bind(run);
+      throwInto = process.domain.bind(throwInto);
+    }
+
+    // The overridden es6PromiseThen function is adequate here because these
+    // two callbacks do not need to run in a Fiber.
+    es6PromiseThen.call(promise, function (result) {
+      tryCatchNextTick(fiber, run, [result]);
+    }, function (error) {
+      tryCatchNextTick(fiber, throwInto, [error]);
+    });
+
+    return Fiber.yield();
+  }
+
+  // Return a wrapper function that returns a Promise for the eventual
+  // result of the original function.
+  Promise.async = function (fn, allowReuseOfCurrentFiber) {
+    var Promise = this;
+    return function () {
+      return Promise.asyncApply(
+        fn, this, arguments,
+        allowReuseOfCurrentFiber
+      );
+    };
+  };
+
+  Promise.asyncApply = function (
+    fn, context, args, allowReuseOfCurrentFiber
+  ) {
+    var Promise = this;
+    var Fiber = Promise.Fiber;
+    var fiber = Fiber && Fiber.current;
+
+    if (fiber && allowReuseOfCurrentFiber) {
+      return this.resolve(fn.apply(context, args));
+    }
+
+    return fiberPool.run({
+      callback: fn,
+      context: context,
+      args: args,
+      dynamics: cloneFiberOwnProperties(fiber)
+    }, Promise);
+  };
 };
 
 function wrapCallback(callback, Promise, dynamics) {
@@ -120,42 +238,6 @@ function shallowClone(value) {
   return value;
 }
 
-// Yield the current Fiber until the given Promise has been fulfilled.
-function awaitPromise(promise) {
-  var Promise = promise.constructor;
-  var Fiber = Promise.Fiber;
-
-  assert.strictEqual(
-    typeof Fiber, "function",
-    "Cannot await unless Promise.Fiber is defined"
-  );
-
-  var fiber = Fiber.current;
-
-  assert.ok(
-    fiber instanceof Fiber,
-    "Cannot await without a Fiber"
-  );
-
-  var run = fiber.run;
-  var throwInto = fiber.throwInto;
-
-  if (process.domain) {
-    run = process.domain.bind(run);
-    throwInto = process.domain.bind(throwInto);
-  }
-
-  // The overridden es6PromiseThen function is adequate here because these
-  // two callbacks do not need to run in a Fiber.
-  es6PromiseThen.call(promise, function (result) {
-    tryCatchNextTick(fiber, run, [result]);
-  }, function (error) {
-    tryCatchNextTick(fiber, throwInto, [error]);
-  });
-
-  return Fiber.yield();
-}
-
 // Invoke method with args against object in a try-catch block,
 // re-throwing any exceptions in the next tick of the event loop, so that
 // they won't get captured/swallowed by the caller.
@@ -169,63 +251,6 @@ function tryCatchNextTick(object, method, args) {
   }
 }
 
-MeteorPromise.awaitAll = function (args) {
-  return awaitPromise(this.all(args));
-};
-
-MeteorPromise.await = function (arg) {
-  return awaitPromise(this.resolve(arg));
-};
-
-MeteorPromise.prototype.await = function () {
-  return awaitPromise(this);
-};
-
-// Return a wrapper function that returns a Promise for the eventual
-// result of the original function.
-MeteorPromise.async = function (fn, allowReuseOfCurrentFiber) {
-  var Promise = this;
-  return function () {
-    return Promise.asyncApply(
-      fn, this, arguments,
-      allowReuseOfCurrentFiber
-    );
-  };
-};
-
-MeteorPromise.asyncApply = function (
-  fn, context, args, allowReuseOfCurrentFiber
-) {
-  var Promise = this;
-  var Fiber = Promise.Fiber;
-  var fiber = Fiber && Fiber.current;
-
-  if (fiber && allowReuseOfCurrentFiber) {
-    return this.resolve(fn.apply(context, args));
-  }
-
-  return fiberPool.run({
-    callback: fn,
-    context: context,
-    args: args,
-    dynamics: cloneFiberOwnProperties(fiber)
-  }, Promise);
-};
-
-Function.prototype.async = function (allowReuseOfCurrentFiber) {
-  return MeteorPromise.async(this, allowReuseOfCurrentFiber);
-};
-
-Function.prototype.asyncApply = function (
-  context, args, allowReuseOfCurrentFiber
-) {
-  return MeteorPromise.asyncApply(
-    this, context, args, allowReuseOfCurrentFiber
-  );
-};
-
-module.exports = exports = MeteorPromise;
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"fiber_pool.js":["assert",function(require,exports){
@@ -237,7 +262,6 @@ module.exports = exports = MeteorPromise;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 var assert = require("assert");
-var undefined;
 
 function FiberPool(targetFiberCount) {
   assert.ok(this instanceof FiberPool);
@@ -268,10 +292,13 @@ function FiberPool(targetFiberCount) {
         }
 
         try {
-          entry.resolve(entry.callback.apply(
+          var result = entry.callback.apply(
             entry.context || null,
             entry.args || []
-          ));
+          );
+
+          setImmediate(entry.resolve.bind(entry, result));
+
         } catch (error) {
           entry.reject(error);
         }
@@ -361,88 +388,121 @@ exports.makePool = function (targetFiberCount) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"promise.js":["promise",function(require,exports,module){
+}]},"promise":{"lib":{"es6-extensions.js":["./core.js",function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/promise.js                                               //
+// node_modules/meteor/promise/node_modules/promise/lib/es6-extensions.js                                           //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
-var hasOwn = Object.prototype.hasOwnProperty;
+'use strict';
 
-var g =
-  typeof global === "object" ? global :
-  typeof window === "object" ? window :
-  typeof self === "object" ? self : this;
+//This file contains the ES6 extensions to the core Promises/A+ API
 
-var GlobalPromise = g.Promise;
-var NpmPromise = require("promise");
+var Promise = require('./core.js');
 
-function copyMethods(target, source) {
-  Object.keys(source).forEach(function (key) {
-    var value = source[key];
-    if (typeof value === "function" &&
-        ! hasOwn.call(target, key)) {
-      target[key] = value;
+module.exports = Promise;
+
+/* Static Functions */
+
+var TRUE = valuePromise(true);
+var FALSE = valuePromise(false);
+var NULL = valuePromise(null);
+var UNDEFINED = valuePromise(undefined);
+var ZERO = valuePromise(0);
+var EMPTYSTRING = valuePromise('');
+
+function valuePromise(value) {
+  var p = new Promise(Promise._61);
+  p._81 = 1;
+  p._65 = value;
+  return p;
+}
+Promise.resolve = function (value) {
+  if (value instanceof Promise) return value;
+
+  if (value === null) return NULL;
+  if (value === undefined) return UNDEFINED;
+  if (value === true) return TRUE;
+  if (value === false) return FALSE;
+  if (value === 0) return ZERO;
+  if (value === '') return EMPTYSTRING;
+
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      var then = value.then;
+      if (typeof then === 'function') {
+        return new Promise(then.bind(value));
+      }
+    } catch (ex) {
+      return new Promise(function (resolve, reject) {
+        reject(ex);
+      });
+    }
+  }
+  return valuePromise(value);
+};
+
+Promise.all = function (arr) {
+  var args = Array.prototype.slice.call(arr);
+
+  return new Promise(function (resolve, reject) {
+    if (args.length === 0) return resolve([]);
+    var remaining = args.length;
+    function res(i, val) {
+      if (val && (typeof val === 'object' || typeof val === 'function')) {
+        if (val instanceof Promise && val.then === Promise.prototype.then) {
+          while (val._81 === 3) {
+            val = val._65;
+          }
+          if (val._81 === 1) return res(i, val._65);
+          if (val._81 === 2) reject(val._65);
+          val.then(function (val) {
+            res(i, val);
+          }, reject);
+          return;
+        } else {
+          var then = val.then;
+          if (typeof then === 'function') {
+            var p = new Promise(then.bind(val));
+            p.then(function (val) {
+              res(i, val);
+            }, reject);
+            return;
+          }
+        }
+      }
+      args[i] = val;
+      if (--remaining === 0) {
+        resolve(args);
+      }
+    }
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i]);
     }
   });
-}
+};
 
-if (typeof GlobalPromise === "function") {
-  copyMethods(GlobalPromise, NpmPromise);
-  copyMethods(GlobalPromise.prototype, NpmPromise.prototype);
-  module.exports = GlobalPromise;
-} else {
-  module.exports = NpmPromise;
-}
+Promise.reject = function (value) {
+  return new Promise(function (resolve, reject) {
+    reject(value);
+  });
+};
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Promise.race = function (values) {
+  return new Promise(function (resolve, reject) {
+    values.forEach(function(value){
+      Promise.resolve(value).then(resolve, reject);
+    });
+  });
+};
 
-}],"node_modules":{"promise":{"package.json":function(require,exports){
+/* Prototype Methods */
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// ../npm/node_modules/meteor-promise/node_modules/promise/package.json                                             //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-exports.name = "promise";
-exports.version = "7.1.1";
-exports.main = "index.js";
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"index.js":["./lib",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/index.js                            //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-module.exports = require('./lib')
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"lib":{"index.js":["./core.js","./done.js","./finally.js","./es6-extensions.js","./node-extensions.js","./synchronous.js",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/index.js                        //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-module.exports = require('./core.js');
-require('./done.js');
-require('./finally.js');
-require('./es6-extensions.js');
-require('./node-extensions.js');
-require('./synchronous.js');
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected);
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -450,7 +510,7 @@ require('./synchronous.js');
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/core.js                         //
+// node_modules/meteor/promise/node_modules/promise/lib/core.js                                                     //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
@@ -670,394 +730,11 @@ function doResolve(fn, promise) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"done.js":["./core.js",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/done.js                         //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-var Promise = require('./core.js');
-
-module.exports = Promise;
-Promise.prototype.done = function (onFulfilled, onRejected) {
-  var self = arguments.length ? this.then.apply(this, arguments) : this;
-  self.then(null, function (err) {
-    setTimeout(function () {
-      throw err;
-    }, 0);
-  });
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"finally.js":["./core.js",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/finally.js                      //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-var Promise = require('./core.js');
-
-module.exports = Promise;
-Promise.prototype['finally'] = function (f) {
-  return this.then(function (value) {
-    return Promise.resolve(f()).then(function () {
-      return value;
-    });
-  }, function (err) {
-    return Promise.resolve(f()).then(function () {
-      throw err;
-    });
-  });
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"es6-extensions.js":["./core.js",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/es6-extensions.js               //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-//This file contains the ES6 extensions to the core Promises/A+ API
-
-var Promise = require('./core.js');
-
-module.exports = Promise;
-
-/* Static Functions */
-
-var TRUE = valuePromise(true);
-var FALSE = valuePromise(false);
-var NULL = valuePromise(null);
-var UNDEFINED = valuePromise(undefined);
-var ZERO = valuePromise(0);
-var EMPTYSTRING = valuePromise('');
-
-function valuePromise(value) {
-  var p = new Promise(Promise._61);
-  p._81 = 1;
-  p._65 = value;
-  return p;
-}
-Promise.resolve = function (value) {
-  if (value instanceof Promise) return value;
-
-  if (value === null) return NULL;
-  if (value === undefined) return UNDEFINED;
-  if (value === true) return TRUE;
-  if (value === false) return FALSE;
-  if (value === 0) return ZERO;
-  if (value === '') return EMPTYSTRING;
-
-  if (typeof value === 'object' || typeof value === 'function') {
-    try {
-      var then = value.then;
-      if (typeof then === 'function') {
-        return new Promise(then.bind(value));
-      }
-    } catch (ex) {
-      return new Promise(function (resolve, reject) {
-        reject(ex);
-      });
-    }
-  }
-  return valuePromise(value);
-};
-
-Promise.all = function (arr) {
-  var args = Array.prototype.slice.call(arr);
-
-  return new Promise(function (resolve, reject) {
-    if (args.length === 0) return resolve([]);
-    var remaining = args.length;
-    function res(i, val) {
-      if (val && (typeof val === 'object' || typeof val === 'function')) {
-        if (val instanceof Promise && val.then === Promise.prototype.then) {
-          while (val._81 === 3) {
-            val = val._65;
-          }
-          if (val._81 === 1) return res(i, val._65);
-          if (val._81 === 2) reject(val._65);
-          val.then(function (val) {
-            res(i, val);
-          }, reject);
-          return;
-        } else {
-          var then = val.then;
-          if (typeof then === 'function') {
-            var p = new Promise(then.bind(val));
-            p.then(function (val) {
-              res(i, val);
-            }, reject);
-            return;
-          }
-        }
-      }
-      args[i] = val;
-      if (--remaining === 0) {
-        resolve(args);
-      }
-    }
-    for (var i = 0; i < args.length; i++) {
-      res(i, args[i]);
-    }
-  });
-};
-
-Promise.reject = function (value) {
-  return new Promise(function (resolve, reject) {
-    reject(value);
-  });
-};
-
-Promise.race = function (values) {
-  return new Promise(function (resolve, reject) {
-    values.forEach(function(value){
-      Promise.resolve(value).then(resolve, reject);
-    });
-  });
-};
-
-/* Prototype Methods */
-
-Promise.prototype['catch'] = function (onRejected) {
-  return this.then(null, onRejected);
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"node-extensions.js":["./core.js","asap",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/node-extensions.js              //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-// This file contains then/promise specific extensions that are only useful
-// for node.js interop
-
-var Promise = require('./core.js');
-var asap = require('asap');
-
-module.exports = Promise;
-
-/* Static Functions */
-
-Promise.denodeify = function (fn, argumentCount) {
-  if (
-    typeof argumentCount === 'number' && argumentCount !== Infinity
-  ) {
-    return denodeifyWithCount(fn, argumentCount);
-  } else {
-    return denodeifyWithoutCount(fn);
-  }
-}
-
-var callbackFn = (
-  'function (err, res) {' +
-  'if (err) { rj(err); } else { rs(res); }' +
-  '}'
-);
-function denodeifyWithCount(fn, argumentCount) {
-  var args = [];
-  for (var i = 0; i < argumentCount; i++) {
-    args.push('a' + i);
-  }
-  var body = [
-    'return function (' + args.join(',') + ') {',
-    'var self = this;',
-    'return new Promise(function (rs, rj) {',
-    'var res = fn.call(',
-    ['self'].concat(args).concat([callbackFn]).join(','),
-    ');',
-    'if (res &&',
-    '(typeof res === "object" || typeof res === "function") &&',
-    'typeof res.then === "function"',
-    ') {rs(res);}',
-    '});',
-    '};'
-  ].join('');
-  return Function(['Promise', 'fn'], body)(Promise, fn);
-}
-function denodeifyWithoutCount(fn) {
-  var fnLength = Math.max(fn.length - 1, 3);
-  var args = [];
-  for (var i = 0; i < fnLength; i++) {
-    args.push('a' + i);
-  }
-  var body = [
-    'return function (' + args.join(',') + ') {',
-    'var self = this;',
-    'var args;',
-    'var argLength = arguments.length;',
-    'if (arguments.length > ' + fnLength + ') {',
-    'args = new Array(arguments.length + 1);',
-    'for (var i = 0; i < arguments.length; i++) {',
-    'args[i] = arguments[i];',
-    '}',
-    '}',
-    'return new Promise(function (rs, rj) {',
-    'var cb = ' + callbackFn + ';',
-    'var res;',
-    'switch (argLength) {',
-    args.concat(['extra']).map(function (_, index) {
-      return (
-        'case ' + (index) + ':' +
-        'res = fn.call(' + ['self'].concat(args.slice(0, index)).concat('cb').join(',') + ');' +
-        'break;'
-      );
-    }).join(''),
-    'default:',
-    'args[argLength] = cb;',
-    'res = fn.apply(self, args);',
-    '}',
-    
-    'if (res &&',
-    '(typeof res === "object" || typeof res === "function") &&',
-    'typeof res.then === "function"',
-    ') {rs(res);}',
-    '});',
-    '};'
-  ].join('');
-
-  return Function(
-    ['Promise', 'fn'],
-    body
-  )(Promise, fn);
-}
-
-Promise.nodeify = function (fn) {
-  return function () {
-    var args = Array.prototype.slice.call(arguments);
-    var callback =
-      typeof args[args.length - 1] === 'function' ? args.pop() : null;
-    var ctx = this;
-    try {
-      return fn.apply(this, arguments).nodeify(callback, ctx);
-    } catch (ex) {
-      if (callback === null || typeof callback == 'undefined') {
-        return new Promise(function (resolve, reject) {
-          reject(ex);
-        });
-      } else {
-        asap(function () {
-          callback.call(ctx, ex);
-        })
-      }
-    }
-  }
-}
-
-Promise.prototype.nodeify = function (callback, ctx) {
-  if (typeof callback != 'function') return this;
-
-  this.then(function (value) {
-    asap(function () {
-      callback.call(ctx, null, value);
-    });
-  }, function (err) {
-    asap(function () {
-      callback.call(ctx, err);
-    });
-  });
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"synchronous.js":["./core.js",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/lib/synchronous.js                  //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-'use strict';
-
-var Promise = require('./core.js');
-
-module.exports = Promise;
-Promise.enableSynchronous = function () {
-  Promise.prototype.isPending = function() {
-    return this.getState() == 0;
-  };
-
-  Promise.prototype.isFulfilled = function() {
-    return this.getState() == 1;
-  };
-
-  Promise.prototype.isRejected = function() {
-    return this.getState() == 2;
-  };
-
-  Promise.prototype.getValue = function () {
-    if (this._81 === 3) {
-      return this._65.getValue();
-    }
-
-    if (!this.isFulfilled()) {
-      throw new Error('Cannot get a value of an unfulfilled promise.');
-    }
-
-    return this._65;
-  };
-
-  Promise.prototype.getReason = function () {
-    if (this._81 === 3) {
-      return this._65.getReason();
-    }
-
-    if (!this.isRejected()) {
-      throw new Error('Cannot get a rejection reason of a non-rejected promise.');
-    }
-
-    return this._65;
-  };
-
-  Promise.prototype.getState = function () {
-    if (this._81 === 3) {
-      return this._65.getState();
-    }
-    if (this._81 === -1 || this._81 === -2) {
-      return 0;
-    }
-
-    return this._81;
-  };
-};
-
-Promise.disableSynchronous = function() {
-  Promise.prototype.isPending = undefined;
-  Promise.prototype.isFulfilled = undefined;
-  Promise.prototype.isRejected = undefined;
-  Promise.prototype.getValue = undefined;
-  Promise.prototype.getReason = undefined;
-  Promise.prototype.getState = undefined;
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }]},"node_modules":{"asap":{"raw.js":["domain",function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/node_modules/asap/raw.js            //
+// node_modules/meteor/promise/node_modules/promise/node_modules/asap/raw.js                                        //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
@@ -1165,97 +842,7 @@ function requestFlush() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"package.json":function(require,exports){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// ../npm/node_modules/meteor-promise/node_modules/promise/node_modules/asap/package.json                           //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-exports.name = "asap";
-exports.version = "2.0.3";
-exports.main = "./asap.js";
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"asap.js":["./raw",function(require,exports,module){
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// node_modules/meteor/promise/node_modules/meteor-promise/node_modules/promise/node_modules/asap/asap.js           //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-"use strict";
-
-var rawAsap = require("./raw");
-var freeTasks = [];
-
-/**
- * Calls a task as soon as possible after returning, in its own event, with
- * priority over IO events. An exception thrown in a task can be handled by
- * `process.on("uncaughtException") or `domain.on("error")`, but will otherwise
- * crash the process. If the error is handled, all subsequent tasks will
- * resume.
- *
- * @param {{call}} task A callable object, typically a function that takes no
- * arguments.
- */
-module.exports = asap;
-function asap(task) {
-    var rawTask;
-    if (freeTasks.length) {
-        rawTask = freeTasks.pop();
-    } else {
-        rawTask = new RawTask();
-    }
-    rawTask.task = task;
-    rawTask.domain = process.domain;
-    rawAsap(rawTask);
-}
-
-function RawTask() {
-    this.task = null;
-    this.domain = null;
-}
-
-RawTask.prototype.call = function () {
-    if (this.domain) {
-        this.domain.enter();
-    }
-    var threw = true;
-    try {
-        this.task.call();
-        threw = false;
-        // If the task throws an exception (presumably) Node.js restores the
-        // domain stack for the next event.
-        if (this.domain) {
-            this.domain.exit();
-        }
-    } finally {
-        // We use try/finally and a threw flag to avoid messing up stack traces
-        // when we catch and release errors.
-        if (threw) {
-            // In Node.js, uncaught exceptions are considered fatal errors.
-            // Re-throw them to interrupt flushing!
-            // Ensure that flushing continues if an uncaught exception is
-            // suppressed listening process.on("uncaughtException") or
-            // domain.on("error").
-            rawAsap.requestFlush();
-        }
-        // If the task threw an error, we do not want to exit the domain here.
-        // Exiting the domain would prevent the domain from catching the error.
-        this.task = null;
-        this.domain = null;
-        freeTasks.push(this);
-    }
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}]}}}}}}}}}},{"extensions":[".js",".json"]});
+}]}}}}}}}},{"extensions":[".js",".json"]});
 var exports = require("./node_modules/meteor/promise/server.js");
 
 /* Exports */

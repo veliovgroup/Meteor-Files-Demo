@@ -8,6 +8,11 @@ var check = Package.check.check;
 var Match = Package.check.Match;
 var ReactiveDict = Package['reactive-dict'].ReactiveDict;
 var _ = Package.underscore._;
+var Symbol = Package['ecmascript-runtime'].Symbol;
+var Map = Package['ecmascript-runtime'].Map;
+var Set = Package['ecmascript-runtime'].Set;
+var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
+var Promise = Package.promise.Promise;
 
 /* Package-scope variables */
 var __coffeescriptShare, ActiveRoute;

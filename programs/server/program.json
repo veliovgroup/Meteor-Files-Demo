@@ -23,6 +23,26 @@
       "path": "packages/npm-mongo.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/modules-runtime/node_modules",
+      "sourceMap": "packages/modules-runtime.js.map",
+      "path": "packages/modules-runtime.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/modules/node_modules",
+      "sourceMap": "packages/modules.js.map",
+      "path": "packages/modules.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "sourceMap": "packages/promise.js.map",
+      "path": "packages/promise.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ecmascript-runtime/node_modules",
+      "sourceMap": "packages/ecmascript-runtime.js.map",
+      "path": "packages/ecmascript-runtime.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/babel-compiler/node_modules",
       "sourceMap": "packages/babel-compiler.js.map",
       "path": "packages/babel-compiler.js"
@@ -50,25 +70,6 @@
     {
       "sourceMap": "packages/tracker.js.map",
       "path": "packages/tracker.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/modules-runtime/node_modules",
-      "sourceMap": "packages/modules-runtime.js.map",
-      "path": "packages/modules-runtime.js"
-    },
-    {
-      "sourceMap": "packages/modules.js.map",
-      "path": "packages/modules.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/promise/node_modules",
-      "sourceMap": "packages/promise.js.map",
-      "path": "packages/promise.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/ecmascript-runtime/node_modules",
-      "sourceMap": "packages/ecmascript-runtime.js.map",
-      "path": "packages/ecmascript-runtime.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
@@ -111,6 +112,14 @@
       "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
       "sourceMap": "packages/ddp-client.js.map",
       "path": "packages/ddp-client.js"
+    },
+    {
+      "sourceMap": "packages/rate-limit.js.map",
+      "path": "packages/rate-limit.js"
+    },
+    {
+      "sourceMap": "packages/ddp-rate-limiter.js.map",
+      "path": "packages/ddp-rate-limiter.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
@@ -236,6 +245,9 @@
       "path": "packages/http.js"
     },
     {
+      "path": "packages/fastclick.js"
+    },
+    {
       "path": "packages/fortawesome_fontawesome.js"
     },
     {
@@ -252,9 +264,6 @@
     {
       "sourceMap": "packages/momentjs_moment.js.map",
       "path": "packages/momentjs_moment.js"
-    },
-    {
-      "path": "packages/twbs_bootstrap.js"
     },
     {
       "path": "packages/templating.js"
@@ -300,16 +309,10 @@
       "path": "packages/cfs_graphicsmagick.js"
     },
     {
-      "sourceMap": "packages/sha.js.map",
-      "path": "packages/sha.js"
-    },
-    {
-      "sourceMap": "packages/ostrio_cookies.js.map",
       "path": "packages/ostrio_cookies.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
-      "sourceMap": "packages/ostrio_files.js.map",
       "path": "packages/ostrio_files.js"
     },
     {
@@ -322,7 +325,10 @@
       "path": "packages/ostrio_flow-router-extra.js"
     },
     {
-      "path": "packages/ostrio_flow-router-title.js"
+      "path": "packages/ostrio_templatehelpers.js"
+    },
+    {
+      "path": "packages/ostrio_cstorage.js"
     },
     {
       "sourceMap": "packages/zimme_active-route.js.map",
@@ -333,10 +339,78 @@
       "path": "packages/arillo_flow-router-helpers.js"
     },
     {
-      "path": "packages/ostrio_templatehelpers.js"
+      "path": "packages/ostrio_flow-router-title.js"
     },
     {
-      "path": "packages/ostrio_cstorage.js"
+      "path": "packages/ostrio_flow-router-meta.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ostrio_spiderable-middleware/node_modules",
+      "sourceMap": "packages/ostrio_spiderable-middleware.js.map",
+      "path": "packages/ostrio_spiderable-middleware.js"
+    },
+    {
+      "sourceMap": "packages/accounts-base.js.map",
+      "path": "packages/accounts-base.js"
+    },
+    {
+      "sourceMap": "packages/service-configuration.js.map",
+      "path": "packages/service-configuration.js"
+    },
+    {
+      "path": "packages/localstorage.js"
+    },
+    {
+      "sourceMap": "packages/oauth.js.map",
+      "path": "packages/oauth.js",
+      "assets": {
+        "end_of_popup_response.html": "assets/packages/oauth/end_of_popup_response.html",
+        "end_of_redirect_response.html": "assets/packages/oauth/end_of_redirect_response.html"
+      }
+    },
+    {
+      "sourceMap": "packages/accounts-oauth.js.map",
+      "path": "packages/accounts-oauth.js"
+    },
+    {
+      "sourceMap": "packages/oauth2.js.map",
+      "path": "packages/oauth2.js"
+    },
+    {
+      "sourceMap": "packages/github.js.map",
+      "path": "packages/github.js"
+    },
+    {
+      "sourceMap": "packages/accounts-github.js.map",
+      "path": "packages/accounts-github.js"
+    },
+    {
+      "sourceMap": "packages/oauth1.js.map",
+      "path": "packages/oauth1.js"
+    },
+    {
+      "sourceMap": "packages/twitter.js.map",
+      "path": "packages/twitter.js"
+    },
+    {
+      "sourceMap": "packages/accounts-twitter.js.map",
+      "path": "packages/accounts-twitter.js"
+    },
+    {
+      "sourceMap": "packages/facebook.js.map",
+      "path": "packages/facebook.js"
+    },
+    {
+      "sourceMap": "packages/accounts-facebook.js.map",
+      "path": "packages/accounts-facebook.js"
+    },
+    {
+      "sourceMap": "packages/meteor-developer.js.map",
+      "path": "packages/meteor-developer.js"
+    },
+    {
+      "sourceMap": "packages/accounts-meteor-developer.js.map",
+      "path": "packages/accounts-meteor-developer.js"
     },
     {
       "path": "packages/livedata.js"
@@ -372,6 +446,15 @@
       "node_modules": "npm/node_modules",
       "sourceMap": "app/server/image-processing.coffee.js.map",
       "path": "app/server/image-processing.coffee.js"
+    },
+    {
+      "node_modules": "npm/node_modules",
+      "sourceMap": "app/server/service-configurations.coffee.js.map",
+      "path": "app/server/service-configurations.coffee.js"
+    },
+    {
+      "node_modules": "npm/node_modules",
+      "path": "app/server/spierable.js"
     },
     {
       "sourceMap": "packages/mdg_validation-error.js.map",

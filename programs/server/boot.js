@@ -150,6 +150,14 @@ Fiber(function () {
       });
     }
 
+    function statOrNull(path) {
+      try {
+        return fs.statSync(path);
+      } catch (e) {
+        return null;
+      }
+    }
+
     var Npm = {
       /**
        * @summary Require a package that was specified using
@@ -171,7 +179,7 @@ Fiber(function () {
             name.split("/", 1)[0]
           ));
 
-          if (fs.existsSync(packageBase)) {
+          if (statOrNull(packageBase)) {
             return fullPath = files.convertToOSPath(
               files.pathResolve(nodeModuleBase, name)
             );
@@ -239,6 +247,12 @@ Fiber(function () {
       getBinary: function (assetPath, callback) {
         return getAsset(assetPath, undefined, callback);
       },
+      /**
+       * @summary Get the absolute path to the static server asset. Note that assets are read-only.
+       * @locus Server [Not in build plugins]
+       * @memberOf Assets
+       * @param {String} assetPath The path of the asset, relative to the application's `private` subdirectory.
+       */
       absoluteFilePath: function (assetPath) {
         if (!fileInfo.assets || !_.has(fileInfo.assets, assetPath)) {
           throw new Error("Unknown asset: " + assetPath);

@@ -356,6 +356,7 @@ _.extend(LocalCollection.Cursor.prototype, {
       throw Error("You may not observe a cursor with {fields: {_id: 0}}");
 
     var query = {
+      dirty: false,
       matcher: self.matcher, // not fast pathed
       sorter: ordered && self.sorter,
       distances: (
@@ -589,6 +590,7 @@ LocalCollection.prototype.insert = function (doc, callback) {
   // trigger live queries that match
   for (var qid in self.queries) {
     var query = self.queries[qid];
+    if (query.dirty) continue;
     var matchResult = query.matcher.documentMatches(doc);
     if (matchResult.result) {
       if (query.distances && matchResult.distance !== undefined)
@@ -674,6 +676,8 @@ LocalCollection.prototype.remove = function (selector, callback) {
     var removeId = remove[i];
     var removeDoc = self._docs.get(removeId);
     _.each(self.queries, function (query, qid) {
+      if (query.dirty) return;
+
       if (query.matcher.documentMatches(removeDoc).result) {
         if (query.cursor.skip || query.cursor.limit)
           queriesToRecompute.push(qid);
@@ -851,6 +855,8 @@ LocalCollection.prototype._modifyAndNotify = function (
   var matched_before = {};
   for (var qid in self.queries) {
     var query = self.queries[qid];
+    if (query.dirty) continue;
+
     if (query.ordered) {
       matched_before[qid] = query.matcher.documentMatches(doc).result;
     } else {
@@ -866,6 +872,8 @@ LocalCollection.prototype._modifyAndNotify = function (
 
   for (qid in self.queries) {
     query = self.queries[qid];
+    if (query.dirty) continue;
+
     var before = matched_before[qid];
     var afterMatch = query.matcher.documentMatches(doc);
     var after = afterMatch.result;
@@ -985,6 +993,14 @@ LocalCollection._updateInResults = function (query, doc, old_doc) {
 // oldResults is guaranteed to be ignored if the query is not paused.
 LocalCollection.prototype._recomputeResults = function (query, oldResults) {
   var self = this;
+  if (self.paused) {
+    // There's no reason to recompute the results now as we're still paused.
+    // By flagging the query as "dirty", the recompute will be performed
+    // when resumeObservers is called.
+    query.dirty = true;
+    return;
+  }
+
   if (! self.paused && ! oldResults)
     oldResults = query.results;
   if (query.distances)
@@ -1107,11 +1123,17 @@ LocalCollection.prototype.resumeObservers = function () {
 
   for (var qid in this.queries) {
     var query = self.queries[qid];
-    // Diff the current results against the snapshot and send to observers.
-    // pass the query object for its observer callbacks.
-    LocalCollection._diffQueryChanges(
-      query.ordered, query.resultsSnapshot, query.results, query,
-      { projectionFn: query.projectionFn });
+    if (query.dirty) {
+      query.dirty = false;
+      // re-compute results will perform `LocalCollection._diffQueryChanges` automatically.
+      self._recomputeResults(query, query.resultsSnapshot);
+    } else {
+      // Diff the current results against the snapshot and send to observers.
+      // pass the query object for its observer callbacks.
+      LocalCollection._diffQueryChanges(
+        query.ordered, query.resultsSnapshot, query.results, query,
+        {projectionFn: query.projectionFn});
+    }
     query.resultsSnapshot = null;
   }
   self._observeQueue.drain();
@@ -1519,15 +1541,13 @@ var operatorBranchedMatcher = function (valueSelector, matcher, isRoot) {
 
   var operatorMatchers = [];
   _.each(valueSelector, function (operand, operator) {
-    // XXX we should actually implement $eq, which is new in 2.6
     var simpleRange = _.contains(['$lt', '$lte', '$gt', '$gte'], operator) &&
       _.isNumber(operand);
-    var simpleInequality = operator === '$ne' && !_.isObject(operand);
+    var simpleEquality = _.contains(['$ne', '$eq'], operator) && !_.isObject(operand);
     var simpleInclusion = _.contains(['$in', '$nin'], operator) &&
       _.isArray(operand) && !_.any(operand, _.isObject);
 
-    if (! (operator === '$eq' || simpleRange ||
-           simpleInclusion || simpleInequality)) {
+    if (! (simpleRange || simpleInclusion || simpleEquality)) {
       matcher._isSimple = false;
     }
 
@@ -1644,6 +1664,10 @@ var invertBranchedMatcher = function (branchedMatcher) {
 // "match each branched value independently and combine with
 // convertElementMatcherToBranchedMatcher".
 var VALUE_OPERATORS = {
+  $eq: function (operand) {
+    return convertElementMatcherToBranchedMatcher(
+      equalityElementMatcher(operand));
+  },
   $not: function (operand, valueSelector, matcher) {
     return invertBranchedMatcher(compileValueSelector(operand, matcher));
   },
@@ -3099,7 +3123,7 @@ LocalCollection._modify = function (doc, mod, options) {
           throw MinimongoError("An empty update path is not valid.");
         }
 
-        if (keypath === '_id') {
+        if (keypath === '_id' && op !== '$setOnInsert') {
           throw MinimongoError("Mod on _id not allowed");
         }
 
@@ -4071,7 +4095,9 @@ Minimongo.Matcher.prototype.matchingDocument = function () {
         // if there is a strict equality, there is a good
         // chance we can use one of those as "matching"
         // dummy value
-        if (valueSelector.$in) {
+        if (valueSelector.$eq) {
+          return valueSelector.$eq;
+        } else if (valueSelector.$in) {
           var matcher = new Minimongo.Matcher({ placeholder: valueSelector });
 
           // Return anything from $in that matches the whole selector for this
@@ -4098,7 +4124,7 @@ Minimongo.Matcher.prototype.matchingDocument = function () {
             fallback = true;
 
           return middle;
-        } else if (onlyContainsKeys(valueSelector, ['$nin',' $ne'])) {
+        } else if (onlyContainsKeys(valueSelector, ['$nin', '$ne'])) {
           // Since self._isSimple makes sure $nin and $ne are not combined with
           // objects or arrays, we can confidently return an empty object as it
           // never matches any scalar.
@@ -4147,7 +4173,6 @@ var startsWith = function(str, starts) {
   return str.length >= starts.length &&
     str.substring(0, starts.length) === starts;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

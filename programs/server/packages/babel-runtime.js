@@ -12,7 +12,7 @@ var Promise = Package.promise.Promise;
 /* Package-scope variables */
 var meteorBabelHelpers;
 
-var require = meteorInstall({"node_modules":{"meteor":{"babel-runtime":{"babel-runtime.js":["meteor-babel-helpers","regenerator/runtime-module",function(require,exports,module){
+var require = meteorInstall({"node_modules":{"meteor":{"babel-runtime":{"babel-runtime.js":["meteor-babel-helpers","regenerator-runtime",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
@@ -382,7 +382,7 @@ meteorInstall({
       "regenerator.js": function (r, e, module) {
         // Note that we use the require function provided to the
         // babel-runtime.js file, not the one named 'r' above.
-        var runtime = require("regenerator/runtime-module");
+        var runtime = require("regenerator-runtime");
 
         // If Promise.asyncApply is defined, use it to wrap calls to
         // runtime.async so that the entire async function will run in its
@@ -481,11 +481,25 @@ meteorBabelHelpers = module.exports = {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}},"regenerator":{"runtime-module.js":["./runtime",function(require,exports,module){
+}},"regenerator-runtime":{"package.json":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
-// node_modules/meteor/babel-runtime/node_modules/regenerator/runtime-module.js                            //
+// ../npm/node_modules/regenerator-runtime/package.json                                                    //
+//                                                                                                         //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                           //
+exports.name = "regenerator-runtime";
+exports.version = "0.9.5";
+exports.main = "runtime-module.js";
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"runtime-module.js":["./runtime",function(require,exports,module){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                         //
+// node_modules/meteor/babel-runtime/node_modules/regenerator-runtime/runtime-module.js                    //
 //                                                                                                         //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                            //
@@ -527,7 +541,7 @@ if (hadRuntime) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                         //
-// node_modules/meteor/babel-runtime/node_modules/regenerator/runtime.js                                   //
+// node_modules/meteor/babel-runtime/node_modules/regenerator-runtime/runtime.js                           //
 //                                                                                                         //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                            //
@@ -843,11 +857,9 @@ if (hadRuntime) {
         }
 
         if (method === "next") {
-          if (state === GenStateSuspendedYield) {
-            context.sent = arg;
-          } else {
-            context.sent = undefined;
-          }
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = arg;
 
         } else if (method === "throw") {
           if (state === GenStateSuspendedStart) {
@@ -1020,7 +1032,9 @@ if (hadRuntime) {
     reset: function(skipTempReset) {
       this.prev = 0;
       this.next = 0;
-      this.sent = undefined;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
       this.done = false;
       this.delegate = null;
 

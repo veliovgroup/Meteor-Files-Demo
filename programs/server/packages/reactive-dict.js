@@ -40,28 +40,28 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 var stringify = function stringify(value) {                                                                         // 3
   if (value === undefined) return 'undefined';                                                                      // 4
   return EJSON.stringify(value);                                                                                    // 6
-};                                                                                                                  //
+};                                                                                                                  // 7
 var parse = function parse(serialized) {                                                                            // 8
   if (serialized === undefined || serialized === 'undefined') return undefined;                                     // 9
   return EJSON.parse(serialized);                                                                                   // 11
-};                                                                                                                  //
+};                                                                                                                  // 12
                                                                                                                     //
 var changed = function changed(v) {                                                                                 // 14
   v && v.changed();                                                                                                 // 15
-};                                                                                                                  //
+};                                                                                                                  // 16
                                                                                                                     //
 // XXX COMPAT WITH 0.9.1 : accept migrationData instead of dictName                                                 //
 ReactiveDict = function (_ReactiveDict) {                                                                           // 19
-  function ReactiveDict(_x) {                                                                                       //
-    return _ReactiveDict.apply(this, arguments);                                                                    //
-  }                                                                                                                 //
+  function ReactiveDict(_x) {                                                                                       // 19
+    return _ReactiveDict.apply(this, arguments);                                                                    // 19
+  }                                                                                                                 // 19
                                                                                                                     //
-  ReactiveDict.toString = function () {                                                                             //
-    return _ReactiveDict.toString();                                                                                //
-  };                                                                                                                //
+  ReactiveDict.toString = function () {                                                                             // 19
+    return _ReactiveDict.toString();                                                                                // 19
+  };                                                                                                                // 19
                                                                                                                     //
-  return ReactiveDict;                                                                                              //
-}(function (dictName) {                                                                                             //
+  return ReactiveDict;                                                                                              // 19
+}(function (dictName) {                                                                                             // 19
   // this.keys: key -> value                                                                                        //
   if (dictName) {                                                                                                   // 21
     if (typeof dictName === 'string') {                                                                             // 22
@@ -73,222 +73,200 @@ ReactiveDict = function (_ReactiveDict) {                                       
     } else if ((typeof dictName === 'undefined' ? 'undefined' : (0, _typeof3['default'])(dictName)) === 'object') {
       // back-compat case: dictName is actually migrationData                                                       //
       this.keys = dictName;                                                                                         // 30
-    } else {                                                                                                        //
+    } else {                                                                                                        // 31
       throw new Error("Invalid ReactiveDict argument: " + dictName);                                                // 32
-    }                                                                                                               //
-  } else {                                                                                                          //
+    }                                                                                                               // 33
+  } else {                                                                                                          // 34
     // no name given; no migration will be performed                                                                //
     this.keys = {};                                                                                                 // 36
-  }                                                                                                                 //
+  }                                                                                                                 // 37
                                                                                                                     //
   this.allDeps = new Tracker.Dependency();                                                                          // 39
   this.keyDeps = {}; // key -> Dependency                                                                           // 40
-  this.keyValueDeps = {}; // key -> Dependency                                                                      // 19
-});                                                                                                                 // 19
+  this.keyValueDeps = {}; // key -> Dependency                                                                      // 41
+});                                                                                                                 // 42
                                                                                                                     //
 _.extend(ReactiveDict.prototype, {                                                                                  // 44
   // set() began as a key/value method, but we are now overloading it                                               //
   // to take an object of key/value pairs, similar to backbone                                                      //
   // http://backbonejs.org/#Model-set                                                                               //
                                                                                                                     //
-  set: function () {                                                                                                // 49
-    function set(keyOrObject, value) {                                                                              // 49
-      var self = this;                                                                                              // 50
+  set: function set(keyOrObject, value) {                                                                           // 49
+    var self = this;                                                                                                // 50
                                                                                                                     //
-      if ((typeof keyOrObject === 'undefined' ? 'undefined' : (0, _typeof3['default'])(keyOrObject)) === 'object' && value === undefined) {
-        // Called as `dict.set({...})`                                                                              //
-        self._setObject(keyOrObject);                                                                               // 54
-        return;                                                                                                     // 55
-      }                                                                                                             //
-      // the input isn't an object, so it must be a key                                                             //
-      // and we resume with the rest of the function                                                                //
-      var key = keyOrObject;                                                                                        // 49
+    if ((typeof keyOrObject === 'undefined' ? 'undefined' : (0, _typeof3['default'])(keyOrObject)) === 'object' && value === undefined) {
+      // Called as `dict.set({...})`                                                                                //
+      self._setObject(keyOrObject);                                                                                 // 54
+      return;                                                                                                       // 55
+    }                                                                                                               // 56
+    // the input isn't an object, so it must be a key                                                               //
+    // and we resume with the rest of the function                                                                  //
+    var key = keyOrObject;                                                                                          // 59
                                                                                                                     //
-      value = stringify(value);                                                                                     // 61
+    value = stringify(value);                                                                                       // 61
                                                                                                                     //
-      var keyExisted = _.has(self.keys, key);                                                                       // 63
-      var oldSerializedValue = keyExisted ? self.keys[key] : 'undefined';                                           // 64
-      var isNewValue = value !== oldSerializedValue;                                                                // 65
+    var keyExisted = _.has(self.keys, key);                                                                         // 63
+    var oldSerializedValue = keyExisted ? self.keys[key] : 'undefined';                                             // 64
+    var isNewValue = value !== oldSerializedValue;                                                                  // 65
                                                                                                                     //
-      self.keys[key] = value;                                                                                       // 67
+    self.keys[key] = value;                                                                                         // 67
                                                                                                                     //
-      if (isNewValue || !keyExisted) {                                                                              // 69
-        self.allDeps.changed();                                                                                     // 70
-      }                                                                                                             //
+    if (isNewValue || !keyExisted) {                                                                                // 69
+      self.allDeps.changed();                                                                                       // 70
+    }                                                                                                               // 71
                                                                                                                     //
-      if (isNewValue) {                                                                                             // 73
-        changed(self.keyDeps[key]);                                                                                 // 74
-        if (self.keyValueDeps[key]) {                                                                               // 75
-          changed(self.keyValueDeps[key][oldSerializedValue]);                                                      // 76
-          changed(self.keyValueDeps[key][value]);                                                                   // 77
-        }                                                                                                           //
-      }                                                                                                             //
-    }                                                                                                               //
+    if (isNewValue) {                                                                                               // 73
+      changed(self.keyDeps[key]);                                                                                   // 74
+      if (self.keyValueDeps[key]) {                                                                                 // 75
+        changed(self.keyValueDeps[key][oldSerializedValue]);                                                        // 76
+        changed(self.keyValueDeps[key][value]);                                                                     // 77
+      }                                                                                                             // 78
+    }                                                                                                               // 79
+  },                                                                                                                // 80
                                                                                                                     //
-    return set;                                                                                                     //
-  }(),                                                                                                              //
+  setDefault: function setDefault(keyOrObject, value) {                                                             // 82
+    var self = this;                                                                                                // 83
                                                                                                                     //
-  setDefault: function () {                                                                                         // 82
-    function setDefault(key, value) {                                                                               // 82
-      var self = this;                                                                                              // 83
-      if (!_.has(self.keys, key)) {                                                                                 // 84
-        self.set(key, value);                                                                                       // 85
-      }                                                                                                             //
-    }                                                                                                               //
+    if ((typeof keyOrObject === 'undefined' ? 'undefined' : (0, _typeof3['default'])(keyOrObject)) === 'object' && value === undefined) {
+      // Called as `dict.setDefault({...})`                                                                         //
+      self._setDefaultObject(keyOrObject);                                                                          // 87
+      return;                                                                                                       // 88
+    }                                                                                                               // 89
+    // the input isn't an object, so it must be a key                                                               //
+    // and we resume with the rest of the function                                                                  //
+    var key = keyOrObject;                                                                                          // 92
                                                                                                                     //
-    return setDefault;                                                                                              //
-  }(),                                                                                                              //
+    if (!_.has(self.keys, key)) {                                                                                   // 94
+      self.set(key, value);                                                                                         // 95
+    }                                                                                                               // 96
+  },                                                                                                                // 97
                                                                                                                     //
-  get: function () {                                                                                                // 89
-    function get(key) {                                                                                             // 89
-      var self = this;                                                                                              // 90
-      self._ensureKey(key);                                                                                         // 91
-      self.keyDeps[key].depend();                                                                                   // 92
-      return parse(self.keys[key]);                                                                                 // 93
-    }                                                                                                               //
+  get: function get(key) {                                                                                          // 99
+    var self = this;                                                                                                // 100
+    self._ensureKey(key);                                                                                           // 101
+    self.keyDeps[key].depend();                                                                                     // 102
+    return parse(self.keys[key]);                                                                                   // 103
+  },                                                                                                                // 104
                                                                                                                     //
-    return get;                                                                                                     //
-  }(),                                                                                                              //
+  equals: function equals(key, value) {                                                                             // 106
+    var self = this;                                                                                                // 107
                                                                                                                     //
-  equals: function () {                                                                                             // 96
-    function equals(key, value) {                                                                                   // 96
-      var self = this;                                                                                              // 97
+    // Mongo.ObjectID is in the 'mongo' package                                                                     //
+    var ObjectID = null;                                                                                            // 110
+    if (Package.mongo) {                                                                                            // 111
+      ObjectID = Package.mongo.Mongo.ObjectID;                                                                      // 112
+    }                                                                                                               // 113
                                                                                                                     //
-      // Mongo.ObjectID is in the 'mongo' package                                                                   //
-      var ObjectID = null;                                                                                          // 96
-      if (Package.mongo) {                                                                                          // 101
-        ObjectID = Package.mongo.Mongo.ObjectID;                                                                    // 102
-      }                                                                                                             //
+    // We don't allow objects (or arrays that might include objects) for                                            //
+    // .equals, because JSON.stringify doesn't canonicalize object key                                              //
+    // order. (We can make equals have the right return value by parsing the                                        //
+    // current value and using EJSON.equals, but we won't have a canonical                                          //
+    // element of keyValueDeps[key] to store the dependency.) You can still use                                     //
+    // "EJSON.equals(reactiveDict.get(key), value)".                                                                //
+    //                                                                                                              //
+    // XXX we could allow arrays as long as we recursively check that there                                         //
+    // are no objects                                                                                               //
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && typeof value !== 'undefined' && !(value instanceof Date) && !(ObjectID && value instanceof ObjectID) && value !== null) {
+      throw new Error("ReactiveDict.equals: value must be scalar");                                                 // 131
+    }                                                                                                               // 132
+    var serializedValue = stringify(value);                                                                         // 133
                                                                                                                     //
-      // We don't allow objects (or arrays that might include objects) for                                          //
-      // .equals, because JSON.stringify doesn't canonicalize object key                                            //
-      // order. (We can make equals have the right return value by parsing the                                      //
-      // current value and using EJSON.equals, but we won't have a canonical                                        //
-      // element of keyValueDeps[key] to store the dependency.) You can still use                                   //
-      // "EJSON.equals(reactiveDict.get(key), value)".                                                              //
-      //                                                                                                            //
-      // XXX we could allow arrays as long as we recursively check that there                                       //
-      // are no objects                                                                                             //
-      if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && typeof value !== 'undefined' && !(value instanceof Date) && !(ObjectID && value instanceof ObjectID) && value !== null) {
-        throw new Error("ReactiveDict.equals: value must be scalar");                                               // 121
-      }                                                                                                             //
-      var serializedValue = stringify(value);                                                                       // 123
+    if (Tracker.active) {                                                                                           // 135
+      self._ensureKey(key);                                                                                         // 136
                                                                                                                     //
-      if (Tracker.active) {                                                                                         // 125
-        self._ensureKey(key);                                                                                       // 126
+      if (!_.has(self.keyValueDeps[key], serializedValue)) self.keyValueDeps[key][serializedValue] = new Tracker.Dependency();
                                                                                                                     //
-        if (!_.has(self.keyValueDeps[key], serializedValue)) self.keyValueDeps[key][serializedValue] = new Tracker.Dependency();
+      var isNew = self.keyValueDeps[key][serializedValue].depend();                                                 // 141
+      if (isNew) {                                                                                                  // 142
+        Tracker.onInvalidate(function () {                                                                          // 143
+          // clean up [key][serializedValue] if it's now empty, so we don't                                         //
+          // use O(n) memory for n = values seen ever                                                               //
+          if (!self.keyValueDeps[key][serializedValue].hasDependents()) delete self.keyValueDeps[key][serializedValue];
+        });                                                                                                         // 148
+      }                                                                                                             // 149
+    }                                                                                                               // 150
                                                                                                                     //
-        var isNew = self.keyValueDeps[key][serializedValue].depend();                                               // 131
-        if (isNew) {                                                                                                // 132
-          Tracker.onInvalidate(function () {                                                                        // 133
-            // clean up [key][serializedValue] if it's now empty, so we don't                                       //
-            // use O(n) memory for n = values seen ever                                                             //
-            if (!self.keyValueDeps[key][serializedValue].hasDependents()) delete self.keyValueDeps[key][serializedValue];
-          });                                                                                                       //
-        }                                                                                                           //
-      }                                                                                                             //
+    var oldValue = undefined;                                                                                       // 152
+    if (_.has(self.keys, key)) oldValue = parse(self.keys[key]);                                                    // 153
+    return EJSON.equals(oldValue, value);                                                                           // 154
+  },                                                                                                                // 155
                                                                                                                     //
-      var oldValue = undefined;                                                                                     // 142
-      if (_.has(self.keys, key)) oldValue = parse(self.keys[key]);                                                  // 143
-      return EJSON.equals(oldValue, value);                                                                         // 144
-    }                                                                                                               //
+  all: function all() {                                                                                             // 157
+    this.allDeps.depend();                                                                                          // 158
+    var ret = {};                                                                                                   // 159
+    _.each(this.keys, function (value, key) {                                                                       // 160
+      ret[key] = parse(value);                                                                                      // 161
+    });                                                                                                             // 162
+    return ret;                                                                                                     // 163
+  },                                                                                                                // 164
                                                                                                                     //
-    return equals;                                                                                                  //
-  }(),                                                                                                              //
+  clear: function clear() {                                                                                         // 166
+    var self = this;                                                                                                // 167
                                                                                                                     //
-  all: function () {                                                                                                // 147
-    function all() {                                                                                                // 147
-      this.allDeps.depend();                                                                                        // 148
-      var ret = {};                                                                                                 // 149
-      _.each(this.keys, function (value, key) {                                                                     // 150
-        ret[key] = parse(value);                                                                                    // 151
-      });                                                                                                           //
-      return ret;                                                                                                   // 153
-    }                                                                                                               //
+    var oldKeys = self.keys;                                                                                        // 169
+    self.keys = {};                                                                                                 // 170
                                                                                                                     //
-    return all;                                                                                                     //
-  }(),                                                                                                              //
+    self.allDeps.changed();                                                                                         // 172
                                                                                                                     //
-  clear: function () {                                                                                              // 156
-    function clear() {                                                                                              // 156
-      var self = this;                                                                                              // 157
+    _.each(oldKeys, function (value, key) {                                                                         // 174
+      changed(self.keyDeps[key]);                                                                                   // 175
+      if (self.keyValueDeps[key]) {                                                                                 // 176
+        changed(self.keyValueDeps[key][value]);                                                                     // 177
+        changed(self.keyValueDeps[key]['undefined']);                                                               // 178
+      }                                                                                                             // 179
+    });                                                                                                             // 180
+  },                                                                                                                // 182
                                                                                                                     //
-      var oldKeys = self.keys;                                                                                      // 159
-      self.keys = {};                                                                                               // 160
+  'delete': function _delete(key) {                                                                                 // 184
+    var self = this;                                                                                                // 185
+    var didRemove = false;                                                                                          // 186
                                                                                                                     //
-      self.allDeps.changed();                                                                                       // 162
+    if (_.has(self.keys, key)) {                                                                                    // 188
+      var oldValue = self.keys[key];                                                                                // 189
+      delete self.keys[key];                                                                                        // 190
+      changed(self.keyDeps[key]);                                                                                   // 191
+      if (self.keyValueDeps[key]) {                                                                                 // 192
+        changed(self.keyValueDeps[key][oldValue]);                                                                  // 193
+        changed(self.keyValueDeps[key]['undefined']);                                                               // 194
+      }                                                                                                             // 195
+      self.allDeps.changed();                                                                                       // 196
+      didRemove = true;                                                                                             // 197
+    }                                                                                                               // 198
                                                                                                                     //
-      _.each(oldKeys, function (value, key) {                                                                       // 164
-        changed(self.keyDeps[key]);                                                                                 // 165
-        if (self.keyValueDeps[key]) {                                                                               // 166
-          changed(self.keyValueDeps[key][value]);                                                                   // 167
-          changed(self.keyValueDeps[key]['undefined']);                                                             // 168
-        }                                                                                                           //
-      });                                                                                                           //
-    }                                                                                                               //
+    return didRemove;                                                                                               // 200
+  },                                                                                                                // 201
                                                                                                                     //
-    return clear;                                                                                                   //
-  }(),                                                                                                              //
+  _setObject: function _setObject(object) {                                                                         // 203
+    var self = this;                                                                                                // 204
                                                                                                                     //
-  'delete': function () {                                                                                           // 174
-    function _delete(key) {                                                                                         // 174
-      var self = this;                                                                                              // 175
-      var didRemove = false;                                                                                        // 176
+    _.each(object, function (value, key) {                                                                          // 206
+      self.set(key, value);                                                                                         // 207
+    });                                                                                                             // 208
+  },                                                                                                                // 209
                                                                                                                     //
-      if (_.has(self.keys, key)) {                                                                                  // 178
-        var oldValue = self.keys[key];                                                                              // 179
-        delete self.keys[key];                                                                                      // 180
-        changed(self.keyDeps[key]);                                                                                 // 181
-        if (self.keyValueDeps[key]) {                                                                               // 182
-          changed(self.keyValueDeps[key][oldValue]);                                                                // 183
-          changed(self.keyValueDeps[key]['undefined']);                                                             // 184
-        }                                                                                                           //
-        self.allDeps.changed();                                                                                     // 186
-        didRemove = true;                                                                                           // 187
-      }                                                                                                             //
+  _setDefaultObject: function _setDefaultObject(object) {                                                           // 211
+    var self = this;                                                                                                // 212
                                                                                                                     //
-      return didRemove;                                                                                             // 190
-    }                                                                                                               //
+    _.each(object, function (value, key) {                                                                          // 214
+      self.setDefault(key, value);                                                                                  // 215
+    });                                                                                                             // 216
+  },                                                                                                                // 217
                                                                                                                     //
-    return _delete;                                                                                                 //
-  }(),                                                                                                              //
-                                                                                                                    //
-  _setObject: function () {                                                                                         // 193
-    function _setObject(object) {                                                                                   // 193
-      var self = this;                                                                                              // 194
-                                                                                                                    //
-      _.each(object, function (value, key) {                                                                        // 196
-        self.set(key, value);                                                                                       // 197
-      });                                                                                                           //
-    }                                                                                                               //
-                                                                                                                    //
-    return _setObject;                                                                                              //
-  }(),                                                                                                              //
-                                                                                                                    //
-  _ensureKey: function () {                                                                                         // 201
-    function _ensureKey(key) {                                                                                      // 201
-      var self = this;                                                                                              // 202
-      if (!(key in self.keyDeps)) {                                                                                 // 203
-        self.keyDeps[key] = new Tracker.Dependency();                                                               // 204
-        self.keyValueDeps[key] = {};                                                                                // 205
-      }                                                                                                             //
-    }                                                                                                               //
-                                                                                                                    //
-    return _ensureKey;                                                                                              //
-  }(),                                                                                                              //
+  _ensureKey: function _ensureKey(key) {                                                                            // 219
+    var self = this;                                                                                                // 220
+    if (!(key in self.keyDeps)) {                                                                                   // 221
+      self.keyDeps[key] = new Tracker.Dependency();                                                                 // 222
+      self.keyValueDeps[key] = {};                                                                                  // 223
+    }                                                                                                               // 224
+  },                                                                                                                // 225
                                                                                                                     //
   // Get a JSON value that can be passed to the constructor to                                                      //
   // create a new ReactiveDict with the same contents as this one                                                   //
-  _getMigrationData: function () {                                                                                  // 211
-    function _getMigrationData() {                                                                                  // 211
-      // XXX sanitize and make sure it's JSONible?                                                                  //
-      return this.keys;                                                                                             // 213
-    }                                                                                                               //
-                                                                                                                    //
-    return _getMigrationData;                                                                                       //
-  }()                                                                                                               //
-});                                                                                                                 //
+  _getMigrationData: function _getMigrationData() {                                                                 // 229
+    // XXX sanitize and make sure it's JSONible?                                                                    //
+    return this.keys;                                                                                               // 231
+  }                                                                                                                 // 232
+});                                                                                                                 // 44
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"migration.js":function(){
@@ -306,13 +284,13 @@ ReactiveDict._loadMigratedDict = function (dictName) {                          
   if (_.has(ReactiveDict._migratedDictData, dictName)) return ReactiveDict._migratedDictData[dictName];             // 5
                                                                                                                     //
   return null;                                                                                                      // 8
-};                                                                                                                  //
+};                                                                                                                  // 9
                                                                                                                     //
 ReactiveDict._registerDictForMigrate = function (dictName, dict) {                                                  // 11
   if (_.has(ReactiveDict._dictsToMigrate, dictName)) throw new Error("Duplicate ReactiveDict name: " + dictName);   // 12
                                                                                                                     //
   ReactiveDict._dictsToMigrate[dictName] = dict;                                                                    // 15
-};                                                                                                                  //
+};                                                                                                                  // 16
                                                                                                                     //
 if (Meteor.isClient && Package.reload) {                                                                            // 18
   // Put old migrated data into ReactiveDict._migratedDictData,                                                     //
@@ -322,15 +300,15 @@ if (Meteor.isClient && Package.reload) {                                        
                                                                                                                     //
   // On migration, assemble the data from all the dicts that have been                                              //
   // registered.                                                                                                    //
-  Package.reload.Reload._onMigrate('reactive-dict', function () {                                                   // 18
+  Package.reload.Reload._onMigrate('reactive-dict', function () {                                                   // 27
     var dictsToMigrate = ReactiveDict._dictsToMigrate;                                                              // 28
     var dataToMigrate = {};                                                                                         // 29
                                                                                                                     //
-    for (var dictName in meteorBabelHelpers.sanitizeForInObject(dictsToMigrate)) {                                  // 31
+    for (var dictName in dictsToMigrate) {                                                                          // 31
       dataToMigrate[dictName] = dictsToMigrate[dictName]._getMigrationData();                                       // 32
-    }return [true, { dicts: dataToMigrate }];                                                                       //
-  });                                                                                                               //
-}                                                                                                                   //
+    }return [true, { dicts: dataToMigrate }];                                                                       // 31
+  });                                                                                                               // 35
+}                                                                                                                   // 36
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}},{"extensions":[".js",".json"]});

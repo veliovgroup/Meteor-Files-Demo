@@ -49,30 +49,30 @@ var errorSchema = new SimpleSchema({                                            
   name: { type: String },                                                                                   // 6
   type: { type: String },                                                                                   // 7
   details: { type: Object, blackbox: true, optional: true }                                                 // 8
-});                                                                                                         //
+});                                                                                                         // 5
                                                                                                             //
 var errorsSchema = new SimpleSchema({                                                                       // 11
   errors: { type: Array },                                                                                  // 12
   'errors.$': { type: errorSchema }                                                                         // 13
-});                                                                                                         //
+});                                                                                                         // 11
                                                                                                             //
 ValidationError = function (_Meteor$Error) {                                                                // 16
-  (0, _inherits3['default'])(_class, _Meteor$Error);                                                        //
+  (0, _inherits3['default'])(_class, _Meteor$Error);                                                        // 16
                                                                                                             //
   function _class(errors) {                                                                                 // 17
     var message = arguments.length <= 1 || arguments[1] === undefined ? 'Validation Failed' : arguments[1];
-    (0, _classCallCheck3['default'])(this, _class);                                                         //
+    (0, _classCallCheck3['default'])(this, _class);                                                         // 17
                                                                                                             //
     errorsSchema.validate({ errors: errors });                                                              // 18
                                                                                                             //
     var _this = (0, _possibleConstructorReturn3['default'])(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors));
                                                                                                             //
     _this.errors = errors;                                                                                  // 22
-    return _this;                                                                                           //
-  }                                                                                                         //
+    return _this;                                                                                           // 17
+  }                                                                                                         // 23
                                                                                                             //
-  return _class;                                                                                            //
-}(Meteor.Error);                                                                                            //
+  return _class;                                                                                            // 16
+}(Meteor.Error);                                                                                            // 16
                                                                                                             //
 // If people use this to check for the error code, we can change it                                         //
 // in future versions                                                                                       //

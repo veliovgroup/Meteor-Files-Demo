@@ -22,14 +22,6 @@ makeInstaller = function (options) {
   // if they do not exactly match an installed module.
   var defaultExtensions = options.extensions || [".js", ".json"];
 
-  // This constructor will be used to instantiate the module objects
-  // passed to module factory functions (i.e. the third argument after
-  // require and exports).
-  var Module = options.Module || function Module(id) {
-    this.id = id;
-    this.children = [];
-  };
-
   // If defined, the options.onInstall function will be called any time
   // new modules are installed.
   var onInstall = options.onInstall;
@@ -68,6 +60,21 @@ makeInstaller = function (options) {
     }
     return rootRequire;
   }
+
+  // This constructor will be used to instantiate the module objects
+  // passed to module factory functions (i.e. the third argument after
+  // require and exports), and is exposed as install.Module in case the
+  // caller of makeInstaller wishes to modify Module.prototype.
+  function Module(id) {
+    this.id = id;
+    this.children = [];
+  }
+
+  Module.prototype.resolve = function (id) {
+    return this.require.resolve(id);
+  };
+
+  install.Module = Module;
 
   function getOwn(obj, key) {
     return hasOwn.call(obj, key) && obj[key];
@@ -108,7 +115,11 @@ makeInstaller = function (options) {
     require.resolve = function (id) {
       var f = fileResolve(file, id);
       if (f) return f.m.id;
-      throw new Error("Cannot find module '" + id + "'");
+      var error = new Error("Cannot find module '" + id + "'");
+      if (fallback && isFunction(fallback.resolve)) {
+        return fallback.resolve(id, file.m.id, error);
+      }
+      throw error;
     };
 
     return require;
@@ -142,6 +153,7 @@ makeInstaller = function (options) {
   function fileEvaluate(file, parentModule) {
     var contents = file && file.c;
     var module = file.m;
+
     if (! hasOwn.call(module, "exports")) {
       if (parentModule) {
         module.parent = parentModule;
@@ -156,14 +168,21 @@ makeInstaller = function (options) {
       if (! isFunction(module.useNode) ||
           ! module.useNode()) {
         contents(
-          file.r = file.r || makeRequire(file),
+          module.require = module.require || makeRequire(file),
           module.exports = {},
           module,
           file.m.id,
           file.p.m.id
         );
       }
+
+      module.loaded = true;
     }
+
+    if (isFunction(module.runModuleSetters)) {
+      module.runModuleSetters();
+    }
+
     return module.exports;
   }
 
@@ -393,7 +412,7 @@ var topLevelIdPattern = /^[^./]/;
 // been installed is required. For backwards compatibility, and so that we
 // can require binary dependencies on the server, we implement the
 // fallback in terms of Npm.require.
-options.fallback = function (id, dir, error) {
+options.fallback = function (id, parentId, error) {
   // For simplicity, we honor only top-level module identifiers here.
   // We could try to honor relative and absolute module identifiers by
   // somehow combining `id` with `dir`, but we'd have to be really careful
@@ -410,14 +429,22 @@ options.fallback = function (id, dir, error) {
   throw error;
 };
 
+options.fallback.resolve = function (id, parentId, error) {
+  if (Meteor.isServer &&
+      topLevelIdPattern.test(id)) {
+    // Allow any top-level identifier to resolve to itself on the server,
+    // so that options.fallback can have a chance to handle it.
+    return id;
+  }
+
+  throw error;
+};
+
+meteorInstall = makeInstaller(options);
+var Mp = meteorInstall.Module.prototype;
+
 if (Meteor.isServer) {
-  // Defining Module.prototype.useNode allows the module system to
-  // delegate evaluation to Node, unless useNode returns false.
-  (options.Module = function Module(id) {
-    // Same as the default Module constructor implementation.
-    this.id = id;
-    this.children = [];
-  }).prototype.useNode = function () {
+  Mp.useNode = function () {
     if (typeof npmRequire !== "function") {
       // Can't use Node if npmRequire is not defined.
       return false;
@@ -448,8 +475,6 @@ if (Meteor.isServer) {
     return true;
   };
 }
-
-meteorInstall = makeInstaller(options);
 
 /////////////////////////////////////////////////////////////////////////////
 

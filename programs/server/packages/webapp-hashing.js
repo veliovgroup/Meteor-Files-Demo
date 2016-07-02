@@ -48,7 +48,7 @@ WebAppHashing.calculateClientHash = function (manifest, includeFilter, runtimeCo
                                                                                                 //
   if (runtimeConfigOverride) {                                                                  // 24
     runtimeCfg = runtimeConfigOverride;                                                         // 25
-  }                                                                                             //
+  }                                                                                             // 26
                                                                                                 //
   hash.update(JSON.stringify(runtimeCfg, 'utf8'));                                              // 28
                                                                                                 //
@@ -56,10 +56,10 @@ WebAppHashing.calculateClientHash = function (manifest, includeFilter, runtimeCo
     if ((!includeFilter || includeFilter(resource.type)) && (resource.where === 'client' || resource.where === 'internal')) {
       hash.update(resource.path);                                                               // 33
       hash.update(resource.hash);                                                               // 34
-    }                                                                                           //
-  });                                                                                           //
+    }                                                                                           // 35
+  });                                                                                           // 36
   return hash.digest('hex');                                                                    // 37
-};                                                                                              //
+};                                                                                              // 38
                                                                                                 //
 WebAppHashing.calculateCordovaCompatibilityHash = function (platformVersion, pluginVersions) {  // 40
   var hash = crypto.createHash('sha1');                                                         // 42
@@ -67,28 +67,28 @@ WebAppHashing.calculateCordovaCompatibilityHash = function (platformVersion, plu
   hash.update(platformVersion);                                                                 // 44
                                                                                                 //
   // Sort plugins first so iteration order doesn't affect the hash                              //
-  var plugins = Object.keys(pluginVersions).sort();                                             // 41
+  var plugins = Object.keys(pluginVersions).sort();                                             // 47
   for (var _iterator = plugins, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-    var _ref;                                                                                   //
+    var _ref;                                                                                   // 48
                                                                                                 //
-    if (_isArray) {                                                                             //
-      if (_i >= _iterator.length) break;                                                        //
-      _ref = _iterator[_i++];                                                                   //
-    } else {                                                                                    //
-      _i = _iterator.next();                                                                    //
-      if (_i.done) break;                                                                       //
-      _ref = _i.value;                                                                          //
-    }                                                                                           //
+    if (_isArray) {                                                                             // 48
+      if (_i >= _iterator.length) break;                                                        // 48
+      _ref = _iterator[_i++];                                                                   // 48
+    } else {                                                                                    // 48
+      _i = _iterator.next();                                                                    // 48
+      if (_i.done) break;                                                                       // 48
+      _ref = _i.value;                                                                          // 48
+    }                                                                                           // 48
                                                                                                 //
-    var plugin = _ref;                                                                          //
+    var plugin = _ref;                                                                          // 48
                                                                                                 //
     var version = pluginVersions[plugin];                                                       // 49
     hash.update(plugin);                                                                        // 50
     hash.update(version);                                                                       // 51
-  }                                                                                             //
+  }                                                                                             // 52
                                                                                                 //
   return hash.digest('hex');                                                                    // 54
-};                                                                                              //
+};                                                                                              // 55
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}},{"extensions":[".js",".json"]});
