@@ -60,7 +60,7 @@ if (Meteor.isServer) {                                                          
   @param path      {String} - Path to file on FS                                                                       //
   @param maxLength {Number} - Max amount of chunks in stream                                                           //
   @param file      {Object} - fileRef Object                                                                           //
-  @summary writableStream wrapper class, makes sure chunks is written in given order                                   //
+  @summary writableStream wrapper class, makes sure chunks is written in given order. Implementation of queue stream.  //
    */                                                                                                                  //
   writeStream = function () {                                                                                          //
     function writeStream(path1, maxLength, file1) {                                                                    //
@@ -118,7 +118,7 @@ if (Meteor.isServer) {                                                          
     @memberOf writeStream                                                                                              //
     @name end                                                                                                          //
     @param {Function} callback - Callback                                                                              //
-    @summary Write chunk in given order                                                                                //
+    @summary Finishes writing to writableStream, only after all chunks in queue is written                             //
     @returns {Boolean} - True if stream is fulfilled, false if queue is in progress                                    //
      */                                                                                                                //
                                                                                                                        //
@@ -719,7 +719,7 @@ FilesCollection = function () {                                                 
       delete this.downloadCallback;                                                                                    //
       delete this.interceptDownload;                                                                                   //
       delete this.continueUploadTTL;                                                                                   //
-      if (_.has(Package, 'accounts-base') && Accounts) {                                                               //
+      if (_.has(Package, 'accounts-base')) {                                                                           //
         setTokenCookie = function setTokenCookie() {                                                                   //
           if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
             cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                           //
@@ -786,7 +786,7 @@ FilesCollection = function () {                                                 
         throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "] \"storagePath\" must be set on \"public\" collections! Note: \"storagePath\" must be equal on be inside of your web/proxy-server (absolute) root.");
       }                                                                                                                //
       if (storagePath == null) {                                                                                       //
-        storagePath = "assets/app/uploads/" + this.collectionName;                                                     //
+        storagePath = "assets" + nodePath.sep + "app" + nodePath.sep + "uploads" + nodePath.sep + this.collectionName;
       }                                                                                                                //
       Object.defineProperty(self, 'storagePath', {                                                                     //
         get: function () {                                                                                             //
@@ -796,7 +796,7 @@ FilesCollection = function () {                                                 
             if (_.isString(storagePath)) {                                                                             //
               sp = storagePath;                                                                                        //
             } else if (_.isFunction(storagePath)) {                                                                    //
-              sp = storagePath.call(self, "assets/app/uploads/" + self.collectionName);                                //
+              sp = storagePath.call(self, "assets" + nodePath.sep + "app" + nodePath.sep + "uploads" + nodePath.sep + self.collectionName);
             }                                                                                                          //
             if (!_.isString(sp)) {                                                                                     //
               throw new Meteor.Error(400, "[FilesCollection." + self.collectionName + "] \"storagePath\" function must return a String!");
@@ -1009,7 +1009,7 @@ FilesCollection = function () {                                                 
           if (request.method === 'POST') {                                                                             //
             body = '';                                                                                                 //
             handleError = function handleError(error) {                                                                //
-              console.warn("[FilesCollection] [Upload] [HTTP] Exception:", e);                                         //
+              console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                     //
               response.writeHead(500);                                                                                 //
               response.end(JSON.stringify({                                                                            //
                 error: error                                                                                           //
@@ -1262,7 +1262,7 @@ FilesCollection = function () {                                                 
     fileName = this._getFileName(opts.file);                                                                           //
     ref = this._getExt(fileName), extension = ref.extension, extensionWithDot = ref.extensionWithDot;                  //
     result = opts.file;                                                                                                //
-    result.path = this.storagePath + "/" + opts.FSName + extensionWithDot;                                             //
+    result.path = "" + this.storagePath + nodePath.sep + opts.FSName + extensionWithDot;                               //
     result.name = fileName;                                                                                            //
     result.meta = opts.file.meta;                                                                                      //
     result.extension = extension;                                                                                      //
@@ -1454,7 +1454,7 @@ FilesCollection = function () {                                                 
     if (Meteor.isServer) {                                                                                             //
       if (http) {                                                                                                      //
         cookie = http.request.Cookies;                                                                                 //
-        if (_.has(Package, 'accounts-base') && Accounts && cookie.has('meteor_login_token')) {                         //
+        if (_.has(Package, 'accounts-base') && cookie.has('meteor_login_token')) {                                     //
           user = Meteor.users.findOne({                                                                                //
             'services.resume.loginTokens.hashedToken': Accounts._hashLoginToken(cookie.get('meteor_login_token'))      //
           });                                                                                                          //
@@ -1467,7 +1467,7 @@ FilesCollection = function () {                                                 
         }                                                                                                              //
       }                                                                                                                //
     } else {                                                                                                           //
-      if (_.has(Package, 'accounts-base') && Accounts && Meteor.userId()) {                                            //
+      if (_.has(Package, 'accounts-base') && Meteor.userId()) {                                                        //
         result.user = function () {                                                                                    //
           return Meteor.user();                                                                                        //
         };                                                                                                             //
@@ -1577,7 +1577,7 @@ FilesCollection = function () {                                                 
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
     }                                                                                                                  //
-    opts.path = this.storagePath + "/" + FSName + extensionWithDot;                                                    //
+    opts.path = "" + this.storagePath + nodePath.sep + FSName + extensionWithDot;                                      //
     opts.type = this._getMimeType(opts);                                                                               //
     if (opts.meta == null) {                                                                                           //
       opts.meta = {};                                                                                                  //
@@ -1660,7 +1660,7 @@ FilesCollection = function () {                                                 
     if (opts.meta == null) {                                                                                           //
       opts.meta = {};                                                                                                  //
     }                                                                                                                  //
-    opts.path = this.storagePath + "/" + FSName + extensionWithDot;                                                    //
+    opts.path = "" + this.storagePath + nodePath.sep + FSName + extensionWithDot;                                      //
     storeResult = function storeResult(result, callback) {                                                             //
       result._id = fileId;                                                                                             //
       self.collection.insert(result, function (error) {                                                                //
@@ -1784,7 +1784,7 @@ FilesCollection = function () {                                                 
             type: opts.type,                                                                                           //
             size: opts.size,                                                                                           //
             extension: extension,                                                                                      //
-            _storagePath: path.replace("/" + fileName, '')                                                             //
+            _storagePath: path.replace("" + nodePath.sep + fileName, '')                                               //
           });                                                                                                          //
           result._id = Random.id();                                                                                    //
           return self.collection.insert(_.clone(result), function (error) {                                            //
@@ -2459,10 +2459,13 @@ FilesCollection = function () {                                                 
                                                                                                                        //
   FilesCollection.prototype.remove = function (selector, callback) {                                                   //
     var docs, files, self;                                                                                             //
+    if (selector == null) {                                                                                            //
+      selector = {};                                                                                                   //
+    }                                                                                                                  //
     if (this.debug) {                                                                                                  //
       console.info("[FilesCollection] [remove(" + JSON.stringify(selector) + ")]");                                    //
     }                                                                                                                  //
-    check(selector, Match.Optional(Match.OneOf(Object, String)));                                                      //
+    check(selector, Match.OneOf(Object, String));                                                                      //
     check(callback, Match.Optional(Function));                                                                         //
     if (Meteor.isClient) {                                                                                             //
       if (this.allowClientCode) {                                                                                      //
@@ -2513,10 +2516,9 @@ FilesCollection = function () {                                                 
   @locus Server                                                                                                        //
   @memberOf FilesCollection                                                                                            //
   @name deny                                                                                                           //
-  @name allow                                                                                                          //
   @param {Object} rules                                                                                                //
-  @see http://docs.meteor.com/#/full/allow                                                                             //
-  @summary link Mongo.Collection allow/deny methods                                                                    //
+  @see  https://docs.meteor.com/api/collections.html#Mongo-Collection-deny                                             //
+  @summary link Mongo.Collection deny methods                                                                          //
   @returns {Mongo.Collection} Instance                                                                                 //
    */                                                                                                                  //
                                                                                                                        //
@@ -2524,6 +2526,16 @@ FilesCollection = function () {                                                 
     this.collection.deny(rules);                                                                                       //
     return this.collection;                                                                                            //
   } : void 0;                                                                                                          //
+                                                                                                                       //
+  /*                                                                                                                   //
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name allow                                                                                                          //
+  @param {Object} rules                                                                                                //
+  @see https://docs.meteor.com/api/collections.html#Mongo-Collection-allow                                             //
+  @summary link Mongo.Collection allow methods                                                                         //
+  @returns {Mongo.Collection} Instance                                                                                 //
+   */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype.allow = Meteor.isServer ? function (rules) {                                               //
     this.collection.allow(rules);                                                                                      //
@@ -2534,9 +2546,8 @@ FilesCollection = function () {                                                 
   @locus Server                                                                                                        //
   @memberOf FilesCollection                                                                                            //
   @name denyClient                                                                                                     //
-  @name allowClient                                                                                                    //
-  @see http://docs.meteor.com/#/full/allow                                                                             //
-  @summary Shorthands for Mongo.Collection allow/deny methods                                                          //
+  @see https://docs.meteor.com/api/collections.html#Mongo-Collection-deny                                              //
+  @summary Shorthands for Mongo.Collection deny method                                                                 //
   @returns {Mongo.Collection} Instance                                                                                 //
    */                                                                                                                  //
                                                                                                                        //
@@ -2566,6 +2577,15 @@ FilesCollection = function () {                                                 
     });                                                                                                                //
     return this.collection;                                                                                            //
   } : void 0;                                                                                                          //
+                                                                                                                       //
+  /*                                                                                                                   //
+  @locus Server                                                                                                        //
+  @memberOf FilesCollection                                                                                            //
+  @name allowClient                                                                                                    //
+  @see https://docs.meteor.com/api/collections.html#Mongo-Collection-allow                                             //
+  @summary Shorthands for Mongo.Collection allow method                                                                //
+  @returns {Mongo.Collection} Instance                                                                                 //
+   */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype.allowClient = Meteor.isServer ? function () {                                              //
     this.collection.allow({                                                                                            //
@@ -2617,11 +2637,12 @@ FilesCollection = function () {                                                 
       if (fileRef.versions && !_.isEmpty(fileRef.versions)) {                                                          //
         _.each(fileRef.versions, function (vRef) {                                                                     //
           return bound(function () {                                                                                   //
-            return fs.unlink(vRef.path, NOOP);                                                                         //
+            fs.unlink(vRef.path, NOOP);                                                                                //
           });                                                                                                          //
         });                                                                                                            //
+      } else {                                                                                                         //
+        fs.unlink(fileRef.path, NOOP);                                                                                 //
       }                                                                                                                //
-      fs.unlink(fileRef.path, NOOP);                                                                                   //
     }                                                                                                                  //
     return this;                                                                                                       //
   } : void 0;                                                                                                          //

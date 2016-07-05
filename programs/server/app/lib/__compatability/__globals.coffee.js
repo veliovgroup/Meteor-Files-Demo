@@ -41,6 +41,14 @@ if (Meteor.isClient) {                                                 // 5
   };                                                                   //
   _app.storeTTLUser = 432000000;                                       //
   _app.showProjectInfo = new ReactiveVar(false);                       //
+  _app.serviceConfiguration = new ReactiveVar({});                     //
+  Meteor.call('getServiceConfiguration', function(error, serviceConfiguration) {
+    if (error) {                                                       //
+      console.error(error);                                            //
+    } else {                                                           //
+      _app.serviceConfiguration.set(serviceConfiguration);             //
+    }                                                                  //
+  });                                                                  //
   Meteor.autorun(function() {                                          //
     ClientStorage.set('blamed', _app.blamed.get());                    //
   });                                                                  //
@@ -72,7 +80,7 @@ if (Meteor.isClient) {                                                 // 5
     return filesize(size);                                             //
   });                                                                  //
   Template.registerHelper('extless', function(filename) {              //
-    var parts;                                                         // 44
+    var parts;                                                         // 52
     if (filename == null) {                                            //
       filename = '';                                                   //
     }                                                                  //
@@ -80,11 +88,11 @@ if (Meteor.isClient) {                                                 // 5
     if (parts.length > 1) {                                            //
       parts.pop();                                                     //
     }                                                                  //
-    return parts.join('.');                                            // 46
+    return parts.join('.');                                            // 54
   });                                                                  //
   Template.registerHelper('DateToISO', function(time) {                //
     if (!time) {                                                       //
-      return 0;                                                        // 48
+      return 0;                                                        // 56
     }                                                                  //
     if (_.isString(time) || _.isNumber(time)) {                        //
       time = new Date(time);                                           //
