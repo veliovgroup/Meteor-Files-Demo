@@ -2,22 +2,22 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "d9560c85d5c28b86b5d3eca27ff62a219b647b72.js",
+      "path": "0f6a56f06601d21b5cfa972f0dad48a5b1d901b1.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/d9560c85d5c28b86b5d3eca27ff62a219b647b72.js?meteor_js_resource=true",
-      "size": 783986,
-      "hash": "d9560c85d5c28b86b5d3eca27ff62a219b647b72"
+      "url": "/0f6a56f06601d21b5cfa972f0dad48a5b1d901b1.js?meteor_js_resource=true",
+      "size": 786312,
+      "hash": "0f6a56f06601d21b5cfa972f0dad48a5b1d901b1"
     },
     {
-      "path": "8f18cc412ac5d6d9b5c43ec44aa22010f58af001.css",
+      "path": "315405a7d60f41d6be2b961b61f79310a5948ac1.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/8f18cc412ac5d6d9b5c43ec44aa22010f58af001.css?meteor_css_resource=true",
-      "size": 64619,
-      "hash": "8f18cc412ac5d6d9b5c43ec44aa22010f58af001"
+      "url": "/315405a7d60f41d6be2b961b61f79310a5948ac1.css?meteor_css_resource=true",
+      "size": 64617,
+      "hash": "315405a7d60f41d6be2b961b61f79310a5948ac1"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",

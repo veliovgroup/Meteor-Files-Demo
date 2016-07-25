@@ -17,7 +17,7 @@ var moment;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 //! moment.js
-//! version : 2.14.1
+//! version : 2.14.4
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
 //! momentjs.com
@@ -4174,7 +4174,7 @@ var moment;
     // Side effect imports
 
 
-    utils_hooks__hooks.version = '2.14.1';
+    utils_hooks__hooks.version = '2.14.4';
 
     setHookCallback(local__createLocal);
 

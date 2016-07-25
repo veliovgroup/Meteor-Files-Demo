@@ -4,7 +4,6 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
-var Cookies = Package['ostrio:cookies'].Cookies;
 var WebApp = Package.webapp.WebApp;
 var main = Package.webapp.main;
 var WebAppInternals = Package.webapp.WebAppInternals;
@@ -12,16 +11,21 @@ var _ = Package.underscore._;
 var check = Package.check.check;
 var Match = Package.check.Match;
 var Random = Package.random.Random;
+var ECMAScript = Package.ecmascript.ECMAScript;
+var Cookies = Package['ostrio:cookies'].Cookies;
 var Symbol = Package['ecmascript-runtime'].Symbol;
 var Map = Package['ecmascript-runtime'].Map;
 var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
+var meteorInstall = Package.modules.meteorInstall;
+var Buffer = Package.modules.Buffer;
+var process = Package.modules.process;
 
 /* Package-scope variables */
 var __coffeescriptShare, FilesCollection;
 
-(function(){
+var require = meteorInstall({"node_modules":{"meteor":{"ostrio:files":{"files.coffee.js":["./event-emitter.jsx",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -30,6 +34,7 @@ var __coffeescriptShare, FilesCollection;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
+exports.__esModule = true;                                                                                             //
 var FileCursor, FilesCursor, NOOP, Throttle, bound, events, fileType, _fixJSONParse, _fixJSONStringify, formatFleURL, fs, nodePath, request, writeStream;                 
                                                                                                                        //
 NOOP = function NOOP() {};                                                                                             //
@@ -107,7 +112,7 @@ if (Meteor.isServer) {                                                          
         } else {                                                                                                       //
           self = this;                                                                                                 //
           Meteor.setTimeout(function () {                                                                              //
-            return self.write(num, chunk);                                                                             //
+            self.write(num, chunk);                                                                                    //
           }, 25);                                                                                                      //
         }                                                                                                              //
       }                                                                                                                //
@@ -131,7 +136,7 @@ if (Meteor.isServer) {                                                          
         } else {                                                                                                       //
           self = this;                                                                                                 //
           Meteor.setTimeout(function () {                                                                              //
-            return self.end(callback);                                                                                 //
+            self.end(callback);                                                                                        //
           }, 25);                                                                                                      //
         }                                                                                                              //
       }                                                                                                                //
@@ -140,6 +145,8 @@ if (Meteor.isServer) {                                                          
                                                                                                                        //
     return writeStream;                                                                                                //
   }();                                                                                                                 //
+} else {var EventEmitter;module.import('./event-emitter.jsx',{"EventEmitter":function(v){EventEmitter=v}});            //
+                                                                                                                       //
 }                                                                                                                      //
                                                                                                                        //
 /*                                                                                                                     //
@@ -176,7 +183,7 @@ FileCursor = function () {                                                      
     if (this._fileRef) {                                                                                               //
       this._collection.remove(this._fileRef._id, callback);                                                            //
     } else {                                                                                                           //
-      callback(new Meteor.Error(404, 'No such file'));                                                                 //
+      callback && callback(new Meteor.Error(404, 'No such file'));                                                     //
     }                                                                                                                  //
     return this;                                                                                                       //
   };                                                                                                                   //
@@ -430,7 +437,7 @@ FilesCursor = function () {                                                     
     if (this._collection.debug) {                                                                                      //
       console.info('[FilesCollection] [FilesCursor] [remove()]');                                                      //
     }                                                                                                                  //
-    this._collection.remove(this._selector, callback, this);                                                           //
+    this._collection.remove(this._selector, callback);                                                                 //
     return this;                                                                                                       //
   };                                                                                                                   //
                                                                                                                        //
@@ -618,6 +625,7 @@ _fixJSONStringify = function fixJSONStringify(obj) {                            
 @param config.parentDirPermissions {Number}  - [Server] Permissions which will be set to parent directory of uploaded files (octal), like: `611` or `0o777`. Default: 0755
 @param config.storagePath    {String|Function}  - [Server] Storage path on file system                                 //
 @param config.cacheControl   {String}  - [Server] Default `Cache-Control` header                                       //
+@param config.responseHeaders {Object|Function} - [Server] Custom response headers, if function is passed, must return Object
 @param config.throttle       {Number}  - [Server] bps throttle threshold                                               //
 @param config.downloadRoute  {String}  - [Both]   Server Route used to retrieve files                                  //
 @param config.collection     {Mongo.Collection} - [Both] Mongo Collection Instance                                     //
@@ -638,7 +646,13 @@ return `false` or `String` to abort upload                                      
 @summary Create new instance of FilesCollection                                                                        //
  */                                                                                                                    //
                                                                                                                        //
-FilesCollection = function () {                                                                                        //
+exports.                                                                                                               //
+                                                                                                                       //
+/*                                                                                                                     //
+Export the FilesCollection class                                                                                       //
+ */                                                                                                                    //
+                                                                                                                       //
+FilesCollection = FilesCollection = function () {                                                                      //
   var FileUpload, UploadInstance;                                                                                      //
                                                                                                                        //
   FilesCollection.prototype.__proto__ = function () {                                                                  //
@@ -657,7 +671,7 @@ FilesCollection = function () {                                                 
       EventEmitter.call(this);                                                                                         //
     }                                                                                                                  //
     if (config) {                                                                                                      //
-      storagePath = config.storagePath, this.collection = config.collection, this.collectionName = config.collectionName, this.downloadRoute = config.downloadRoute, this.schema = config.schema, this.chunkSize = config.chunkSize, this.namingFunction = config.namingFunction, this.debug = config.debug, this.onbeforeunloadMessage = config.onbeforeunloadMessage, this.permissions = config.permissions, this.parentDirPermissions = config.parentDirPermissions, this.allowClientCode = config.allowClientCode, this.onBeforeUpload = config.onBeforeUpload, this.integrityCheck = config.integrityCheck, this["protected"] = config["protected"], this["public"] = config["public"], this.strict = config.strict, this.downloadCallback = config.downloadCallback, this.cacheControl = config.cacheControl, this.throttle = config.throttle, this.onAfterUpload = config.onAfterUpload, this.onAfterRemove = config.onAfterRemove, this.interceptDownload = config.interceptDownload, this.onBeforeRemove = config.onBeforeRemove, this.continueUploadTTL = config.continueUploadTTL;
+      storagePath = config.storagePath, this.collection = config.collection, this.collectionName = config.collectionName, this.downloadRoute = config.downloadRoute, this.schema = config.schema, this.chunkSize = config.chunkSize, this.namingFunction = config.namingFunction, this.debug = config.debug, this.onbeforeunloadMessage = config.onbeforeunloadMessage, this.permissions = config.permissions, this.parentDirPermissions = config.parentDirPermissions, this.allowClientCode = config.allowClientCode, this.onBeforeUpload = config.onBeforeUpload, this.integrityCheck = config.integrityCheck, this["protected"] = config["protected"], this["public"] = config["public"], this.strict = config.strict, this.downloadCallback = config.downloadCallback, this.cacheControl = config.cacheControl, this.responseHeaders = config.responseHeaders, this.throttle = config.throttle, this.onAfterUpload = config.onAfterUpload, this.onAfterRemove = config.onAfterRemove, this.interceptDownload = config.interceptDownload, this.onBeforeRemove = config.onBeforeRemove, this.continueUploadTTL = config.continueUploadTTL;
     }                                                                                                                  //
     self = this;                                                                                                       //
     cookie = new Cookies();                                                                                            //
@@ -719,19 +733,28 @@ FilesCollection = function () {                                                 
       delete this.downloadCallback;                                                                                    //
       delete this.interceptDownload;                                                                                   //
       delete this.continueUploadTTL;                                                                                   //
+      delete this.responseHeaders;                                                                                     //
       if (_.has(Package, 'accounts-base')) {                                                                           //
-        setTokenCookie = function setTokenCookie() {                                                                   //
-          if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
-            cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                           //
-            return cookie.send();                                                                                      //
+        setTokenCookie = function () {                                                                                 //
+          function setTokenCookie() {                                                                                  //
+            if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
+              cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                         //
+              return cookie.send();                                                                                    //
+            }                                                                                                          //
           }                                                                                                            //
-        };                                                                                                             //
-        unsetTokenCookie = function unsetTokenCookie() {                                                               //
-          if (cookie.has('meteor_login_token')) {                                                                      //
-            cookie.remove('meteor_login_token');                                                                       //
-            return cookie.send();                                                                                      //
+                                                                                                                       //
+          return setTokenCookie;                                                                                       //
+        }();                                                                                                           //
+        unsetTokenCookie = function () {                                                                               //
+          function unsetTokenCookie() {                                                                                //
+            if (cookie.has('meteor_login_token')) {                                                                    //
+              cookie.remove('meteor_login_token');                                                                     //
+              return cookie.send();                                                                                    //
+            }                                                                                                          //
           }                                                                                                            //
-        };                                                                                                             //
+                                                                                                                       //
+          return unsetTokenCookie;                                                                                     //
+        }();                                                                                                           //
         Accounts.onLogin(function () {                                                                                 //
           setTokenCookie();                                                                                            //
         });                                                                                                            //
@@ -782,6 +805,28 @@ FilesCollection = function () {                                                 
       if (this.continueUploadTTL == null) {                                                                            //
         this.continueUploadTTL = 10800;                                                                                //
       }                                                                                                                //
+      if (this.responseHeaders == null) {                                                                              //
+        this.responseHeaders = function (responseCode, fileRef, versionRef) {                                          //
+          var headers;                                                                                                 //
+          headers = {};                                                                                                //
+          switch (responseCode) {                                                                                      //
+            case '206':                                                                                                //
+              headers['Pragma'] = 'private';                                                                           //
+              headers['Trailer'] = 'expires';                                                                          //
+              headers['Transfer-Encoding'] = 'chunked';                                                                //
+              break;                                                                                                   //
+            case '400':                                                                                                //
+              headers['Cache-Control'] = 'no-cache';                                                                   //
+              break;                                                                                                   //
+            case '416':                                                                                                //
+              headers['Content-Range'] = "bytes */" + versionRef.size;                                                 //
+          }                                                                                                            //
+          headers['Connection'] = 'keep-alive';                                                                        //
+          headers['Content-Type'] = versionRef.type || 'application/octet-stream';                                     //
+          headers['Accept-Ranges'] = 'bytes';                                                                          //
+          return headers;                                                                                              //
+        };                                                                                                             //
+      }                                                                                                                //
       if (this["public"] && !storagePath) {                                                                            //
         throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "] \"storagePath\" must be set on \"public\" collections! Note: \"storagePath\" must be equal on be inside of your web/proxy-server (absolute) root.");
       }                                                                                                                //
@@ -830,6 +875,7 @@ FilesCollection = function () {                                                 
       check(this.downloadCallback, Match.OneOf(false, Function));                                                      //
       check(this.interceptDownload, Match.OneOf(false, Function));                                                     //
       check(this.continueUploadTTL, Number);                                                                           //
+      check(this.responseHeaders, Match.OneOf(Object, Function));                                                      //
       this._preCollection = new Mongo.Collection('__pre_' + this.collectionName);                                      //
       this._preCollection._ensureIndex({                                                                               //
         'createdAt': 1                                                                                                 //
@@ -855,8 +901,7 @@ FilesCollection = function () {                                                 
         }()                                                                                                            //
       });                                                                                                              //
       this._createStream = function (_id, path, opts) {                                                                //
-        self._currentUploads[_id] = new writeStream(path, opts.fileLength, opts);                                      //
-        return self._currentUploads[_id];                                                                              //
+        return self._currentUploads[_id] = new writeStream(path, opts.fileLength, opts);                               //
       };                                                                                                               //
       this._continueUpload = function (_id) {                                                                          //
         var contUpld, ref, ref1;                                                                                       //
@@ -1008,13 +1053,17 @@ FilesCollection = function () {                                                 
         if (!!~request._parsedUrl.path.indexOf(self.downloadRoute + "/" + self.collectionName + "/__upload")) {        //
           if (request.method === 'POST') {                                                                             //
             body = '';                                                                                                 //
-            handleError = function handleError(error) {                                                                //
-              console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                     //
-              response.writeHead(500);                                                                                 //
-              response.end(JSON.stringify({                                                                            //
-                error: error                                                                                           //
-              }));                                                                                                     //
-            };                                                                                                         //
+            handleError = function () {                                                                                //
+              function handleError(error) {                                                                            //
+                console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                   //
+                response.writeHead(500);                                                                               //
+                response.end(JSON.stringify({                                                                          //
+                  error: error                                                                                         //
+                }));                                                                                                   //
+              }                                                                                                        //
+                                                                                                                       //
+              return handleError;                                                                                      //
+            }();                                                                                                       //
             request.on('data', function (data) {                                                                       //
               return bound(function () {                                                                               //
                 body += data;                                                                                          //
@@ -1422,9 +1471,13 @@ FilesCollection = function () {                                                 
     var cleanName, fileName;                                                                                           //
     fileName = fileData.name || fileData.fileName;                                                                     //
     if (_.isString(fileName) && fileName.length > 0) {                                                                 //
-      cleanName = function cleanName(str) {                                                                            //
-        return str.replace(/\.\./g, '').replace(/\//g, '');                                                            //
-      };                                                                                                               //
+      cleanName = function () {                                                                                        //
+        function cleanName(str) {                                                                                      //
+          return str.replace(/\.\./g, '').replace(/\//g, '');                                                          //
+        }                                                                                                              //
+                                                                                                                       //
+        return cleanName;                                                                                              //
+      }();                                                                                                             //
       return cleanName(fileData.name || fileData.fileName);                                                            //
     } else {                                                                                                           //
       return '';                                                                                                       //
@@ -1551,11 +1604,12 @@ FilesCollection = function () {                                                 
   @param {String} opts.type - File mime-type                                                                           //
   @param {Object} opts.meta - File additional meta-data                                                                //
   @param {Function} callback - function(error, fileObj){...}                                                           //
+  @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                     //
   @summary Write buffer to FS and add to FilesCollection Collection                                                    //
   @returns {FilesCollection} Instance                                                                                  //
    */                                                                                                                  //
                                                                                                                        //
-  FilesCollection.prototype.write = Meteor.isServer ? function (buffer, opts, callback) {                              //
+  FilesCollection.prototype.write = Meteor.isServer ? function (buffer, opts, callback, proceedAfterUpload) {          //
     var FSName, extension, extensionWithDot, fileId, fileName, ref, result, self, stream;                              //
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
@@ -1564,11 +1618,17 @@ FilesCollection = function () {                                                 
       console.info('[FilesCollection] [write()]');                                                                     //
     }                                                                                                                  //
     if (_.isFunction(opts)) {                                                                                          //
+      proceedAfterUpload = callback;                                                                                   //
       callback = opts;                                                                                                 //
       opts = {};                                                                                                       //
+    } else if (_.isBoolean(callback)) {                                                                                //
+      proceedAfterUpload = callback;                                                                                   //
+    } else if (_.isBoolean(opts)) {                                                                                    //
+      proceedAfterUpload = opts;                                                                                       //
     }                                                                                                                  //
     check(opts, Match.Optional(Object));                                                                               //
     check(callback, Match.Optional(Function));                                                                         //
+    check(proceedAfterUpload, Match.Optional(Boolean));                                                                //
     fileId = Random.id();                                                                                              //
     FSName = this.namingFunction ? this.namingFunction() : fileId;                                                     //
     fileName = opts.name || opts.fileName ? opts.name || opts.fileName : FSName;                                       //
@@ -1601,18 +1661,22 @@ FilesCollection = function () {                                                 
     stream.end(buffer, function (error) {                                                                              //
       return bound(function () {                                                                                       //
         if (error) {                                                                                                   //
-          return callback && callback(error);                                                                          //
+          callback && callback(error);                                                                                 //
         } else {                                                                                                       //
-          return self.collection.insert(_.clone(result), function (error) {                                            //
+          self.collection.insert(_.clone(result), function (error) {                                                   //
             if (error) {                                                                                               //
               callback && callback(error);                                                                             //
               if (self.debug) {                                                                                        //
-                return console.warn("[FilesCollection] [write] [insert] Error: " + fileName + " -> " + self.collectionName, error);
+                console.warn("[FilesCollection] [write] [insert] Error: " + fileName + " -> " + self.collectionName, error);
               }                                                                                                        //
             } else {                                                                                                   //
               callback && callback(null, result);                                                                      //
+              if (proceedAfterUpload === true) {                                                                       //
+                self.onAfterUpload && self.onAfterUpload.call(self, result);                                           //
+                self.emit('afterUpload', result);                                                                      //
+              }                                                                                                        //
               if (self.debug) {                                                                                        //
-                return console.info("[FilesCollection] [write]: " + fileName + " -> " + self.collectionName);          //
+                console.info("[FilesCollection] [write]: " + fileName + " -> " + self.collectionName);                 //
               }                                                                                                        //
             }                                                                                                          //
           });                                                                                                          //
@@ -1632,22 +1696,29 @@ FilesCollection = function () {                                                 
   @param {String} opts.type - File mime-type                                                                           //
   @param {Object} opts.meta - File additional meta-data                                                                //
   @param {Function} callback - function(error, fileObj){...}                                                           //
+  @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                     //
   @summary Download file, write stream to FS and add to FilesCollection Collection                                     //
   @returns {FilesCollection} Instance                                                                                  //
    */                                                                                                                  //
                                                                                                                        //
-  FilesCollection.prototype.load = Meteor.isServer ? function (url, opts, callback) {                                  //
+  FilesCollection.prototype.load = Meteor.isServer ? function (url, opts, callback, proceedAfterUpload) {              //
     var FSName, extension, extensionWithDot, fileId, fileName, pathParts, ref, self, storeResult;                      //
     if (this.debug) {                                                                                                  //
       console.info("[FilesCollection] [load(" + url + ", " + JSON.stringify(opts) + ", callback)]");                   //
     }                                                                                                                  //
     if (_.isFunction(opts)) {                                                                                          //
+      proceedAfterUpload = callback;                                                                                   //
       callback = opts;                                                                                                 //
       opts = {};                                                                                                       //
+    } else if (_.isBoolean(callback)) {                                                                                //
+      proceedAfterUpload = callback;                                                                                   //
+    } else if (_.isBoolean(opts)) {                                                                                    //
+      proceedAfterUpload = opts;                                                                                       //
     }                                                                                                                  //
     check(url, String);                                                                                                //
     check(opts, Match.Optional(Object));                                                                               //
     check(callback, Match.Optional(Function));                                                                         //
+    check(proceedAfterUpload, Match.Optional(Boolean));                                                                //
     self = this;                                                                                                       //
     if (opts == null) {                                                                                                //
       opts = {};                                                                                                       //
@@ -1661,22 +1732,30 @@ FilesCollection = function () {                                                 
       opts.meta = {};                                                                                                  //
     }                                                                                                                  //
     opts.path = "" + this.storagePath + nodePath.sep + FSName + extensionWithDot;                                      //
-    storeResult = function storeResult(result, callback) {                                                             //
-      result._id = fileId;                                                                                             //
-      self.collection.insert(result, function (error) {                                                                //
-        if (error) {                                                                                                   //
-          callback && callback(error);                                                                                 //
-          if (self.debug) {                                                                                            //
-            console.error("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
+    storeResult = function () {                                                                                        //
+      function storeResult(result, callback) {                                                                         //
+        result._id = fileId;                                                                                           //
+        self.collection.insert(result, function (error) {                                                              //
+          if (error) {                                                                                                 //
+            callback && callback(error);                                                                               //
+            if (self.debug) {                                                                                          //
+              console.error("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
+            }                                                                                                          //
+          } else {                                                                                                     //
+            callback && callback(null, result);                                                                        //
+            if (proceedAfterUpload === true) {                                                                         //
+              self.onAfterUpload && self.onAfterUpload.call(self, result);                                             //
+              self.emit('afterUpload', result);                                                                        //
+            }                                                                                                          //
+            if (self.debug) {                                                                                          //
+              console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);            //
+            }                                                                                                          //
           }                                                                                                            //
-        } else {                                                                                                       //
-          callback && callback(null, result);                                                                          //
-          if (self.debug) {                                                                                            //
-            console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);              //
-          }                                                                                                            //
-        }                                                                                                              //
-      });                                                                                                              //
-    };                                                                                                                 //
+        });                                                                                                            //
+      }                                                                                                                //
+                                                                                                                       //
+      return storeResult;                                                                                              //
+    }();                                                                                                               //
     request.get(url).on('error', function (error) {                                                                    //
       return bound(function () {                                                                                       //
         callback && callback(error);                                                                                   //
@@ -1735,18 +1814,24 @@ FilesCollection = function () {                                                 
   @param {String} opts.type - File mime-type                                                                           //
   @param {Object} opts.meta - File additional meta-data                                                                //
   @param {Function} callback - function(error, fileObj){...}                                                           //
+  @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                     //
   @summary Add file from FS to FilesCollection                                                                         //
   @returns {FilesCollection} Instance                                                                                  //
    */                                                                                                                  //
                                                                                                                        //
-  FilesCollection.prototype.addFile = Meteor.isServer ? function (path, opts, callback) {                              //
+  FilesCollection.prototype.addFile = Meteor.isServer ? function (path, opts, callback, proceedAfterUpload) {          //
     var self;                                                                                                          //
     if (this.debug) {                                                                                                  //
       console.info("[FilesCollection] [addFile(" + path + ")]");                                                       //
     }                                                                                                                  //
     if (_.isFunction(opts)) {                                                                                          //
+      proceedAfterUpload = callback;                                                                                   //
       callback = opts;                                                                                                 //
       opts = {};                                                                                                       //
+    } else if (_.isBoolean(callback)) {                                                                                //
+      proceedAfterUpload = callback;                                                                                   //
+    } else if (_.isBoolean(opts)) {                                                                                    //
+      proceedAfterUpload = opts;                                                                                       //
     }                                                                                                                  //
     if (this["public"]) {                                                                                              //
       throw new Meteor.Error(403, 'Can not run [addFile] on public collection! Just Move file to root of your server, then add record to Collection');
@@ -1754,12 +1839,13 @@ FilesCollection = function () {                                                 
     check(path, String);                                                                                               //
     check(opts, Match.Optional(Object));                                                                               //
     check(callback, Match.Optional(Function));                                                                         //
+    check(proceedAfterUpload, Match.Optional(Boolean));                                                                //
     self = this;                                                                                                       //
     fs.stat(path, function (error, stats) {                                                                            //
       return bound(function () {                                                                                       //
         var extension, extensionWithDot, fileName, pathParts, ref, result;                                             //
         if (error) {                                                                                                   //
-          return callback && callback(error);                                                                          //
+          callback && callback(error);                                                                                 //
         } else if (stats.isFile()) {                                                                                   //
           pathParts = path.split('/');                                                                                 //
           fileName = pathParts[pathParts.length - 1];                                                                  //
@@ -1787,21 +1873,25 @@ FilesCollection = function () {                                                 
             _storagePath: path.replace("" + nodePath.sep + fileName, '')                                               //
           });                                                                                                          //
           result._id = Random.id();                                                                                    //
-          return self.collection.insert(_.clone(result), function (error) {                                            //
+          self.collection.insert(_.clone(result), function (error) {                                                   //
             if (error) {                                                                                               //
               callback && callback(error);                                                                             //
               if (self.debug) {                                                                                        //
-                return console.warn("[FilesCollection] [addFile] [insert] Error: " + fileName + " -> " + self.collectionName, error);
+                console.warn("[FilesCollection] [addFile] [insert] Error: " + fileName + " -> " + self.collectionName, error);
               }                                                                                                        //
             } else {                                                                                                   //
               callback && callback(null, result);                                                                      //
+              if (proceedAfterUpload === true) {                                                                       //
+                self.onAfterUpload && self.onAfterUpload.call(self, result);                                           //
+                self.emit('afterUpload', result);                                                                      //
+              }                                                                                                        //
               if (self.debug) {                                                                                        //
-                return console.info("[FilesCollection] [addFile]: " + fileName + " -> " + self.collectionName);        //
+                console.info("[FilesCollection] [addFile]: " + fileName + " -> " + self.collectionName);               //
               }                                                                                                        //
             }                                                                                                          //
           });                                                                                                          //
         } else {                                                                                                       //
-          return callback && callback(new Meteor.Error(400, "[FilesCollection] [addFile(" + path + ")]: File does not exist"));
+          callback && callback(new Meteor.Error(400, "[FilesCollection] [addFile(" + path + ")]: File does not exist"));
         }                                                                                                              //
       });                                                                                                              //
     });                                                                                                                //
@@ -1824,7 +1914,7 @@ FilesCollection = function () {                                                 
       selector = {};                                                                                                   //
     }                                                                                                                  //
     if (this.debug) {                                                                                                  //
-      console.info("[FilesCollection] [findOne(" + JSON.stringify(selector) + ")]");                                   //
+      console.info("[FilesCollection] [findOne(" + JSON.stringify(selector) + ", " + JSON.stringify(options) + ")]");  //
     }                                                                                                                  //
     check(selector, Match.OneOf(Object, String));                                                                      //
     check(options, Match.Optional(Object));                                                                            //
@@ -1891,12 +1981,10 @@ FilesCollection = function () {                                                 
    */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype.insert = Meteor.isClient ? function (config, autoStart) {                                  //
-    var mName;                                                                                                         //
     if (autoStart == null) {                                                                                           //
       autoStart = true;                                                                                                //
     }                                                                                                                  //
-    mName = autoStart ? 'start' : 'manual';                                                                            //
-    return new this._UploadInstance(config, this)[mName]();                                                            //
+    return new this._UploadInstance(config, this)[autoStart ? 'start' : 'manual']();                                   //
   } : void 0;                                                                                                          //
                                                                                                                        //
   /*                                                                                                                   //
@@ -2481,7 +2569,7 @@ FilesCollection = function () {                                                 
       if (files.count() > 0) {                                                                                         //
         self = this;                                                                                                   //
         files.forEach(function (file) {                                                                                //
-          return self.unlink(file);                                                                                    //
+          self.unlink(file);                                                                                           //
         });                                                                                                            //
       }                                                                                                                //
       if (this.onAfterRemove) {                                                                                        //
@@ -2747,7 +2835,7 @@ FilesCollection = function () {                                                 
    */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype.serve = Meteor.isServer ? function (http, fileRef, vRef, version, readableStream, responseType, force200) {
-    var array, dispositionEncoding, dispositionName, dispositionType, end, partiral, ref, ref1, reqRange, self, start, stream, streamErrorHandler, take, text;
+    var array, dispositionEncoding, dispositionName, dispositionType, end, headers, key, partiral, reqRange, self, start, stream, streamErrorHandler, take, text, value;
     if (version == null) {                                                                                             //
       version = 'original';                                                                                            //
     }                                                                                                                  //
@@ -2770,13 +2858,7 @@ FilesCollection = function () {                                                 
     }                                                                                                                  //
     dispositionName = "filename=\"" + encodeURIComponent(fileRef.name) + "\"; filename=*UTF-8\"" + encodeURIComponent(fileRef.name) + "\"; ";
     dispositionEncoding = 'charset=utf-8';                                                                             //
-    http.response.setHeader('Content-Type', vRef.type);                                                                //
     http.response.setHeader('Content-Disposition', dispositionType + dispositionName + dispositionEncoding);           //
-    http.response.setHeader('Accept-Ranges', 'bytes');                                                                 //
-    if (fileRef != null ? (ref = fileRef.updatedAt) != null ? ref.toUTCString() : void 0 : void 0) {                   //
-      http.response.setHeader('Last-Modified', fileRef != null ? (ref1 = fileRef.updatedAt) != null ? ref1.toUTCString() : void 0 : void 0);
-    }                                                                                                                  //
-    http.response.setHeader('Connection', 'keep-alive');                                                               //
     if (http.request.headers.range && !force200) {                                                                     //
       partiral = true;                                                                                                 //
       array = http.request.headers.range.split(/bytes=([0-9]*)-([0-9]*)/);                                             //
@@ -2807,25 +2889,33 @@ FilesCollection = function () {                                                 
       if (start + take >= vRef.size) {                                                                                 //
         reqRange.end = vRef.size - 1;                                                                                  //
       }                                                                                                                //
-      http.response.setHeader('Pragma', 'private');                                                                    //
-      http.response.setHeader('Expires', new Date(+new Date() + 1000 * 32400).toUTCString());                          //
-      http.response.setHeader('Cache-Control', 'private, maxage=10800, s-maxage=32400');                               //
       if (self.strict && (reqRange.start >= vRef.size - 1 || reqRange.end > vRef.size - 1)) {                          //
         responseType = '416';                                                                                          //
       } else {                                                                                                         //
         responseType = '206';                                                                                          //
       }                                                                                                                //
     } else {                                                                                                           //
-      http.response.setHeader('Cache-Control', self.cacheControl);                                                     //
       responseType = '200';                                                                                            //
     }                                                                                                                  //
-    streamErrorHandler = function streamErrorHandler(error) {                                                          //
-      http.response.writeHead(500);                                                                                    //
-      http.response.end(error.toString());                                                                             //
-      if (self.debug) {                                                                                                //
-        console.error("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [500]", error);                   //
+    streamErrorHandler = function () {                                                                                 //
+      function streamErrorHandler(error) {                                                                             //
+        http.response.writeHead(500);                                                                                  //
+        http.response.end(error.toString());                                                                           //
+        if (self.debug) {                                                                                              //
+          console.error("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [500]", error);                 //
+        }                                                                                                              //
       }                                                                                                                //
-    };                                                                                                                 //
+                                                                                                                       //
+      return streamErrorHandler;                                                                                       //
+    }();                                                                                                               //
+    headers = _.isFunction(self.responseHeaders) ? self.responseHeaders(responseType, fileRef, vRef, version) : self.responseHeaders;
+    if (!headers['Cache-Control']) {                                                                                   //
+      http.response.setHeader('Cache-Control', self.cacheControl);                                                     //
+    }                                                                                                                  //
+    for (key in meteorBabelHelpers.sanitizeForInObject(headers)) {                                                     //
+      value = headers[key];                                                                                            //
+      http.response.setHeader(key, value);                                                                             //
+    }                                                                                                                  //
     switch (responseType) {                                                                                            //
       case '400':                                                                                                      //
         if (self.debug) {                                                                                              //
@@ -2834,7 +2924,6 @@ FilesCollection = function () {                                                 
         text = 'Content-Length mismatch!';                                                                             //
         http.response.writeHead(400, {                                                                                 //
           'Content-Type': 'text/plain',                                                                                //
-          'Cache-Control': 'no-cache',                                                                                 //
           'Content-Length': text.length                                                                                //
         });                                                                                                            //
         http.response.end(text);                                                                                       //
@@ -2846,9 +2935,7 @@ FilesCollection = function () {                                                 
         if (self.debug) {                                                                                              //
           console.warn("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [416] Content-Range is not specified!");
         }                                                                                                              //
-        http.response.writeHead(416, {                                                                                 //
-          'Content-Range': "bytes */" + vRef.size                                                                      //
-        });                                                                                                            //
+        http.response.writeHead(416);                                                                                  //
         http.response.end();                                                                                           //
         break;                                                                                                         //
       case '200':                                                                                                      //
@@ -2877,8 +2964,6 @@ FilesCollection = function () {                                                 
           console.info("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [206]");                         //
         }                                                                                                              //
         http.response.setHeader('Content-Range', "bytes " + reqRange.start + "-" + reqRange.end + "/" + vRef.size);    //
-        http.response.setHeader('Trailer', 'expires');                                                                 //
-        http.response.setHeader('Transfer-Encoding', 'chunked');                                                       //
         stream = readableStream || fs.createReadStream(vRef.path, {                                                    //
           start: reqRange.start,                                                                                       //
           end: reqRange.end                                                                                            //
@@ -2983,13 +3068,486 @@ if (Meteor.isClient) {                                                          
       return '';                                                                                                       //
     }                                                                                                                  //
   });                                                                                                                  //
-}                                                                                                                      //
+}exports.FilesCollection = FilesCollection;                                                                            //
+                                                                                                                       //
                                                                                                                        //
 Meteor.Files = FilesCollection;                                                                                        //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}).call(this);
+}],"event-emitter.jsx":["babel-runtime/helpers/typeof",function(require,exports,module){
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                     //
+// packages/ostrio_files/event-emitter.jsx                                                                             //
+//                                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                       //
+var _typeof2 = require('babel-runtime/helpers/typeof');                                                                //
+                                                                                                                       //
+var _typeof3 = _interopRequireDefault(_typeof2);                                                                       //
+                                                                                                                       //
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }                      //
+                                                                                                                       //
+/*!                                                                                                                    //
+ * EventEmitter v4.2.11 - git.io/ee                                                                                    //
+ * Unlicense - http://unlicense.org/                                                                                   //
+ * Oliver Caldwell - http://oli.me.uk/                                                                                 //
+ * @preserve                                                                                                           //
+ */                                                                                                                    //
+                                                                                                                       //
+;(function () {module.export({EventEmitter:function(){return EventEmitter}});                                          // 8
+  /**                                                                                                                  //
+   * Class for managing events.                                                                                        //
+   * Can be extended to provide event functionality in other classes.                                                  //
+   *                                                                                                                   //
+   * @class EventEmitter Manages event registering and emitting.                                                       //
+   */                                                                                                                  //
+  function EventEmitter() {}                                                                                           // 15
+                                                                                                                       //
+  // Shortcuts to improve speed and size                                                                               //
+  var proto = EventEmitter.prototype;                                                                                  // 18
+  var exports = this;                                                                                                  // 19
+  var originalGlobalValue = exports.EventEmitter;                                                                      // 20
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Finds the index of the listener for the event in its storage array.                                               //
+   *                                                                                                                   //
+   * @param {Function[]} listeners Array of listeners to search through.                                               //
+   * @param {Function} listener Method to look for.                                                                    //
+   * @return {Number} Index of the specified listener, -1 if not found                                                 //
+   * @api private                                                                                                      //
+   */                                                                                                                  //
+  function indexOfListener(listeners, listener) {                                                                      // 30
+    var i = listeners.length;                                                                                          // 31
+    while (i--) {                                                                                                      // 32
+      if (listeners[i].listener === listener) {                                                                        // 33
+        return i;                                                                                                      // 34
+      }                                                                                                                // 35
+    }                                                                                                                  // 36
+                                                                                                                       //
+    return -1;                                                                                                         // 38
+  }                                                                                                                    // 39
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias a method while keeping the context correct, to allow for overwriting of target method.                      //
+   *                                                                                                                   //
+   * @param {String} name The name of the target method.                                                               //
+   * @return {Function} The aliased method                                                                             //
+   * @api private                                                                                                      //
+   */                                                                                                                  //
+  function alias(name) {                                                                                               // 48
+    return function aliasClosure() {                                                                                   // 49
+      return this[name].apply(this, arguments);                                                                        // 50
+    };                                                                                                                 // 51
+  }                                                                                                                    // 52
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Returns the listener array for the specified event.                                                               //
+   * Will initialise the event object and listener arrays if required.                                                 //
+   * Will return an object if you use a regex search. The object contains keys for each matched event. So /ba[rz]/ might return an object containing bar and baz. But only if you have either defined them with defineEvent or added some listeners to them.
+   * Each property in the object response is an array of listener functions.                                           //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to return the listeners from.                                        //
+   * @return {Function[]|Object} All listener functions for the event.                                                 //
+   */                                                                                                                  //
+  proto.getListeners = function getListeners(evt) {                                                                    // 63
+    var events = this._getEvents();                                                                                    // 64
+    var response = void 0;                                                                                             // 65
+    var key = void 0;                                                                                                  // 66
+                                                                                                                       //
+    // Return a concatenated array of all matching events if                                                           //
+    // the selector is a regular expression.                                                                           //
+    if (evt instanceof RegExp) {                                                                                       // 70
+      response = {};                                                                                                   // 71
+      for (key in events) {                                                                                            // 72
+        if (events.hasOwnProperty(key) && evt.test(key)) {                                                             // 73
+          response[key] = events[key];                                                                                 // 74
+        }                                                                                                              // 75
+      }                                                                                                                // 76
+    } else {                                                                                                           // 77
+      response = events[evt] || (events[evt] = []);                                                                    // 79
+    }                                                                                                                  // 80
+                                                                                                                       //
+    return response;                                                                                                   // 82
+  };                                                                                                                   // 83
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Takes a list of listener objects and flattens it into a list of listener functions.                               //
+   *                                                                                                                   //
+   * @param {Object[]} listeners Raw listener objects.                                                                 //
+   * @return {Function[]} Just the listener functions.                                                                 //
+   */                                                                                                                  //
+  proto.flattenListeners = function flattenListeners(listeners) {                                                      // 91
+    var flatListeners = [];                                                                                            // 92
+    var i = void 0;                                                                                                    // 93
+                                                                                                                       //
+    for (i = 0; i < listeners.length; i += 1) {                                                                        // 95
+      flatListeners.push(listeners[i].listener);                                                                       // 96
+    }                                                                                                                  // 97
+                                                                                                                       //
+    return flatListeners;                                                                                              // 99
+  };                                                                                                                   // 100
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Fetches the requested listeners via getListeners but will always return the results inside an object. This is mainly for internal use but others may find it useful.
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to return the listeners from.                                        //
+   * @return {Object} All listener functions for an event in an object.                                                //
+   */                                                                                                                  //
+  proto.getListenersAsObject = function getListenersAsObject(evt) {                                                    // 108
+    var listeners = this.getListeners(evt);                                                                            // 109
+    var response = void 0;                                                                                             // 110
+                                                                                                                       //
+    if (listeners instanceof Array) {                                                                                  // 112
+      response = {};                                                                                                   // 113
+      response[evt] = listeners;                                                                                       // 114
+    }                                                                                                                  // 115
+                                                                                                                       //
+    return response || listeners;                                                                                      // 117
+  };                                                                                                                   // 118
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Adds a listener function to the specified event.                                                                  //
+   * The listener will not be added if it is a duplicate.                                                              //
+   * If the listener returns true then it will be removed after it is called.                                          //
+   * If you pass a regular expression as the event name then the listener will be added to all events that match it.   //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to attach the listener to.                                           //
+   * @param {Function} listener Method to be called when the event is emitted. If the function returns true then it will be removed after calling.
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.addListener = function addListener(evt, listener) {                                                            // 130
+    var listeners = this.getListenersAsObject(evt);                                                                    // 131
+    var listenerIsWrapped = (typeof listener === 'undefined' ? 'undefined' : (0, _typeof3['default'])(listener)) === 'object';
+    var key = void 0;                                                                                                  // 133
+                                                                                                                       //
+    for (key in listeners) {                                                                                           // 135
+      if (listeners.hasOwnProperty(key) && indexOfListener(listeners[key], listener) === -1) {                         // 136
+        listeners[key].push(listenerIsWrapped ? listener : {                                                           // 137
+          listener: listener,                                                                                          // 138
+          once: false                                                                                                  // 139
+        });                                                                                                            // 137
+      }                                                                                                                // 141
+    }                                                                                                                  // 142
+                                                                                                                       //
+    return this;                                                                                                       // 144
+  };                                                                                                                   // 145
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias of addListener                                                                                              //
+   */                                                                                                                  //
+  proto.on = alias('addListener');                                                                                     // 150
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Semi-alias of addListener. It will add a listener that will be                                                    //
+   * automatically removed after its first execution.                                                                  //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to attach the listener to.                                           //
+   * @param {Function} listener Method to be called when the event is emitted. If the function returns true then it will be removed after calling.
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.addOnceListener = function addOnceListener(evt, listener) {                                                    // 160
+    return this.addListener(evt, {                                                                                     // 161
+      listener: listener,                                                                                              // 162
+      once: true                                                                                                       // 163
+    });                                                                                                                // 161
+  };                                                                                                                   // 165
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias of addOnceListener.                                                                                         //
+   */                                                                                                                  //
+  proto.once = alias('addOnceListener');                                                                               // 170
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Defines an event name. This is required if you want to use a regex to add a listener to multiple events at once. If you don't do this then how do you expect it to know what event to add to? Should it just add to every possible match for a regex? No. That is scary and bad.
+   * You need to tell it what event names should be matched by a regex.                                                //
+   *                                                                                                                   //
+   * @param {String} evt Name of the event to create.                                                                  //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.defineEvent = function defineEvent(evt) {                                                                      // 179
+    this.getListeners(evt);                                                                                            // 180
+    return this;                                                                                                       // 181
+  };                                                                                                                   // 182
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Uses defineEvent to define multiple events.                                                                       //
+   *                                                                                                                   //
+   * @param {String[]} evts An array of event names to define.                                                         //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.defineEvents = function defineEvents(evts) {                                                                   // 190
+    for (var i = 0; i < evts.length; i += 1) {                                                                         // 191
+      this.defineEvent(evts[i]);                                                                                       // 192
+    }                                                                                                                  // 193
+    return this;                                                                                                       // 194
+  };                                                                                                                   // 195
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Removes a listener function from the specified event.                                                             //
+   * When passed a regular expression as the event name, it will remove the listener from all events that match it.    //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to remove the listener from.                                         //
+   * @param {Function} listener Method to remove from the event.                                                       //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.removeListener = function removeListener(evt, listener) {                                                      // 205
+    var listeners = this.getListenersAsObject(evt);                                                                    // 206
+    var index = void 0;                                                                                                // 207
+    var key = void 0;                                                                                                  // 208
+                                                                                                                       //
+    for (key in listeners) {                                                                                           // 210
+      if (listeners.hasOwnProperty(key)) {                                                                             // 211
+        index = indexOfListener(listeners[key], listener);                                                             // 212
+                                                                                                                       //
+        if (index !== -1) {                                                                                            // 214
+          listeners[key].splice(index, 1);                                                                             // 215
+        }                                                                                                              // 216
+      }                                                                                                                // 217
+    }                                                                                                                  // 218
+                                                                                                                       //
+    return this;                                                                                                       // 220
+  };                                                                                                                   // 221
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias of removeListener                                                                                           //
+   */                                                                                                                  //
+  proto.off = alias('removeListener');                                                                                 // 226
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Adds listeners in bulk using the manipulateListeners method.                                                      //
+   * If you pass an object as the second argument you can add to multiple events at once. The object should contain key value pairs of events and listeners or listener arrays. You can also pass it an event name and an array of listeners to be added.
+   * You can also pass it a regular expression to add the array of listeners to all events that match it.              //
+   * Yeah, this function does quite a bit. That's probably a bad thing.                                                //
+   *                                                                                                                   //
+   * @param {String|Object|RegExp} evt An event name if you will pass an array of listeners next. An object if you wish to add to multiple events at once.
+   * @param {Function[]} [listeners] An optional array of listener functions to add.                                   //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.addListeners = function addListeners(evt, listeners) {                                                         // 238
+    // Pass through to manipulateListeners                                                                             //
+    return this.manipulateListeners(false, evt, listeners);                                                            // 240
+  };                                                                                                                   // 241
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Removes listeners in bulk using the manipulateListeners method.                                                   //
+   * If you pass an object as the second argument you can remove from multiple events at once. The object should contain key value pairs of events and listeners or listener arrays.
+   * You can also pass it an event name and an array of listeners to be removed.                                       //
+   * You can also pass it a regular expression to remove the listeners from all events that match it.                  //
+   *                                                                                                                   //
+   * @param {String|Object|RegExp} evt An event name if you will pass an array of listeners next. An object if you wish to remove from multiple events at once.
+   * @param {Function[]} [listeners] An optional array of listener functions to remove.                                //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.removeListeners = function removeListeners(evt, listeners) {                                                   // 253
+    // Pass through to manipulateListeners                                                                             //
+    return this.manipulateListeners(true, evt, listeners);                                                             // 255
+  };                                                                                                                   // 256
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Edits listeners in bulk. The addListeners and removeListeners methods both use this to do their job. You should really use those instead, this is a little lower level.
+   * The first argument will determine if the listeners are removed (true) or added (false).                           //
+   * If you pass an object as the second argument you can add/remove from multiple events at once. The object should contain key value pairs of events and listeners or listener arrays.
+   * You can also pass it an event name and an array of listeners to be added/removed.                                 //
+   * You can also pass it a regular expression to manipulate the listeners of all events that match it.                //
+   *                                                                                                                   //
+   * @param {Boolean} remove True if you want to remove listeners, false if you want to add.                           //
+   * @param {String|Object|RegExp} evt An event name if you will pass an array of listeners next. An object if you wish to add/remove from multiple events at once.
+   * @param {Function[]} [listeners] An optional array of listener functions to add/remove.                            //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.manipulateListeners = function manipulateListeners(remove, evt, listeners) {                                   // 270
+    var i = void 0;                                                                                                    // 271
+    var value = void 0;                                                                                                // 272
+    var single = remove ? this.removeListener : this.addListener;                                                      // 273
+    var multiple = remove ? this.removeListeners : this.addListeners;                                                  // 274
+                                                                                                                       //
+    // If evt is an object then pass each of its properties to this method                                             //
+    if ((typeof evt === 'undefined' ? 'undefined' : (0, _typeof3['default'])(evt)) === 'object' && !(evt instanceof RegExp)) {
+      for (i in evt) {                                                                                                 // 278
+        if (evt.hasOwnProperty(i) && (value = evt[i])) {                                                               // 279
+          // Pass the single listener straight through to the singular method                                          //
+          if (typeof value === 'function') {                                                                           // 281
+            single.call(this, i, value);                                                                               // 282
+          } else {                                                                                                     // 283
+            // Otherwise pass back to the multiple function                                                            //
+            multiple.call(this, i, value);                                                                             // 286
+          }                                                                                                            // 287
+        }                                                                                                              // 288
+      }                                                                                                                // 289
+    } else {                                                                                                           // 290
+      // So evt must be a string                                                                                       //
+      // And listeners must be an array of listeners                                                                   //
+      // Loop over it and pass each one to the multiple method                                                         //
+      i = listeners.length;                                                                                            // 295
+      while (i--) {                                                                                                    // 296
+        single.call(this, evt, listeners[i]);                                                                          // 297
+      }                                                                                                                // 298
+    }                                                                                                                  // 299
+                                                                                                                       //
+    return this;                                                                                                       // 301
+  };                                                                                                                   // 302
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Removes all listeners from a specified event.                                                                     //
+   * If you do not specify an event then all listeners will be removed.                                                //
+   * That means every event will be emptied.                                                                           //
+   * You can also pass a regex to remove all events that match it.                                                     //
+   *                                                                                                                   //
+   * @param {String|RegExp} [evt] Optional name of the event to remove all listeners for. Will remove from every event if not passed.
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.removeEvent = function removeEvent(evt) {                                                                      // 313
+    var type = typeof evt === 'undefined' ? 'undefined' : (0, _typeof3['default'])(evt);                               // 314
+    var events = this._getEvents();                                                                                    // 315
+    var key = void 0;                                                                                                  // 316
+                                                                                                                       //
+    // Remove different things depending on the state of evt                                                           //
+    if (type === 'string') {                                                                                           // 319
+      // Remove all listeners for the specified event                                                                  //
+      delete events[evt];                                                                                              // 321
+    } else if (evt instanceof RegExp) {                                                                                // 322
+      // Remove all events matching the regex.                                                                         //
+      for (key in events) {                                                                                            // 325
+        if (events.hasOwnProperty(key) && evt.test(key)) {                                                             // 326
+          delete events[key];                                                                                          // 327
+        }                                                                                                              // 328
+      }                                                                                                                // 329
+    } else {                                                                                                           // 330
+      // Remove all listeners in all events                                                                            //
+      delete this._events;                                                                                             // 333
+    }                                                                                                                  // 334
+                                                                                                                       //
+    return this;                                                                                                       // 336
+  };                                                                                                                   // 337
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias of removeEvent.                                                                                             //
+   *                                                                                                                   //
+   * Added to mirror the node API.                                                                                     //
+   */                                                                                                                  //
+  proto.removeAllListeners = alias('removeEvent');                                                                     // 344
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Emits an event of your choice.                                                                                    //
+   * When emitted, every listener attached to that event will be executed.                                             //
+   * If you pass the optional argument array then those arguments will be passed to every listener upon execution.     //
+   * Because it uses `apply`, your array of arguments will be passed as if you wrote them out separately.              //
+   * So they will not arrive within the array on the other side, they will be separate.                                //
+   * You can also pass a regular expression to emit to all events that match it.                                       //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to emit and execute listeners for.                                   //
+   * @param {Array} [args] Optional array of arguments to be passed to each listener.                                  //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.emitEvent = function emitEvent(evt, args) {                                                                    // 358
+    var listenersMap = this.getListenersAsObject(evt);                                                                 // 359
+    var listeners = void 0;                                                                                            // 360
+    var listener = void 0;                                                                                             // 361
+    var i = void 0;                                                                                                    // 362
+    var key = void 0;                                                                                                  // 363
+    var response = void 0;                                                                                             // 364
+                                                                                                                       //
+    for (key in listenersMap) {                                                                                        // 366
+      if (listenersMap.hasOwnProperty(key)) {                                                                          // 367
+        listeners = listenersMap[key].slice(0);                                                                        // 368
+        i = listeners.length;                                                                                          // 369
+                                                                                                                       //
+        while (i--) {                                                                                                  // 371
+          // If the listener returns true then it shall be removed from the event                                      //
+          // The function is executed either with a basic call or an apply if there is an args array                   //
+          listener = listeners[i];                                                                                     // 374
+                                                                                                                       //
+          if (listener.once === true) {                                                                                // 376
+            this.removeListener(evt, listener.listener);                                                               // 377
+          }                                                                                                            // 378
+                                                                                                                       //
+          response = listener.listener.apply(this, args || []);                                                        // 380
+                                                                                                                       //
+          if (response === this._getOnceReturnValue()) {                                                               // 382
+            this.removeListener(evt, listener.listener);                                                               // 383
+          }                                                                                                            // 384
+        }                                                                                                              // 385
+      }                                                                                                                // 386
+    }                                                                                                                  // 387
+                                                                                                                       //
+    return this;                                                                                                       // 389
+  };                                                                                                                   // 390
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Alias of emitEvent                                                                                                //
+   */                                                                                                                  //
+  proto.trigger = alias('emitEvent');                                                                                  // 395
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Subtly different from emitEvent in that it will pass its arguments on to the listeners, as opposed to taking a single array of arguments to pass on.
+   * As with emitEvent, you can pass a regex in place of the event name to emit to all events that match it.           //
+   *                                                                                                                   //
+   * @param {String|RegExp} evt Name of the event to emit and execute listeners for.                                   //
+   * @param {...*} Optional additional arguments to be passed to each listener.                                        //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.emit = function emit(evt) {                                                                                    // 405
+    var args = Array.prototype.slice.call(arguments, 1);                                                               // 406
+    return this.emitEvent(evt, args);                                                                                  // 407
+  };                                                                                                                   // 408
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Sets the current value to check against when executing listeners. If a                                            //
+   * listeners return value matches the one set here then it will be removed                                           //
+   * after execution. This value defaults to true.                                                                     //
+   *                                                                                                                   //
+   * @param {*} value The new value to check for when executing listeners.                                             //
+   * @return {Object} Current instance of EventEmitter for chaining.                                                   //
+   */                                                                                                                  //
+  proto.setOnceReturnValue = function setOnceReturnValue(value) {                                                      // 418
+    this._onceReturnValue = value;                                                                                     // 419
+    return this;                                                                                                       // 420
+  };                                                                                                                   // 421
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Fetches the current value to check against when executing listeners. If                                           //
+   * the listeners return value matches this one then it should be removed                                             //
+   * automatically. It will return true by default.                                                                    //
+   *                                                                                                                   //
+   * @return {*|Boolean} The current value to check for or the default, true.                                          //
+   * @api private                                                                                                      //
+   */                                                                                                                  //
+  proto._getOnceReturnValue = function _getOnceReturnValue() {                                                         // 431
+    if (this.hasOwnProperty('_onceReturnValue')) {                                                                     // 432
+      return this._onceReturnValue;                                                                                    // 433
+    } else {                                                                                                           // 434
+      return true;                                                                                                     // 436
+    }                                                                                                                  // 437
+  };                                                                                                                   // 438
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Fetches the events object and creates one if required.                                                            //
+   *                                                                                                                   //
+   * @return {Object} The events storage object.                                                                       //
+   * @api private                                                                                                      //
+   */                                                                                                                  //
+  proto._getEvents = function _getEvents() {                                                                           // 446
+    return this._events || (this._events = {});                                                                        // 447
+  };                                                                                                                   // 448
+                                                                                                                       //
+  /**                                                                                                                  //
+   * Reverts the global {@link EventEmitter} to its previous value and returns a reference to this version.            //
+   *                                                                                                                   //
+   * @return {Function} Non conflicting EventEmitter class.                                                            //
+   */                                                                                                                  //
+  EventEmitter.noConflict = function noConflict() {                                                                    // 455
+    exports.EventEmitter = originalGlobalValue;                                                                        // 456
+    return EventEmitter;                                                                                               // 457
+  };                                                                                                                   // 458
+                                                                                                                       //
+  // Expose the class                                                                                                  //
+                                                                                                                       // 461
+}).call(this);                                                                                                         // 462
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}]}}}},{"extensions":[".js",".json",".coffee",".jsx"]});
+require("./node_modules/meteor/ostrio:files/files.coffee.js");
 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
@@ -3001,3 +3559,5 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
+
+//# sourceMappingURL=ostrio_files.js.map

@@ -1592,54 +1592,60 @@ _.extend(Server.prototype, {                                                    
    * @memberOf Meteor                                                                                                 //
    * @importFromPackage meteor                                                                                        //
    * @locus Server                                                                                                    //
-   * @param {String} name Name of the record set.  If `null`, the set has no name, and the record set is automatically sent to all connected clients.
+   * @param {String|Object} name If String, name of the record set.  If Object, publications Dictionary of publish functions by name.  If `null`, the set has no name, and the record set is automatically sent to all connected clients.
    * @param {Function} func Function called on the server each time a client subscribes.  Inside the function, `this` is the publish handler object, described below.  If the client passed arguments to `subscribe`, the function is called with the same arguments.
    */                                                                                                                 //
   publish: function publish(name, handler, options) {                                                                 // 1476
     var self = this;                                                                                                  // 1477
                                                                                                                       //
-    options = options || {};                                                                                          // 1479
+    if (!_.isObject(name)) {                                                                                          // 1479
+      options = options || {};                                                                                        // 1480
                                                                                                                       //
-    if (name && name in self.publish_handlers) {                                                                      // 1481
-      Meteor._debug("Ignoring duplicate publish named '" + name + "'");                                               // 1482
-      return;                                                                                                         // 1483
-    }                                                                                                                 // 1484
+      if (name && name in self.publish_handlers) {                                                                    // 1482
+        Meteor._debug("Ignoring duplicate publish named '" + name + "'");                                             // 1483
+        return;                                                                                                       // 1484
+      }                                                                                                               // 1485
                                                                                                                       //
-    if (Package.autopublish && !options.is_auto) {                                                                    // 1486
-      // They have autopublish on, yet they're trying to manually                                                     //
-      // picking stuff to publish. They probably should turn off                                                      //
-      // autopublish. (This check isn't perfect -- if you create a                                                    //
-      // publish before you turn on autopublish, it won't catch                                                       //
-      // it. But this will definitely handle the simple case where                                                    //
-      // you've added the autopublish package to your app, and are                                                    //
-      // calling publish from your app code.)                                                                         //
-      if (!self.warned_about_autopublish) {                                                                           // 1494
-        self.warned_about_autopublish = true;                                                                         // 1495
-        Meteor._debug("** You've set up some data subscriptions with Meteor.publish(), but\n" + "** you still have autopublish turned on. Because autopublish is still\n" + "** on, your Meteor.publish() calls won't have much effect. All data\n" + "** will still be sent to all clients.\n" + "**\n" + "** Turn off autopublish by removing the autopublish package:\n" + "**\n" + "**   $ meteor remove autopublish\n" + "**\n" + "** .. and make sure you have Meteor.publish() and Meteor.subscribe() calls\n" + "** for each collection that you want clients to see.\n");
-      }                                                                                                               // 1508
-    }                                                                                                                 // 1509
+      if (Package.autopublish && !options.is_auto) {                                                                  // 1487
+        // They have autopublish on, yet they're trying to manually                                                   //
+        // picking stuff to publish. They probably should turn off                                                    //
+        // autopublish. (This check isn't perfect -- if you create a                                                  //
+        // publish before you turn on autopublish, it won't catch                                                     //
+        // it. But this will definitely handle the simple case where                                                  //
+        // you've added the autopublish package to your app, and are                                                  //
+        // calling publish from your app code.)                                                                       //
+        if (!self.warned_about_autopublish) {                                                                         // 1495
+          self.warned_about_autopublish = true;                                                                       // 1496
+          Meteor._debug("** You've set up some data subscriptions with Meteor.publish(), but\n" + "** you still have autopublish turned on. Because autopublish is still\n" + "** on, your Meteor.publish() calls won't have much effect. All data\n" + "** will still be sent to all clients.\n" + "**\n" + "** Turn off autopublish by removing the autopublish package:\n" + "**\n" + "**   $ meteor remove autopublish\n" + "**\n" + "** .. and make sure you have Meteor.publish() and Meteor.subscribe() calls\n" + "** for each collection that you want clients to see.\n");
+        }                                                                                                             // 1509
+      }                                                                                                               // 1510
                                                                                                                       //
-    if (name) self.publish_handlers[name] = handler;else {                                                            // 1511
-      self.universal_publish_handlers.push(handler);                                                                  // 1514
-      // Spin up the new publisher on any existing session too. Run each                                              //
-      // session's subscription in a new Fiber, so that there's no change for                                         //
-      // self.sessions to change while we're running this loop.                                                       //
-      _.each(self.sessions, function (session) {                                                                      // 1518
-        if (!session._dontStartNewUniversalSubs) {                                                                    // 1519
-          Fiber(function () {                                                                                         // 1520
-            session._startSubscription(handler);                                                                      // 1521
-          }).run();                                                                                                   // 1522
-        }                                                                                                             // 1523
-      });                                                                                                             // 1524
-    }                                                                                                                 // 1525
-  },                                                                                                                  // 1526
-                                                                                                                      //
-  _removeSession: function _removeSession(session) {                                                                  // 1528
-    var self = this;                                                                                                  // 1529
-    if (self.sessions[session.id]) {                                                                                  // 1530
-      delete self.sessions[session.id];                                                                               // 1531
+      if (name) self.publish_handlers[name] = handler;else {                                                          // 1512
+        self.universal_publish_handlers.push(handler);                                                                // 1515
+        // Spin up the new publisher on any existing session too. Run each                                            //
+        // session's subscription in a new Fiber, so that there's no change for                                       //
+        // self.sessions to change while we're running this loop.                                                     //
+        _.each(self.sessions, function (session) {                                                                    // 1519
+          if (!session._dontStartNewUniversalSubs) {                                                                  // 1520
+            Fiber(function () {                                                                                       // 1521
+              session._startSubscription(handler);                                                                    // 1522
+            }).run();                                                                                                 // 1523
+          }                                                                                                           // 1524
+        });                                                                                                           // 1525
+      }                                                                                                               // 1526
+    } else {                                                                                                          // 1527
+      _.each(name, function (value, key) {                                                                            // 1529
+        self.publish(key, value, {});                                                                                 // 1530
+      });                                                                                                             // 1531
     }                                                                                                                 // 1532
   },                                                                                                                  // 1533
+                                                                                                                      //
+  _removeSession: function _removeSession(session) {                                                                  // 1535
+    var self = this;                                                                                                  // 1536
+    if (self.sessions[session.id]) {                                                                                  // 1537
+      delete self.sessions[session.id];                                                                               // 1538
+    }                                                                                                                 // 1539
+  },                                                                                                                  // 1540
                                                                                                                       //
   /**                                                                                                                 //
    * @summary Defines functions that can be invoked over the network by clients.                                      //
@@ -1648,151 +1654,151 @@ _.extend(Server.prototype, {                                                    
    * @memberOf Meteor                                                                                                 //
    * @importFromPackage meteor                                                                                        //
    */                                                                                                                 //
-  methods: function methods(_methods) {                                                                               // 1542
-    var self = this;                                                                                                  // 1543
-    _.each(_methods, function (func, name) {                                                                          // 1544
-      if (typeof func !== 'function') throw new Error("Method '" + name + "' must be a function");                    // 1545
-      if (self.method_handlers[name]) throw new Error("A method named '" + name + "' is already defined");            // 1547
-      self.method_handlers[name] = func;                                                                              // 1549
-    });                                                                                                               // 1550
-  },                                                                                                                  // 1551
+  methods: function methods(_methods) {                                                                               // 1549
+    var self = this;                                                                                                  // 1550
+    _.each(_methods, function (func, name) {                                                                          // 1551
+      if (typeof func !== 'function') throw new Error("Method '" + name + "' must be a function");                    // 1552
+      if (self.method_handlers[name]) throw new Error("A method named '" + name + "' is already defined");            // 1554
+      self.method_handlers[name] = func;                                                                              // 1556
+    });                                                                                                               // 1557
+  },                                                                                                                  // 1558
                                                                                                                       //
-  call: function call(name /*, arguments */) {                                                                        // 1553
+  call: function call(name /*, arguments */) {                                                                        // 1560
     // if it's a function, the last argument is the result callback,                                                  //
     // not a parameter to the remote method.                                                                          //
-    var args = Array.prototype.slice.call(arguments, 1);                                                              // 1556
-    if (args.length && typeof args[args.length - 1] === "function") var callback = args.pop();                        // 1557
-    return this.apply(name, args, callback);                                                                          // 1559
-  },                                                                                                                  // 1560
+    var args = Array.prototype.slice.call(arguments, 1);                                                              // 1563
+    if (args.length && typeof args[args.length - 1] === "function") var callback = args.pop();                        // 1564
+    return this.apply(name, args, callback);                                                                          // 1566
+  },                                                                                                                  // 1567
                                                                                                                       //
   // @param options {Optional Object}                                                                                 //
   // @param callback {Optional Function}                                                                              //
-  apply: function apply(name, args, options, callback) {                                                              // 1564
-    var self = this;                                                                                                  // 1565
+  apply: function apply(name, args, options, callback) {                                                              // 1571
+    var self = this;                                                                                                  // 1572
                                                                                                                       //
     // We were passed 3 arguments. They may be either (name, args, options)                                           //
     // or (name, args, callback)                                                                                      //
-    if (!callback && typeof options === 'function') {                                                                 // 1569
-      callback = options;                                                                                             // 1570
-      options = {};                                                                                                   // 1571
-    }                                                                                                                 // 1572
-    options = options || {};                                                                                          // 1573
+    if (!callback && typeof options === 'function') {                                                                 // 1576
+      callback = options;                                                                                             // 1577
+      options = {};                                                                                                   // 1578
+    }                                                                                                                 // 1579
+    options = options || {};                                                                                          // 1580
                                                                                                                       //
-    if (callback)                                                                                                     // 1575
+    if (callback)                                                                                                     // 1582
       // It's not really necessary to do this, since we immediately                                                   //
       // run the callback in this fiber before returning, but we do it                                                //
       // anyway for regularity.                                                                                       //
       // XXX improve error message (and how we report it)                                                             //
-      callback = Meteor.bindEnvironment(callback, "delivering result of invoking '" + name + "'");                    // 1580
+      callback = Meteor.bindEnvironment(callback, "delivering result of invoking '" + name + "'");                    // 1587
                                                                                                                       //
     // Run the handler                                                                                                //
-    var handler = self.method_handlers[name];                                                                         // 1586
-    var exception;                                                                                                    // 1587
-    if (!handler) {                                                                                                   // 1588
-      exception = new Meteor.Error(404, "Method '" + name + "' not found");                                           // 1589
-    } else {                                                                                                          // 1590
+    var handler = self.method_handlers[name];                                                                         // 1593
+    var exception;                                                                                                    // 1594
+    if (!handler) {                                                                                                   // 1595
+      exception = new Meteor.Error(404, "Method '" + name + "' not found");                                           // 1596
+    } else {                                                                                                          // 1597
       // If this is a method call from within another method, get the                                                 //
       // user state from the outer method, otherwise don't allow                                                      //
       // setUserId to be called                                                                                       //
-      var userId = null;                                                                                              // 1594
-      var setUserId = function setUserId() {                                                                          // 1595
-        throw new Error("Can't call setUserId on a server initiated method call");                                    // 1596
-      };                                                                                                              // 1597
-      var connection = null;                                                                                          // 1598
-      var currentInvocation = DDP._CurrentInvocation.get();                                                           // 1599
-      if (currentInvocation) {                                                                                        // 1600
-        userId = currentInvocation.userId;                                                                            // 1601
-        setUserId = function setUserId(userId) {                                                                      // 1602
-          currentInvocation.setUserId(userId);                                                                        // 1603
-        };                                                                                                            // 1604
-        connection = currentInvocation.connection;                                                                    // 1605
-      }                                                                                                               // 1606
+      var userId = null;                                                                                              // 1601
+      var setUserId = function setUserId() {                                                                          // 1602
+        throw new Error("Can't call setUserId on a server initiated method call");                                    // 1603
+      };                                                                                                              // 1604
+      var connection = null;                                                                                          // 1605
+      var currentInvocation = DDP._CurrentInvocation.get();                                                           // 1606
+      if (currentInvocation) {                                                                                        // 1607
+        userId = currentInvocation.userId;                                                                            // 1608
+        setUserId = function setUserId(userId) {                                                                      // 1609
+          currentInvocation.setUserId(userId);                                                                        // 1610
+        };                                                                                                            // 1611
+        connection = currentInvocation.connection;                                                                    // 1612
+      }                                                                                                               // 1613
                                                                                                                       //
-      var invocation = new DDPCommon.MethodInvocation({                                                               // 1608
-        isSimulation: false,                                                                                          // 1609
-        userId: userId,                                                                                               // 1610
-        setUserId: setUserId,                                                                                         // 1611
-        connection: connection,                                                                                       // 1612
-        randomSeed: DDPCommon.makeRpcSeed(currentInvocation, name)                                                    // 1613
-      });                                                                                                             // 1608
-      try {                                                                                                           // 1615
-        var result = DDP._CurrentInvocation.withValue(invocation, function () {                                       // 1616
+      var invocation = new DDPCommon.MethodInvocation({                                                               // 1615
+        isSimulation: false,                                                                                          // 1616
+        userId: userId,                                                                                               // 1617
+        setUserId: setUserId,                                                                                         // 1618
+        connection: connection,                                                                                       // 1619
+        randomSeed: DDPCommon.makeRpcSeed(currentInvocation, name)                                                    // 1620
+      });                                                                                                             // 1615
+      try {                                                                                                           // 1622
+        var result = DDP._CurrentInvocation.withValue(invocation, function () {                                       // 1623
           return maybeAuditArgumentChecks(handler, invocation, EJSON.clone(args), "internal call to '" + name + "'");
-        });                                                                                                           // 1620
-        result = EJSON.clone(result);                                                                                 // 1621
-      } catch (e) {                                                                                                   // 1622
-        exception = e;                                                                                                // 1623
-      }                                                                                                               // 1624
-    }                                                                                                                 // 1625
+        });                                                                                                           // 1627
+        result = EJSON.clone(result);                                                                                 // 1628
+      } catch (e) {                                                                                                   // 1629
+        exception = e;                                                                                                // 1630
+      }                                                                                                               // 1631
+    }                                                                                                                 // 1632
                                                                                                                       //
     // Return the result in whichever way the caller asked for it. Note that we                                       //
     // do NOT block on the write fence in an analogous way to how the client                                          //
     // blocks on the relevant data being visible, so you are NOT guaranteed that                                      //
     // cursor observe callbacks have fired when your callback is invoked. (We                                         //
     // can change this if there's a real use case.)                                                                   //
-    if (callback) {                                                                                                   // 1632
-      callback(exception, result);                                                                                    // 1633
-      return undefined;                                                                                               // 1634
-    }                                                                                                                 // 1635
-    if (exception) throw exception;                                                                                   // 1636
-    return result;                                                                                                    // 1638
-  },                                                                                                                  // 1639
+    if (callback) {                                                                                                   // 1639
+      callback(exception, result);                                                                                    // 1640
+      return undefined;                                                                                               // 1641
+    }                                                                                                                 // 1642
+    if (exception) throw exception;                                                                                   // 1643
+    return result;                                                                                                    // 1645
+  },                                                                                                                  // 1646
                                                                                                                       //
-  _urlForSession: function _urlForSession(sessionId) {                                                                // 1641
-    var self = this;                                                                                                  // 1642
-    var session = self.sessions[sessionId];                                                                           // 1643
-    if (session) return session._socketUrl;else return null;                                                          // 1644
-  }                                                                                                                   // 1648
+  _urlForSession: function _urlForSession(sessionId) {                                                                // 1648
+    var self = this;                                                                                                  // 1649
+    var session = self.sessions[sessionId];                                                                           // 1650
+    if (session) return session._socketUrl;else return null;                                                          // 1651
+  }                                                                                                                   // 1655
 });                                                                                                                   // 1392
                                                                                                                       //
-var calculateVersion = function calculateVersion(clientSupportedVersions, serverSupportedVersions) {                  // 1651
-  var correctVersion = _.find(clientSupportedVersions, function (version) {                                           // 1653
-    return _.contains(serverSupportedVersions, version);                                                              // 1654
-  });                                                                                                                 // 1655
-  if (!correctVersion) {                                                                                              // 1656
-    correctVersion = serverSupportedVersions[0];                                                                      // 1657
-  }                                                                                                                   // 1658
-  return correctVersion;                                                                                              // 1659
-};                                                                                                                    // 1660
+var calculateVersion = function calculateVersion(clientSupportedVersions, serverSupportedVersions) {                  // 1658
+  var correctVersion = _.find(clientSupportedVersions, function (version) {                                           // 1660
+    return _.contains(serverSupportedVersions, version);                                                              // 1661
+  });                                                                                                                 // 1662
+  if (!correctVersion) {                                                                                              // 1663
+    correctVersion = serverSupportedVersions[0];                                                                      // 1664
+  }                                                                                                                   // 1665
+  return correctVersion;                                                                                              // 1666
+};                                                                                                                    // 1667
                                                                                                                       //
-DDPServer._calculateVersion = calculateVersion;                                                                       // 1662
+DDPServer._calculateVersion = calculateVersion;                                                                       // 1669
                                                                                                                       //
 // "blind" exceptions other than those that were deliberately thrown to signal                                        //
 // errors to the client                                                                                               //
-var wrapInternalException = function wrapInternalException(exception, context) {                                      // 1667
-  if (!exception || exception instanceof Meteor.Error) return exception;                                              // 1668
+var wrapInternalException = function wrapInternalException(exception, context) {                                      // 1674
+  if (!exception || exception instanceof Meteor.Error) return exception;                                              // 1675
                                                                                                                       //
   // tests can set the 'expected' flag on an exception so it won't go to the                                          //
   // server log                                                                                                       //
-  if (!exception.expected) {                                                                                          // 1673
-    Meteor._debug("Exception " + context, exception.stack);                                                           // 1674
-    if (exception.sanitizedError) {                                                                                   // 1675
-      Meteor._debug("Sanitized and reported to the client as:", exception.sanitizedError.message);                    // 1676
-      Meteor._debug();                                                                                                // 1677
-    }                                                                                                                 // 1678
-  }                                                                                                                   // 1679
+  if (!exception.expected) {                                                                                          // 1680
+    Meteor._debug("Exception " + context, exception.stack);                                                           // 1681
+    if (exception.sanitizedError) {                                                                                   // 1682
+      Meteor._debug("Sanitized and reported to the client as:", exception.sanitizedError.message);                    // 1683
+      Meteor._debug();                                                                                                // 1684
+    }                                                                                                                 // 1685
+  }                                                                                                                   // 1686
                                                                                                                       //
   // Did the error contain more details that could have been useful if caught in                                      //
   // server code (or if thrown from non-client-originated code), but also                                             //
   // provided a "sanitized" version with more context than 500 Internal server                                        //
   // error? Use that.                                                                                                 //
-  if (exception.sanitizedError) {                                                                                     // 1685
-    if (exception.sanitizedError instanceof Meteor.Error) return exception.sanitizedError;                            // 1686
-    Meteor._debug("Exception " + context + " provides a sanitizedError that " + "is not a Meteor.Error; ignoring");   // 1688
-  }                                                                                                                   // 1690
+  if (exception.sanitizedError) {                                                                                     // 1692
+    if (exception.sanitizedError instanceof Meteor.Error) return exception.sanitizedError;                            // 1693
+    Meteor._debug("Exception " + context + " provides a sanitizedError that " + "is not a Meteor.Error; ignoring");   // 1695
+  }                                                                                                                   // 1697
                                                                                                                       //
-  return new Meteor.Error(500, "Internal server error");                                                              // 1692
-};                                                                                                                    // 1693
+  return new Meteor.Error(500, "Internal server error");                                                              // 1699
+};                                                                                                                    // 1700
                                                                                                                       //
 // Audit argument checks, if the audit-argument-checks package exists (it is a                                        //
 // weak dependency of this package).                                                                                  //
-var maybeAuditArgumentChecks = function maybeAuditArgumentChecks(f, context, args, description) {                     // 1698
-  args = args || [];                                                                                                  // 1699
-  if (Package['audit-argument-checks']) {                                                                             // 1700
-    return Match._failIfArgumentsAreNotAllChecked(f, context, args, description);                                     // 1701
-  }                                                                                                                   // 1703
-  return f.apply(context, args);                                                                                      // 1704
-};                                                                                                                    // 1705
+var maybeAuditArgumentChecks = function maybeAuditArgumentChecks(f, context, args, description) {                     // 1705
+  args = args || [];                                                                                                  // 1706
+  if (Package['audit-argument-checks']) {                                                                             // 1707
+    return Match._failIfArgumentsAreNotAllChecked(f, context, args, description);                                     // 1708
+  }                                                                                                                   // 1710
+  return f.apply(context, args);                                                                                      // 1711
+};                                                                                                                    // 1712
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"writefence.js":function(require){

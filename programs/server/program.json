@@ -313,6 +313,7 @@
     },
     {
       "node_modules": "npm/node_modules/meteor/ostrio_files/node_modules",
+      "sourceMap": "packages/ostrio_files.js.map",
       "path": "packages/ostrio_files.js"
     },
     {

@@ -333,6 +333,7 @@ if (Meteor.isServer) {                                                 // 101
         name: 1,                                                       //
         size: 1,                                                       //
         meta: 1,                                                       //
+        type: 1,                                                       //
         isPDF: 1,                                                      //
         isText: 1,                                                     //
         isJSON: 1,                                                     //
@@ -349,7 +350,7 @@ if (Meteor.isServer) {                                                 // 101
   });                                                                  //
   Meteor.publish('file', function(_id) {                               //
     check(_id, String);                                                //
-    return Collections.files.find({                                    // 296
+    return Collections.files.find({                                    // 297
       $or: [                                                           //
         {                                                              //
           _id: _id,                                                    //
@@ -381,7 +382,7 @@ if (Meteor.isServer) {                                                 // 101
   });                                                                  //
   Meteor.methods({                                                     //
     filesLenght: function(userOnly) {                                  //
-      var selector;                                                    // 325
+      var selector;                                                    // 326
       if (userOnly == null) {                                          //
         userOnly = false;                                              //
       }                                                                //
@@ -405,7 +406,7 @@ if (Meteor.isServer) {                                                 // 101
           ]                                                            //
         };                                                             //
       }                                                                //
-      return Collections.files.find(selector).count();                 // 338
+      return Collections.files.find(selector).count();                 // 339
     },                                                                 //
     unblame: function(_id) {                                           //
       check(_id, String);                                              //
@@ -416,7 +417,7 @@ if (Meteor.isServer) {                                                 // 101
           'meta.blamed': -1                                            //
         }                                                              //
       }, _app.NOOP);                                                   //
-      return true;                                                     // 343
+      return true;                                                     // 344
     },                                                                 //
     blame: function(_id) {                                             //
       check(_id, String);                                              //
@@ -427,10 +428,10 @@ if (Meteor.isServer) {                                                 // 101
           'meta.blamed': 1                                             //
         }                                                              //
       }, _app.NOOP);                                                   //
-      return true;                                                     // 348
+      return true;                                                     // 349
     },                                                                 //
     changeAccess: function(_id) {                                      //
-      var file;                                                        // 351
+      var file;                                                        // 352
       check(_id, String);                                              //
       if (Meteor.userId()) {                                           //
         file = Collections.files.findOne({                             //
@@ -443,13 +444,13 @@ if (Meteor.isServer) {                                                 // 101
               'meta.unlisted': file.meta.unlisted ? false : true       //
             }                                                          //
           }, _app.NOOP);                                               //
-          return true;                                                 // 356
+          return true;                                                 // 357
         }                                                              //
       }                                                                //
-      throw new Meteor.Error(401, 'Access denied!');                   // 357
+      throw new Meteor.Error(401, 'Access denied!');                   // 358
     },                                                                 //
     changePrivacy: function(_id) {                                     //
-      var file;                                                        // 360
+      var file;                                                        // 361
       check(_id, String);                                              //
       if (Meteor.userId()) {                                           //
         file = Collections.files.findOne({                             //
@@ -463,10 +464,10 @@ if (Meteor.isServer) {                                                 // 101
               'meta.secured': file.meta.secured ? false : true         //
             }                                                          //
           }, _app.NOOP);                                               //
-          return true;                                                 // 365
+          return true;                                                 // 366
         }                                                              //
       }                                                                //
-      throw new Meteor.Error(401, 'Access denied!');                   // 366
+      throw new Meteor.Error(401, 'Access denied!');                   // 367
     }                                                                  //
   });                                                                  //
 }                                                                      //
