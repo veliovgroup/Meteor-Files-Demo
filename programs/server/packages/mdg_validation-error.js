@@ -19,7 +19,7 @@ var Promise = Package.promise.Promise;
 /* Package-scope variables */
 var ValidationError;
 
-var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"validation-error.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"validation-error.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits",function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                          //
@@ -27,19 +27,8 @@ var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"
 //                                                                                                          //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                             //
-var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');                                     //
+var _classCallCheck;module.import('babel-runtime/helpers/classCallCheck',{"default":function(v){_classCallCheck=v}});var _possibleConstructorReturn;module.import('babel-runtime/helpers/possibleConstructorReturn',{"default":function(v){_possibleConstructorReturn=v}});var _inherits;module.import('babel-runtime/helpers/inherits',{"default":function(v){_inherits=v}});
                                                                                                             //
-var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);                                            //
-                                                                                                            //
-var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');               //
-                                                                                                            //
-var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);                      //
-                                                                                                            //
-var _inherits2 = require('babel-runtime/helpers/inherits');                                                 //
-                                                                                                            //
-var _inherits3 = _interopRequireDefault(_inherits2);                                                        //
-                                                                                                            //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }           //
                                                                                                             //
 /* global ValidationError:true */                                                                           //
 /* global SimpleSchema */                                                                                   //
@@ -57,15 +46,16 @@ var errorsSchema = new SimpleSchema({                                           
 });                                                                                                         // 11
                                                                                                             //
 ValidationError = function (_Meteor$Error) {                                                                // 16
-  (0, _inherits3['default'])(_class, _Meteor$Error);                                                        // 16
+  _inherits(_class, _Meteor$Error);                                                                         // 16
                                                                                                             //
   function _class(errors) {                                                                                 // 17
     var message = arguments.length <= 1 || arguments[1] === undefined ? 'Validation Failed' : arguments[1];
-    (0, _classCallCheck3['default'])(this, _class);                                                         // 17
+                                                                                                            //
+    _classCallCheck(this, _class);                                                                          // 17
                                                                                                             //
     errorsSchema.validate({ errors: errors });                                                              // 18
                                                                                                             //
-    var _this = (0, _possibleConstructorReturn3['default'])(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors));
+    var _this = _possibleConstructorReturn(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors));
                                                                                                             //
     _this.errors = errors;                                                                                  // 22
     return _this;                                                                                           // 17

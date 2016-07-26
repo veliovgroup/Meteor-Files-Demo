@@ -34,8 +34,7 @@ var require = meteorInstall({"node_modules":{"meteor":{"ostrio:files":{"files.co
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-exports.__esModule = true;                                                                                             //
-var FileCursor, FilesCursor, NOOP, Throttle, bound, events, fileType, _fixJSONParse, _fixJSONStringify, formatFleURL, fs, nodePath, request, writeStream;                 
+module.export({FilesCollection:function(){return FilesCollection}});var FileCursor, FilesCollection, FilesCursor, NOOP, Throttle, bound, events, fileType, _fixJSONParse, _fixJSONStringify, formatFleURL, fs, nodePath, request, writeStream;
                                                                                                                        //
 NOOP = function NOOP() {};                                                                                             //
                                                                                                                        //
@@ -646,13 +645,7 @@ return `false` or `String` to abort upload                                      
 @summary Create new instance of FilesCollection                                                                        //
  */                                                                                                                    //
                                                                                                                        //
-exports.                                                                                                               //
-                                                                                                                       //
-/*                                                                                                                     //
-Export the FilesCollection class                                                                                       //
- */                                                                                                                    //
-                                                                                                                       //
-FilesCollection = FilesCollection = function () {                                                                      //
+module.runModuleSetters(FilesCollection = function () {                                                                //
   var FileUpload, UploadInstance;                                                                                      //
                                                                                                                        //
   FilesCollection.prototype.__proto__ = function () {                                                                  //
@@ -735,26 +728,18 @@ FilesCollection = FilesCollection = function () {                               
       delete this.continueUploadTTL;                                                                                   //
       delete this.responseHeaders;                                                                                     //
       if (_.has(Package, 'accounts-base')) {                                                                           //
-        setTokenCookie = function () {                                                                                 //
-          function setTokenCookie() {                                                                                  //
-            if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
-              cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                         //
-              return cookie.send();                                                                                    //
-            }                                                                                                          //
+        setTokenCookie = function setTokenCookie() {                                                                   //
+          if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
+            cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                           //
+            return cookie.send();                                                                                      //
           }                                                                                                            //
-                                                                                                                       //
-          return setTokenCookie;                                                                                       //
-        }();                                                                                                           //
-        unsetTokenCookie = function () {                                                                               //
-          function unsetTokenCookie() {                                                                                //
-            if (cookie.has('meteor_login_token')) {                                                                    //
-              cookie.remove('meteor_login_token');                                                                     //
-              return cookie.send();                                                                                    //
-            }                                                                                                          //
+        };                                                                                                             //
+        unsetTokenCookie = function unsetTokenCookie() {                                                               //
+          if (cookie.has('meteor_login_token')) {                                                                      //
+            cookie.remove('meteor_login_token');                                                                       //
+            return cookie.send();                                                                                      //
           }                                                                                                            //
-                                                                                                                       //
-          return unsetTokenCookie;                                                                                     //
-        }();                                                                                                           //
+        };                                                                                                             //
         Accounts.onLogin(function () {                                                                                 //
           setTokenCookie();                                                                                            //
         });                                                                                                            //
@@ -1053,17 +1038,13 @@ FilesCollection = FilesCollection = function () {                               
         if (!!~request._parsedUrl.path.indexOf(self.downloadRoute + "/" + self.collectionName + "/__upload")) {        //
           if (request.method === 'POST') {                                                                             //
             body = '';                                                                                                 //
-            handleError = function () {                                                                                //
-              function handleError(error) {                                                                            //
-                console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                   //
-                response.writeHead(500);                                                                               //
-                response.end(JSON.stringify({                                                                          //
-                  error: error                                                                                         //
-                }));                                                                                                   //
-              }                                                                                                        //
-                                                                                                                       //
-              return handleError;                                                                                      //
-            }();                                                                                                       //
+            handleError = function handleError(error) {                                                                //
+              console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                     //
+              response.writeHead(500);                                                                                 //
+              response.end(JSON.stringify({                                                                            //
+                error: error                                                                                           //
+              }));                                                                                                     //
+            };                                                                                                         //
             request.on('data', function (data) {                                                                       //
               return bound(function () {                                                                               //
                 body += data;                                                                                          //
@@ -1471,13 +1452,9 @@ FilesCollection = FilesCollection = function () {                               
     var cleanName, fileName;                                                                                           //
     fileName = fileData.name || fileData.fileName;                                                                     //
     if (_.isString(fileName) && fileName.length > 0) {                                                                 //
-      cleanName = function () {                                                                                        //
-        function cleanName(str) {                                                                                      //
-          return str.replace(/\.\./g, '').replace(/\//g, '');                                                          //
-        }                                                                                                              //
-                                                                                                                       //
-        return cleanName;                                                                                              //
-      }();                                                                                                             //
+      cleanName = function cleanName(str) {                                                                            //
+        return str.replace(/\.\./g, '').replace(/\//g, '');                                                            //
+      };                                                                                                               //
       return cleanName(fileData.name || fileData.fileName);                                                            //
     } else {                                                                                                           //
       return '';                                                                                                       //
@@ -1732,30 +1709,26 @@ FilesCollection = FilesCollection = function () {                               
       opts.meta = {};                                                                                                  //
     }                                                                                                                  //
     opts.path = "" + this.storagePath + nodePath.sep + FSName + extensionWithDot;                                      //
-    storeResult = function () {                                                                                        //
-      function storeResult(result, callback) {                                                                         //
-        result._id = fileId;                                                                                           //
-        self.collection.insert(result, function (error) {                                                              //
-          if (error) {                                                                                                 //
-            callback && callback(error);                                                                               //
-            if (self.debug) {                                                                                          //
-              console.error("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
-            }                                                                                                          //
-          } else {                                                                                                     //
-            callback && callback(null, result);                                                                        //
-            if (proceedAfterUpload === true) {                                                                         //
-              self.onAfterUpload && self.onAfterUpload.call(self, result);                                             //
-              self.emit('afterUpload', result);                                                                        //
-            }                                                                                                          //
-            if (self.debug) {                                                                                          //
-              console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);            //
-            }                                                                                                          //
+    storeResult = function storeResult(result, callback) {                                                             //
+      result._id = fileId;                                                                                             //
+      self.collection.insert(result, function (error) {                                                                //
+        if (error) {                                                                                                   //
+          callback && callback(error);                                                                                 //
+          if (self.debug) {                                                                                            //
+            console.error("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
           }                                                                                                            //
-        });                                                                                                            //
-      }                                                                                                                //
-                                                                                                                       //
-      return storeResult;                                                                                              //
-    }();                                                                                                               //
+        } else {                                                                                                       //
+          callback && callback(null, result);                                                                          //
+          if (proceedAfterUpload === true) {                                                                           //
+            self.onAfterUpload && self.onAfterUpload.call(self, result);                                               //
+            self.emit('afterUpload', result);                                                                          //
+          }                                                                                                            //
+          if (self.debug) {                                                                                            //
+            console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);              //
+          }                                                                                                            //
+        }                                                                                                              //
+      });                                                                                                              //
+    };                                                                                                                 //
     request.get(url).on('error', function (error) {                                                                    //
       return bound(function () {                                                                                       //
         callback && callback(error);                                                                                   //
@@ -2897,17 +2870,13 @@ FilesCollection = FilesCollection = function () {                               
     } else {                                                                                                           //
       responseType = '200';                                                                                            //
     }                                                                                                                  //
-    streamErrorHandler = function () {                                                                                 //
-      function streamErrorHandler(error) {                                                                             //
-        http.response.writeHead(500);                                                                                  //
-        http.response.end(error.toString());                                                                           //
-        if (self.debug) {                                                                                              //
-          console.error("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [500]", error);                 //
-        }                                                                                                              //
+    streamErrorHandler = function streamErrorHandler(error) {                                                          //
+      http.response.writeHead(500);                                                                                    //
+      http.response.end(error.toString());                                                                             //
+      if (self.debug) {                                                                                                //
+        console.error("[FilesCollection] [serve(" + vRef.path + ", " + version + ")] [500]", error);                   //
       }                                                                                                                //
-                                                                                                                       //
-      return streamErrorHandler;                                                                                       //
-    }();                                                                                                               //
+    };                                                                                                                 //
     headers = _.isFunction(self.responseHeaders) ? self.responseHeaders(responseType, fileRef, vRef, version) : self.responseHeaders;
     if (!headers['Cache-Control']) {                                                                                   //
       http.response.setHeader('Cache-Control', self.cacheControl);                                                     //
@@ -3013,7 +2982,7 @@ FilesCollection = FilesCollection = function () {                               
   };                                                                                                                   //
                                                                                                                        //
   return FilesCollection;                                                                                              //
-}();                                                                                                                   //
+}());                                                                                                                  //
                                                                                                                        //
 /*                                                                                                                     //
 @locus Anywhere                                                                                                        //
@@ -3068,10 +3037,15 @@ if (Meteor.isClient) {                                                          
       return '';                                                                                                       //
     }                                                                                                                  //
   });                                                                                                                  //
-}exports.FilesCollection = FilesCollection;                                                                            //
+}                                                                                                                      //
                                                                                                                        //
+/*                                                                                                                     //
+Export the FilesCollection class                                                                                       //
+ */                                                                                                                    //
                                                                                                                        //
 Meteor.Files = FilesCollection;                                                                                        //
+                                                                                                                       //
+                                                                                                                       //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"event-emitter.jsx":["babel-runtime/helpers/typeof",function(require,exports,module){
@@ -3082,12 +3056,7 @@ Meteor.Files = FilesCollection;                                                 
 //                                                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
-var _typeof2 = require('babel-runtime/helpers/typeof');                                                                //
-                                                                                                                       //
-var _typeof3 = _interopRequireDefault(_typeof2);                                                                       //
-                                                                                                                       //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }                      //
-                                                                                                                       //
+var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){_typeof=v}});                          //
 /*!                                                                                                                    //
  * EventEmitter v4.2.11 - git.io/ee                                                                                    //
  * Unlicense - http://unlicense.org/                                                                                   //
@@ -3218,7 +3187,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
    */                                                                                                                  //
   proto.addListener = function addListener(evt, listener) {                                                            // 130
     var listeners = this.getListenersAsObject(evt);                                                                    // 131
-    var listenerIsWrapped = (typeof listener === 'undefined' ? 'undefined' : (0, _typeof3['default'])(listener)) === 'object';
+    var listenerIsWrapped = (typeof listener === 'undefined' ? 'undefined' : _typeof(listener)) === 'object';          // 132
     var key = void 0;                                                                                                  // 133
                                                                                                                        //
     for (key in listeners) {                                                                                           // 135
@@ -3363,7 +3332,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
     var multiple = remove ? this.removeListeners : this.addListeners;                                                  // 274
                                                                                                                        //
     // If evt is an object then pass each of its properties to this method                                             //
-    if ((typeof evt === 'undefined' ? 'undefined' : (0, _typeof3['default'])(evt)) === 'object' && !(evt instanceof RegExp)) {
+    if ((typeof evt === 'undefined' ? 'undefined' : _typeof(evt)) === 'object' && !(evt instanceof RegExp)) {          // 277
       for (i in evt) {                                                                                                 // 278
         if (evt.hasOwnProperty(i) && (value = evt[i])) {                                                               // 279
           // Pass the single listener straight through to the singular method                                          //
@@ -3398,7 +3367,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
    * @return {Object} Current instance of EventEmitter for chaining.                                                   //
    */                                                                                                                  //
   proto.removeEvent = function removeEvent(evt) {                                                                      // 313
-    var type = typeof evt === 'undefined' ? 'undefined' : (0, _typeof3['default'])(evt);                               // 314
+    var type = typeof evt === 'undefined' ? 'undefined' : _typeof(evt);                                                // 314
     var events = this._getEvents();                                                                                    // 315
     var key = void 0;                                                                                                  // 316
                                                                                                                        //
@@ -3547,14 +3516,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }]}}}},{"extensions":[".js",".json",".coffee",".jsx"]});
-require("./node_modules/meteor/ostrio:files/files.coffee.js");
+var exports = require("./node_modules/meteor/ostrio:files/files.coffee.js");
 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
 (function (pkg, symbols) {
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['ostrio:files'] = {}, {
+})(Package['ostrio:files'] = exports, {
   FilesCollection: FilesCollection
 });
 

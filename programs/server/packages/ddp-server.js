@@ -202,7 +202,7 @@ _.extend(StreamServer.prototype, {                                              
 });                                                                                                                   // 113
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"livedata_server.js":["babel-runtime/helpers/typeof",function(require){
+},"livedata_server.js":["babel-runtime/helpers/typeof",function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
@@ -210,12 +210,7 @@ _.extend(StreamServer.prototype, {                                              
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
-var _typeof2 = require("babel-runtime/helpers/typeof");                                                               //
-                                                                                                                      //
-var _typeof3 = _interopRequireDefault(_typeof2);                                                                      //
-                                                                                                                      //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }                     //
-                                                                                                                      //
+var _typeof;module.import("babel-runtime/helpers/typeof",{"default":function(v){_typeof=v}});                         //
 DDPServer = {};                                                                                                       // 1
                                                                                                                       //
 var Fiber = Npm.require('fibers');                                                                                    // 3
@@ -934,7 +929,7 @@ _.extend(Session.prototype, {                                                   
   _setUserId: function _setUserId(userId) {                                                                           // 773
     var self = this;                                                                                                  // 774
                                                                                                                       //
-    if (userId !== null && typeof userId !== "string") throw new Error("setUserId must be called on string or null, not " + (typeof userId === "undefined" ? "undefined" : (0, _typeof3["default"])(userId)));
+    if (userId !== null && typeof userId !== "string") throw new Error("setUserId must be called on string or null, not " + (typeof userId === "undefined" ? "undefined" : _typeof(userId)));
                                                                                                                       //
     // Prevent newly-created universal subscriptions from being added to our                                          //
     // session; they will be found below when we call startUniversalSubs.                                             //

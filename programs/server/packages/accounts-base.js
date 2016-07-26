@@ -36,20 +36,15 @@ var require = meteorInstall({"node_modules":{"meteor":{"accounts-base":{"server_
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-exports.__esModule = true;                                                                                         //
-exports.AccountsServer = undefined;                                                                                //
-                                                                                                                   //
-var _accounts_server = require("./accounts_server.js");                                                            // 1
-                                                                                                                   //
-require("./accounts_rate_limit.js");                                                                               // 2
-                                                                                                                   //
-require("./url_server.js");                                                                                        // 3
+module.export({AccountsServer:function(){return AccountsServer}});var AccountsServer;module.import("./accounts_server.js",{"AccountsServer":function(v){AccountsServer=v}});module.import("./accounts_rate_limit.js");module.import("./url_server.js");
+                                                                                                                   // 2
+                                                                                                                   // 3
                                                                                                                    //
 /**                                                                                                                //
  * @namespace Accounts                                                                                             //
  * @summary The namespace for all server-side accounts-related methods.                                            //
  */                                                                                                                //
-Accounts = new _accounts_server.AccountsServer(Meteor.server);                                                     // 9
+Accounts = new AccountsServer(Meteor.server);                                                                      // 9
                                                                                                                    //
 // Users table. Don't use the normal autopublish, since we want to hide                                            //
 // some fields. Code to autopublish this is in accounts_server.js.                                                 //
@@ -63,15 +58,15 @@ Accounts = new _accounts_server.AccountsServer(Meteor.server);                  
 */                                                                                                                 //
 Meteor.users = Accounts.users;                                                                                     // 21
                                                                                                                    //
-exports.                                                                                                           //
-// Since this file is the main module for the server version of the                                                //
-// accounts-base package, properties of non-entry-point modules need to                                            //
-// be re-exported in order to be accessible to modules that import the                                             //
-// accounts-base package.                                                                                          //
-AccountsServer = _accounts_server.AccountsServer;                                                                  // 28
+                                                                                                                   // 23
+                                                                                                                   //
+                                                                                                                   //
+                                                                                                                   //
+                                                                                                                   //
+                                                                                                                   // 28
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"accounts_common.js":["babel-runtime/helpers/classCallCheck",function(require,exports){
+}],"accounts_common.js":["babel-runtime/helpers/classCallCheck",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                 //
@@ -79,15 +74,7 @@ AccountsServer = _accounts_server.AccountsServer;                               
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-exports.__esModule = true;                                                                                         //
-exports.AccountsCommon = undefined;                                                                                //
-                                                                                                                   //
-var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");                                            //
-                                                                                                                   //
-var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);                                                   //
-                                                                                                                   //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }                  //
-                                                                                                                   //
+module.export({AccountsCommon:function(){return AccountsCommon}});var _classCallCheck;module.import("babel-runtime/helpers/classCallCheck",{"default":function(v){_classCallCheck=v}});
 /**                                                                                                                //
  * @summary Super-constructor for AccountsClient and AccountsServer.                                               //
  * @locus Anywhere                                                                                                 //
@@ -97,10 +84,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
  * - connection {Object} Optional DDP connection to reuse.                                                         //
  * - ddpUrl {String} Optional URL for creating a new DDP connection.                                               //
  */                                                                                                                //
-                                                                                                                   //
-var AccountsCommon = exports.AccountsCommon = function () {                                                        //
+var AccountsCommon = function () {                                                                                 // 10
   function AccountsCommon(options) {                                                                               // 11
-    (0, _classCallCheck3["default"])(this, AccountsCommon);                                                        // 11
+    _classCallCheck(this, AccountsCommon);                                                                         // 11
                                                                                                                    //
     // Currently this is read directly by packages like accounts-password                                          //
     // and accounts-ui-unstyled.                                                                                   //
@@ -141,7 +127,7 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.userId = function userId() {                                                            //
+  AccountsCommon.prototype.userId = function userId() {                                                            // 10
     throw new Error("userId method not implemented");                                                              // 50
   };                                                                                                               // 51
                                                                                                                    //
@@ -151,7 +137,7 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.user = function user() {                                                                //
+  AccountsCommon.prototype.user = function user() {                                                                // 10
     var userId = this.userId();                                                                                    // 58
     return userId ? this.users.findOne(userId) : null;                                                             // 59
   };                                                                                                               // 60
@@ -193,7 +179,7 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.config = function config(options) {                                                     //
+  AccountsCommon.prototype.config = function config(options) {                                                     // 10
     var self = this;                                                                                               // 98
                                                                                                                    //
     // We don't want users to accidentally only call Accounts.config on the                                        //
@@ -245,7 +231,7 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.onLogin = function onLogin(func) {                                                      //
+  AccountsCommon.prototype.onLogin = function onLogin(func) {                                                      // 10
     return this._onLoginHook.register(func);                                                                       // 152
   };                                                                                                               // 153
                                                                                                                    //
@@ -256,7 +242,7 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.onLoginFailure = function onLoginFailure(func) {                                        //
+  AccountsCommon.prototype.onLoginFailure = function onLoginFailure(func) {                                        // 10
     return this._onLoginFailureHook.register(func);                                                                // 161
   };                                                                                                               // 162
                                                                                                                    //
@@ -267,11 +253,11 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsCommon.prototype.onLogout = function onLogout(func) {                                                    //
+  AccountsCommon.prototype.onLogout = function onLogout(func) {                                                    // 10
     return this._onLogoutHook.register(func);                                                                      // 170
   };                                                                                                               // 171
                                                                                                                    //
-  AccountsCommon.prototype._initConnection = function _initConnection(options) {                                   //
+  AccountsCommon.prototype._initConnection = function _initConnection(options) {                                   // 10
     if (!Meteor.isClient) {                                                                                        // 174
       return;                                                                                                      // 175
     }                                                                                                              // 176
@@ -302,25 +288,25 @@ var AccountsCommon = exports.AccountsCommon = function () {                     
     }                                                                                                              // 203
   };                                                                                                               // 204
                                                                                                                    //
-  AccountsCommon.prototype._getTokenLifetimeMs = function _getTokenLifetimeMs() {                                  //
+  AccountsCommon.prototype._getTokenLifetimeMs = function _getTokenLifetimeMs() {                                  // 10
     return (this._options.loginExpirationInDays || DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;           // 207
   };                                                                                                               // 209
                                                                                                                    //
-  AccountsCommon.prototype._tokenExpiration = function _tokenExpiration(when) {                                    //
+  AccountsCommon.prototype._tokenExpiration = function _tokenExpiration(when) {                                    // 10
     // We pass when through the Date constructor for backwards compatibility;                                      //
     // `when` used to be a number.                                                                                 //
     return new Date(new Date(when).getTime() + this._getTokenLifetimeMs());                                        // 214
   };                                                                                                               // 215
                                                                                                                    //
-  AccountsCommon.prototype._tokenExpiresSoon = function _tokenExpiresSoon(when) {                                  //
+  AccountsCommon.prototype._tokenExpiresSoon = function _tokenExpiresSoon(when) {                                  // 10
     var minLifetimeMs = .1 * this._getTokenLifetimeMs();                                                           // 218
     var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                     // 219
     if (minLifetimeMs > minLifetimeCapMs) minLifetimeMs = minLifetimeCapMs;                                        // 220
     return new Date() > new Date(when) - minLifetimeMs;                                                            // 222
   };                                                                                                               // 223
                                                                                                                    //
-  return AccountsCommon;                                                                                           //
-}();                                                                                                               //
+  return AccountsCommon;                                                                                           // 10
+}();                                                                                                               // 10
                                                                                                                    //
 var Ap = AccountsCommon.prototype;                                                                                 // 226
                                                                                                                    //
@@ -378,7 +364,7 @@ Ap.LoginCancelledError.prototype.name = lceName;                                
 Ap.LoginCancelledError.numericError = 0x8acdc2f;                                                                   // 283
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"accounts_rate_limit.js":["./accounts_common.js",function(require){
+}],"accounts_rate_limit.js":["./accounts_common.js",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                 //
@@ -386,9 +372,9 @@ Ap.LoginCancelledError.numericError = 0x8acdc2f;                                
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-var _accounts_common = require('./accounts_common.js');                                                            // 1
+var AccountsCommon;module.import("./accounts_common.js",{"AccountsCommon":function(v){AccountsCommon=v}});         // 1
                                                                                                                    //
-var Ap = _accounts_common.AccountsCommon.prototype;                                                                // 3
+var Ap = AccountsCommon.prototype;                                                                                 // 3
 var defaultRateLimiterRuleId;                                                                                      // 4
 // Removes default rate limiting rule                                                                              //
 Ap.removeDefaultRateLimit = function () {                                                                          // 6
@@ -418,7 +404,7 @@ Ap.addDefaultRateLimit = function () {                                          
 Ap.addDefaultRateLimit();                                                                                          // 31
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"accounts_server.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits","./accounts_common.js",function(require,exports){
+}],"accounts_server.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits","./accounts_common.js",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                 //
@@ -426,26 +412,12 @@ Ap.addDefaultRateLimit();                                                       
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-exports.__esModule = true;                                                                                         //
-exports.AccountsServer = undefined;                                                                                //
+module.export({AccountsServer:function(){return AccountsServer}});var _classCallCheck;module.import('babel-runtime/helpers/classCallCheck',{"default":function(v){_classCallCheck=v}});var _possibleConstructorReturn;module.import('babel-runtime/helpers/possibleConstructorReturn',{"default":function(v){_possibleConstructorReturn=v}});var _inherits;module.import('babel-runtime/helpers/inherits',{"default":function(v){_inherits=v}});var AccountsCommon;module.import("./accounts_common.js",{"AccountsCommon":function(v){AccountsCommon=v}});
                                                                                                                    //
-var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');                                            //
-                                                                                                                   //
-var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);                                                   //
-                                                                                                                   //
-var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');                      //
-                                                                                                                   //
-var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);                             //
-                                                                                                                   //
-var _inherits2 = require('babel-runtime/helpers/inherits');                                                        //
-                                                                                                                   //
-var _inherits3 = _interopRequireDefault(_inherits2);                                                               //
-                                                                                                                   //
-var _accounts_common = require('./accounts_common.js');                                                            // 3
-                                                                                                                   //
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }                  //
                                                                                                                    //
 var crypto = Npm.require('crypto');                                                                                // 1
+                                                                                                                   //
+                                                                                                                   // 3
                                                                                                                    //
 /**                                                                                                                //
  * @summary Constructor for the `Accounts` namespace on the server.                                                //
@@ -455,18 +427,17 @@ var crypto = Npm.require('crypto');                                             
  * @instancename accountsServer                                                                                    //
  * @param {Object} server A server object such as `Meteor.server`.                                                 //
  */                                                                                                                //
-                                                                                                                   //
-var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {                                         //
-  (0, _inherits3['default'])(AccountsServer, _AccountsCommon);                                                     //
+var AccountsServer = function (_AccountsCommon) {                                                                  // 13
+  _inherits(AccountsServer, _AccountsCommon);                                                                      // 13
                                                                                                                    //
   // Note that this constructor is less likely to be instantiated multiple                                         //
   // times than the `AccountsClient` constructor, because a single server                                          //
   // can provide only one set of methods.                                                                          //
                                                                                                                    //
   function AccountsServer(server) {                                                                                // 17
-    (0, _classCallCheck3['default'])(this, AccountsServer);                                                        // 17
+    _classCallCheck(this, AccountsServer);                                                                         // 17
                                                                                                                    //
-    var _this = (0, _possibleConstructorReturn3['default'])(this, _AccountsCommon.call(this));                     // 17
+    var _this = _possibleConstructorReturn(this, _AccountsCommon.call(this));                                      // 17
                                                                                                                    //
     _this._server = server || Meteor.server;                                                                       // 20
     // Set up the server's methods, as if by calling Meteor.methods.                                               //
@@ -519,7 +490,7 @@ var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {      
   // @override of "abstract" non-implementation in accounts_common.js                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsServer.prototype.userId = function userId() {                                                            //
+  AccountsServer.prototype.userId = function userId() {                                                            // 13
     // This function only works if called inside a method. In theory, it                                           //
     // could also be called from publish statements, since they also                                               //
     // have a userId associated with them. However, given that publish                                             //
@@ -545,7 +516,7 @@ var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {      
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsServer.prototype.validateLoginAttempt = function validateLoginAttempt(func) {                            //
+  AccountsServer.prototype.validateLoginAttempt = function validateLoginAttempt(func) {                            // 13
     // Exceptions inside the hook callback are passed up to us.                                                    //
     return this._validateLoginHook.register(func);                                                                 // 97
   };                                                                                                               // 98
@@ -557,7 +528,7 @@ var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {      
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsServer.prototype.validateNewUser = function validateNewUser(func) {                                      //
+  AccountsServer.prototype.validateNewUser = function validateNewUser(func) {                                      // 13
     this._validateNewUserHooks.push(func);                                                                         // 106
   };                                                                                                               // 107
                                                                                                                    //
@@ -572,7 +543,7 @@ var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {      
    */                                                                                                              //
                                                                                                                    //
                                                                                                                    //
-  AccountsServer.prototype.onCreateUser = function onCreateUser(func) {                                            //
+  AccountsServer.prototype.onCreateUser = function onCreateUser(func) {                                            // 13
     if (this._onCreateUserHook) {                                                                                  // 119
       throw new Error("Can only call onCreateUser once");                                                          // 120
     }                                                                                                              // 121
@@ -580,10 +551,8 @@ var AccountsServer = exports.AccountsServer = function (_AccountsCommon) {      
     this._onCreateUserHook = func;                                                                                 // 123
   };                                                                                                               // 124
                                                                                                                    //
-  return AccountsServer;                                                                                           //
-}(_accounts_common.AccountsCommon);                                                                                //
-                                                                                                                   //
-;                                                                                                                  // 125
+  return AccountsServer;                                                                                           // 13
+}(AccountsCommon);;                                                                                                // 13
                                                                                                                    //
 var Ap = AccountsServer.prototype;                                                                                 // 127
                                                                                                                    //
@@ -1481,7 +1450,7 @@ Ap._expireTokens = function (oldestValidDate, userId) {                         
 // @override from accounts_common.js                                                                               //
 Ap.config = function (options) {                                                                                   // 1119
   // Call the overridden implementation of the method.                                                             //
-  var superResult = _accounts_common.AccountsCommon.prototype.config.apply(this, arguments);                       // 1121
+  var superResult = AccountsCommon.prototype.config.apply(this, arguments);                                        // 1121
                                                                                                                    //
   // If the user set loginExpirationInDays to null, then we need to clear the                                      //
   // timer that periodically expires tokens.                                                                       //
@@ -1611,8 +1580,8 @@ Ap.insertUserDoc = function (options, user) {                                   
     // https://jira.mongodb.org/browse/SERVER-3069 will get fixed one day                                          //
     if (e.name !== 'MongoError') throw e;                                                                          // 1261
     if (e.code !== 11000) throw e;                                                                                 // 1262
-    if (e.err.indexOf('emails.address') !== -1) throw new Meteor.Error(403, "Email already exists.");              // 1263
-    if (e.err.indexOf('username') !== -1) throw new Meteor.Error(403, "Username already exists.");                 // 1265
+    if (e.errmsg.indexOf('emails.address') !== -1) throw new Meteor.Error(403, "Email already exists.");           // 1263
+    if (e.errmsg.indexOf('username') !== -1) throw new Meteor.Error(403, "Username already exists.");              // 1265
     // XXX better error reporting for services.facebook.id duplicate, etc                                          //
     throw e;                                                                                                       // 1268
   }                                                                                                                // 1269
@@ -1798,7 +1767,7 @@ Ap._deleteSavedTokensForAllUsersOnStartup = function () {                       
 };                                                                                                                 // 1475
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"url_server.js":["./accounts_server.js",function(require){
+}],"url_server.js":["./accounts_server.js",function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                 //
@@ -1806,11 +1775,11 @@ Ap._deleteSavedTokensForAllUsersOnStartup = function () {                       
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-var _accounts_server = require('./accounts_server.js');                                                            // 1
+var AccountsServer;module.import("./accounts_server.js",{"AccountsServer":function(v){AccountsServer=v}});         // 1
                                                                                                                    //
 // XXX These should probably not actually be public?                                                               //
                                                                                                                    //
-_accounts_server.AccountsServer.prototype.urls = {                                                                 // 5
+AccountsServer.prototype.urls = {                                                                                  // 5
   resetPassword: function resetPassword(token) {                                                                   // 6
     return Meteor.absoluteUrl('#/reset-password/' + token);                                                        // 7
   },                                                                                                               // 8

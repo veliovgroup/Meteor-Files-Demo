@@ -223,7 +223,7 @@
       "path": "packages/session.js"
     },
     {
-      "path": "packages/standard-minifier-css.js"
+      "path": "packages/seba_minifiers-autoprefixer.js"
     },
     {
       "path": "packages/standard-minifier-js.js"
