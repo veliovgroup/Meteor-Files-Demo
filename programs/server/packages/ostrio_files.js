@@ -7,6 +7,8 @@ var meteorEnv = Package.meteor.meteorEnv;
 var WebApp = Package.webapp.WebApp;
 var main = Package.webapp.main;
 var WebAppInternals = Package.webapp.WebAppInternals;
+var MongoInternals = Package.mongo.MongoInternals;
+var Mongo = Package.mongo.Mongo;
 var _ = Package.underscore._;
 var check = Package.check.check;
 var Match = Package.check.Match;
@@ -657,7 +659,7 @@ module.runModuleSetters(FilesCollection = function () {                         
   }();                                                                                                                 //
                                                                                                                        //
   function FilesCollection(config) {                                                                                   //
-    var _methods, _preCollectionCursor, cookie, self, setTokenCookie, storagePath, unsetTokenCookie;                   //
+    var Accounts, _methods, _preCollectionCursor, cookie, self, setTokenCookie, storagePath, unsetTokenCookie;         //
     if (Meteor.isServer) {                                                                                             //
       events.EventEmitter.call(this);                                                                                  //
     } else {                                                                                                           //
@@ -728,6 +730,9 @@ module.runModuleSetters(FilesCollection = function () {                         
       delete this.continueUploadTTL;                                                                                   //
       delete this.responseHeaders;                                                                                     //
       if (_.has(Package, 'accounts-base')) {                                                                           //
+        if (!Accounts) {                                                                                               //
+          Accounts = Package['accounts-base'].Accounts;                                                                //
+        }                                                                                                              //
         setTokenCookie = function setTokenCookie() {                                                                   //
           if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
             cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                           //
@@ -1470,7 +1475,7 @@ module.runModuleSetters(FilesCollection = function () {                         
    */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype._getUser = function (http) {                                                               //
-    var cookie, result, user;                                                                                          //
+    var Accounts, cookie, result, user;                                                                                //
     result = {                                                                                                         //
       user: function () {                                                                                              //
         function user() {                                                                                              //
@@ -1485,6 +1490,9 @@ module.runModuleSetters(FilesCollection = function () {                         
       if (http) {                                                                                                      //
         cookie = http.request.Cookies;                                                                                 //
         if (_.has(Package, 'accounts-base') && cookie.has('meteor_login_token')) {                                     //
+          if (!Accounts) {                                                                                             //
+            Accounts = Package['accounts-base'].Accounts;                                                              //
+          }                                                                                                            //
           user = Meteor.users.findOne({                                                                                //
             'services.resume.loginTokens.hashedToken': Accounts._hashLoginToken(cookie.get('meteor_login_token'))      //
           });                                                                                                          //

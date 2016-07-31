@@ -4,10 +4,14 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
+var ECMAScript = Package.ecmascript.ECMAScript;
 var _ = Package.underscore._;
 var WebApp = Package.webapp.WebApp;
 var main = Package.webapp.main;
 var WebAppInternals = Package.webapp.WebAppInternals;
+var meteorInstall = Package.modules.meteorInstall;
+var Buffer = Package.modules.Buffer;
+var process = Package.modules.process;
 var Symbol = Package['ecmascript-runtime'].Symbol;
 var Map = Package['ecmascript-runtime'].Map;
 var Set = Package['ecmascript-runtime'].Set;
@@ -17,7 +21,7 @@ var Promise = Package.promise.Promise;
 /* Package-scope variables */
 var __coffeescriptShare, Cookies;
 
-(function(){
+var require = meteorInstall({"node_modules":{"meteor":{"ostrio:cookies":{"cookies.coffee.js":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                 //
@@ -26,7 +30,7 @@ var __coffeescriptShare, Cookies;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-                                                                                                                   //
+module.export({Cookies:function(){return Cookies}});                                                               //
 /*                                                                                                                 //
 @url https://github.com/jshttp/cookie/blob/master/index.js                                                         //
 @name cookie                                                                                                       //
@@ -190,7 +194,7 @@ serialize = function serialize(name, val, opt) {                                
   opt.expires = opt.expires || opt.expire;                                                                         //
   if (opt.expires) {                                                                                               //
     if (opt.expires === Infinity) {                                                                                //
-      pair.push('Expires=Fri, 31 Dec 9999 23:59:59 GMT');                                                          //
+      pairs.push('Expires=Fri, 31 Dec 9999 23:59:59 GMT');                                                         //
     } else if (opt.expires instanceof Date) {                                                                      //
       pairs.push('Expires=' + opt.expires.toUTCString());                                                          //
     } else if (_.isNumber(opt.expires)) {                                                                          //
@@ -475,7 +479,7 @@ __middlewareHandler = function __middlewareHandler(req, res, self) {            
 @summary Main Cookie class                                                                                         //
  */                                                                                                                //
                                                                                                                    //
-Cookies = function (superClass) {                                                                                  //
+module.runModuleSetters(Cookies = function (superClass) {                                                          //
   extend(Cookies, superClass);                                                                                     //
                                                                                                                    //
   function Cookies(opts) {                                                                                         //
@@ -540,22 +544,28 @@ Cookies = function (superClass) {                                               
   } : void 0;                                                                                                      //
                                                                                                                    //
   return Cookies;                                                                                                  //
-}(__cookies);                                                                                                      //
+}(__cookies));                                                                                                     //
                                                                                                                    //
 if (Meteor.isServer) {                                                                                             //
   Cookies.isLoadedOnServer = false;                                                                                //
 }                                                                                                                  //
+                                                                                                                   //
+/*                                                                                                                 //
+Export the Cookies class                                                                                           //
+ */                                                                                                                //
+                                                                                                                   //
+                                                                                                                   //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}).call(this);
-
+}}}}},{"extensions":[".js",".json",".coffee"]});
+var exports = require("./node_modules/meteor/ostrio:cookies/cookies.coffee.js");
 
 /* Exports */
 if (typeof Package === 'undefined') Package = {};
 (function (pkg, symbols) {
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['ostrio:cookies'] = {}, {
+})(Package['ostrio:cookies'] = exports, {
   Cookies: Cookies
 });
 

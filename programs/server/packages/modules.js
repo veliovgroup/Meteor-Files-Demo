@@ -154,7 +154,7 @@ install("aldeed:schema-index");
 install("aldeed:schema-deny");
 install("aldeed:collection2");
 install("cfs:graphicsmagick");
-install("ostrio:cookies");
+install("ostrio:cookies", "meteor/ostrio:cookies/cookies.coffee.js");
 install("ostrio:files", "meteor/ostrio:files/files.coffee.js");
 install("reactive-dict");
 install("ostrio:flow-router-extra");
