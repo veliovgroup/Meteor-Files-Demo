@@ -414,6 +414,10 @@
       "path": "packages/accounts-meteor-developer.js"
     },
     {
+      "sourceMap": "packages/shell-server.js.map",
+      "path": "packages/shell-server.js"
+    },
+    {
       "path": "packages/livedata.js"
     },
     {

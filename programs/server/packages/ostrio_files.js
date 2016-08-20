@@ -81,6 +81,7 @@ if (Meteor.isServer) {                                                          
         highWaterMark: 0                                                                                               //
       });                                                                                                              //
       this.drained = true;                                                                                             //
+      this.aborted = false;                                                                                            //
       this.writtenChunks = 0;                                                                                          //
       this.stream.on('drain', function () {                                                                            //
         return bound(function () {                                                                                     //
@@ -89,7 +90,10 @@ if (Meteor.isServer) {                                                          
         });                                                                                                            //
       });                                                                                                              //
       this.stream.on('error', function (error) {                                                                       //
-        return bound(function () {});                                                                                  //
+        return bound(function () {                                                                                     //
+          console.error("[FilesCollection] [writeStream] [ERROR:]", error);                                            //
+          self.abort();                                                                                                //
+        });                                                                                                            //
       });                                                                                                              //
     }                                                                                                                  //
                                                                                                                        //
@@ -105,7 +109,7 @@ if (Meteor.isServer) {                                                          
                                                                                                                        //
     writeStream.prototype.write = function (num, chunk, callback) {                                                    //
       var self;                                                                                                        //
-      if (!this.stream._writableState.ended && num > this.writtenChunks) {                                             //
+      if (!this.aborted && !this.stream._writableState.ended && num > this.writtenChunks) {                            //
         if (this.drained && num === this.writtenChunks + 1) {                                                          //
           this.drained = false;                                                                                        //
           this.stream.write(chunk, callback);                                                                          //
@@ -130,7 +134,7 @@ if (Meteor.isServer) {                                                          
                                                                                                                        //
     writeStream.prototype.end = function (callback) {                                                                  //
       var self;                                                                                                        //
-      if (!this.stream._writableState.ended) {                                                                         //
+      if (!this.aborted && !this.stream._writableState.ended) {                                                        //
         if (this.writtenChunks === this.maxLength) {                                                                   //
           this.stream.end(callback);                                                                                   //
           return true;                                                                                                 //
@@ -142,6 +146,18 @@ if (Meteor.isServer) {                                                          
         }                                                                                                              //
       }                                                                                                                //
       return false;                                                                                                    //
+    };                                                                                                                 //
+                                                                                                                       //
+    /*                                                                                                                 //
+    @memberOf writeStream                                                                                              //
+    @name abort                                                                                                        //
+    @summary Aborts writing to writableStream, prevent memory leaks caused by unsatisfied queue                        //
+    @returns {Boolean} - True                                                                                          //
+     */                                                                                                                //
+                                                                                                                       //
+    writeStream.prototype.abort = function () {                                                                        //
+      this.aborted = true;                                                                                             //
+      return true;                                                                                                     //
     };                                                                                                                 //
                                                                                                                        //
     return writeStream;                                                                                                //
@@ -659,7 +675,7 @@ module.runModuleSetters(FilesCollection = function () {                         
   }();                                                                                                                 //
                                                                                                                        //
   function FilesCollection(config) {                                                                                   //
-    var Accounts, _methods, _preCollectionCursor, cookie, self, setTokenCookie, storagePath, unsetTokenCookie;         //
+    var _methods, _preCollectionCursor, cookie, self, setTokenCookie, storagePath, unsetTokenCookie;                   //
     if (Meteor.isServer) {                                                                                             //
       events.EventEmitter.call(this);                                                                                  //
     } else {                                                                                                           //
@@ -729,33 +745,31 @@ module.runModuleSetters(FilesCollection = function () {                         
       delete this.interceptDownload;                                                                                   //
       delete this.continueUploadTTL;                                                                                   //
       delete this.responseHeaders;                                                                                     //
-      if (_.has(Package, 'accounts-base')) {                                                                           //
-        if (!Accounts) {                                                                                               //
-          Accounts = Package['accounts-base'].Accounts;                                                                //
+      setTokenCookie = function setTokenCookie() {                                                                     //
+        Meteor.setTimeout(function () {                                                                                //
+          if (!cookie.has('x_mtok') && Meteor.connection._lastSessionId || cookie.has('x_mtok') && cookie.get('x_mtok') !== Meteor.connection._lastSessionId) {
+            cookie.set('x_mtok', Meteor.connection._lastSessionId, null, '/');                                         //
+            cookie.send();                                                                                             //
+          }                                                                                                            //
+        }, 25);                                                                                                        //
+      };                                                                                                               //
+      unsetTokenCookie = function unsetTokenCookie() {                                                                 //
+        if (cookie.has('x_mtok')) {                                                                                    //
+          cookie.remove('x_mtok');                                                                                     //
+          cookie.send();                                                                                               //
         }                                                                                                              //
-        setTokenCookie = function setTokenCookie() {                                                                   //
-          if (!cookie.has('meteor_login_token') && Accounts._lastLoginTokenWhenPolled || cookie.has('meteor_login_token') && cookie.get('meteor_login_token') !== Accounts._lastLoginTokenWhenPolled) {
-            cookie.set('meteor_login_token', Accounts._lastLoginTokenWhenPolled, null, '/');                           //
-            return cookie.send();                                                                                      //
-          }                                                                                                            //
-        };                                                                                                             //
-        unsetTokenCookie = function unsetTokenCookie() {                                                               //
-          if (cookie.has('meteor_login_token')) {                                                                      //
-            cookie.remove('meteor_login_token');                                                                       //
-            return cookie.send();                                                                                      //
-          }                                                                                                            //
-        };                                                                                                             //
-        Accounts.onLogin(function () {                                                                                 //
-          setTokenCookie();                                                                                            //
-        });                                                                                                            //
-        Accounts.onLogout(function () {                                                                                //
-          unsetTokenCookie();                                                                                          //
-        });                                                                                                            //
-        if (Accounts._lastLoginTokenWhenPolled) {                                                                      //
+      };                                                                                                               //
+      Tracker.autorun(function () {                                                                                    //
+        if (Meteor.status().connected) {                                                                               //
           setTokenCookie();                                                                                            //
         } else {                                                                                                       //
           unsetTokenCookie();                                                                                          //
         }                                                                                                              //
+      });                                                                                                              //
+      if (Meteor.connection._lastSessionId) {                                                                          //
+        setTokenCookie();                                                                                              //
+      } else {                                                                                                         //
+        unsetTokenCookie();                                                                                            //
       }                                                                                                                //
       check(this.onbeforeunloadMessage, Match.OneOf(String, Function));                                                //
     } else {                                                                                                           //
@@ -883,6 +897,7 @@ module.runModuleSetters(FilesCollection = function () {                         
             }                                                                                                          //
             if ((ref = self._currentUploads) != null ? ref[_id] : void 0) {                                            //
               self._currentUploads[_id].end();                                                                         //
+              self._currentUploads[_id].abort();                                                                       //
               delete self._currentUploads[_id];                                                                        //
             }                                                                                                          //
           }                                                                                                            //
@@ -1042,7 +1057,6 @@ module.runModuleSetters(FilesCollection = function () {                         
         var _file, body, handleError, http, params, uri, uris, version;                                                //
         if (!!~request._parsedUrl.path.indexOf(self.downloadRoute + "/" + self.collectionName + "/__upload")) {        //
           if (request.method === 'POST') {                                                                             //
-            body = '';                                                                                                 //
             handleError = function handleError(error) {                                                                //
               console.warn("[FilesCollection] [Upload] [HTTP] Exception:", error);                                     //
               response.writeHead(500);                                                                                 //
@@ -1050,6 +1064,7 @@ module.runModuleSetters(FilesCollection = function () {                         
                 error: error                                                                                           //
               }));                                                                                                     //
             };                                                                                                         //
+            body = '';                                                                                                 //
             request.on('data', function (data) {                                                                       //
               return bound(function () {                                                                               //
                 body += data;                                                                                          //
@@ -1057,32 +1072,69 @@ module.runModuleSetters(FilesCollection = function () {                         
             });                                                                                                        //
             request.on('end', function () {                                                                            //
               return bound(function () {                                                                               //
-                var _continueUpload, error, error1, opts, ref, ref1, result, user;                                     //
+                var _continueUpload, error, error1, opts, ref, ref1, ref2, ref3, ref4, result, user;                   //
                 try {                                                                                                  //
-                  opts = JSON.parse(body);                                                                             //
-                  user = self._getUser({                                                                               //
-                    request: request,                                                                                  //
-                    response: response                                                                                 //
-                  });                                                                                                  //
-                  _continueUpload = self._continueUpload(opts.fileId);                                                 //
-                  if (!_continueUpload) {                                                                              //
-                    throw new Meteor.Error(408, 'Can\'t continue upload, session expired. Start upload again.');       //
-                  }                                                                                                    //
-                  ref = self._prepareUpload(_.extend(opts, _continueUpload), user.userId, 'HTTP'), result = ref.result, opts = ref.opts;
-                  if (opts.eof) {                                                                                      //
-                    Meteor.wrapAsync(self._handleUpload.bind(self, result, opts))();                                   //
-                    response.writeHead(200);                                                                           //
-                    if (result != null ? (ref1 = result.file) != null ? ref1.meta : void 0 : void 0) {                 //
-                      result.file.meta = _fixJSONStringify(result.file.meta);                                          //
-                    }                                                                                                  //
-                    response.end(JSON.stringify(result));                                                              //
+                  if (request.headers['x-mtok'] && ((ref = Meteor.server.sessions) != null ? ref[request.headers['x-mtok']] : void 0)) {
+                    user = {                                                                                           //
+                      userId: (ref1 = Meteor.server.sessions[request.headers['x-mtok']]) != null ? ref1.userId : void 0
+                    };                                                                                                 //
                   } else {                                                                                             //
-                    self.emit('_handleUpload', result, opts, NOOP);                                                    //
+                    user = self._getUser({                                                                             //
+                      request: request,                                                                                //
+                      response: response                                                                               //
+                    });                                                                                                //
                   }                                                                                                    //
-                  response.writeHead(200);                                                                             //
-                  response.end(JSON.stringify({                                                                        //
-                    success: true                                                                                      //
-                  }));                                                                                                 //
+                  if (request.headers['x-start'] !== '1') {                                                            //
+                    opts = {                                                                                           //
+                      fileId: request.headers['x-fileid']                                                              //
+                    };                                                                                                 //
+                    if (request.headers['x-eof'] === '1') {                                                            //
+                      opts.eof = true;                                                                                 //
+                    } else {                                                                                           //
+                      opts.binData = new Buffer(body, 'base64');                                                       //
+                      opts.chunkId = parseInt(request.headers['x-chunkid']);                                           //
+                    }                                                                                                  //
+                    _continueUpload = self._continueUpload(opts.fileId);                                               //
+                    if (!_continueUpload) {                                                                            //
+                      throw new Meteor.Error(408, 'Can\'t continue upload, session expired. Start upload again.');     //
+                    }                                                                                                  //
+                    ref2 = self._prepareUpload(_.extend(opts, _continueUpload), user.userId, 'HTTP'), result = ref2.result, opts = ref2.opts;
+                    if (opts.eof) {                                                                                    //
+                      Meteor.wrapAsync(self._handleUpload.bind(self, result, opts))();                                 //
+                      response.writeHead(200);                                                                         //
+                      if (result != null ? (ref3 = result.file) != null ? ref3.meta : void 0 : void 0) {               //
+                        result.file.meta = _fixJSONStringify(result.file.meta);                                        //
+                      }                                                                                                //
+                      response.end(JSON.stringify(result));                                                            //
+                    } else {                                                                                           //
+                      self.emit('_handleUpload', result, opts, NOOP);                                                  //
+                    }                                                                                                  //
+                    response.writeHead(204);                                                                           //
+                    response.end();                                                                                    //
+                  } else {                                                                                             //
+                    if (self.debug) {                                                                                  //
+                      console.info("[FilesCollection] [File Start HTTP] " + opts.file.name + " - " + opts.fileId);     //
+                    }                                                                                                  //
+                    opts = JSON.parse(body);                                                                           //
+                    if (opts != null ? (ref4 = opts.file) != null ? ref4.meta : void 0 : void 0) {                     //
+                      opts.file.meta = _fixJSONParse(opts.file.meta);                                                  //
+                    }                                                                                                  //
+                    result = self._prepareUpload(_.clone(opts), this.userId, 'Start Method').result;                   //
+                    opts._id = opts.fileId;                                                                            //
+                    opts.createdAt = new Date();                                                                       //
+                    self._preCollection.insert(opts);                                                                  //
+                    self._createStream(result._id, result.path, opts);                                                 //
+                    if (opts.returnMeta) {                                                                             //
+                      response.writeHead(200);                                                                         //
+                      response.end(JSON.stringify({                                                                    //
+                        uploadRoute: self.downloadRoute + "/" + self.collectionName + "/__upload",                     //
+                        file: result                                                                                   //
+                      }));                                                                                             //
+                    } else {                                                                                           //
+                      response.writeHead(204);                                                                         //
+                      response.end();                                                                                  //
+                    }                                                                                                  //
+                  }                                                                                                    //
                 } catch (error1) {                                                                                     //
                   error = error1;                                                                                      //
                   handleError(error);                                                                                  //
@@ -1193,7 +1245,7 @@ module.runModuleSetters(FilesCollection = function () {                         
           throw new Meteor.Error(401, '[FilesCollection] [remove] Run code from client is not allowed!');              //
         }                                                                                                              //
       };                                                                                                               //
-      _methods[self._methodNames._Start] = function (opts) {                                                           //
+      _methods[self._methodNames._Start] = function (opts, returnMeta) {                                               //
         var result;                                                                                                    //
         check(opts, {                                                                                                  //
           file: Object,                                                                                                //
@@ -1202,6 +1254,7 @@ module.runModuleSetters(FilesCollection = function () {                         
           chunkSize: Number,                                                                                           //
           fileLength: Number                                                                                           //
         });                                                                                                            //
+        check(returnMeta, Match.Optional(Boolean));                                                                    //
         if (self.debug) {                                                                                              //
           console.info("[FilesCollection] [File Start Method] " + opts.file.name + " - " + opts.fileId);               //
         }                                                                                                              //
@@ -1210,7 +1263,14 @@ module.runModuleSetters(FilesCollection = function () {                         
         opts.createdAt = new Date();                                                                                   //
         self._preCollection.insert(opts);                                                                              //
         self._createStream(result._id, result.path, opts);                                                             //
-        return true;                                                                                                   //
+        if (returnMeta) {                                                                                              //
+          return {                                                                                                     //
+            uploadRoute: self.downloadRoute + "/" + self.collectionName + "/__upload",                                 //
+            file: result                                                                                               //
+          };                                                                                                           //
+        } else {                                                                                                       //
+          return true;                                                                                                 //
+        }                                                                                                              //
       };                                                                                                               //
       _methods[self._methodNames._Write] = function (opts) {                                                           //
         var _continueUpload, e, error1, ref, result;                                                                   //
@@ -1220,6 +1280,9 @@ module.runModuleSetters(FilesCollection = function () {                         
           binData: Match.Optional(String),                                                                             //
           chunkId: Match.Optional(Number)                                                                              //
         });                                                                                                            //
+        if (opts.binData) {                                                                                            //
+          opts.binData = new Buffer(opts.binData, 'base64');                                                           //
+        }                                                                                                              //
         _continueUpload = self._continueUpload(opts.fileId);                                                           //
         if (!_continueUpload) {                                                                                        //
           throw new Meteor.Error(408, 'Can\'t continue upload, session expired. Start upload again.');                 //
@@ -1401,7 +1464,7 @@ module.runModuleSetters(FilesCollection = function () {                         
           });                                                                                                          //
         });                                                                                                            //
       } else {                                                                                                         //
-        this._currentUploads[result._id].write(opts.chunkId, new Buffer(opts.binData, 'base64'), cb);                  //
+        this._currentUploads[result._id].write(opts.chunkId, opts.binData, cb);                                        //
       }                                                                                                                //
     } catch (error1) {                                                                                                 //
       e = error1;                                                                                                      //
@@ -1454,13 +1517,10 @@ module.runModuleSetters(FilesCollection = function () {                         
    */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype._getFileName = function (fileData) {                                                       //
-    var cleanName, fileName;                                                                                           //
+    var fileName;                                                                                                      //
     fileName = fileData.name || fileData.fileName;                                                                     //
     if (_.isString(fileName) && fileName.length > 0) {                                                                 //
-      cleanName = function cleanName(str) {                                                                            //
-        return str.replace(/\.\./g, '').replace(/\//g, '');                                                            //
-      };                                                                                                               //
-      return cleanName(fileData.name || fileData.fileName);                                                            //
+      return (fileData.name || fileData.fileName).replace(/\.\./g, '').replace(/\//g, '');                             //
     } else {                                                                                                           //
       return '';                                                                                                       //
     }                                                                                                                  //
@@ -1475,7 +1535,7 @@ module.runModuleSetters(FilesCollection = function () {                         
    */                                                                                                                  //
                                                                                                                        //
   FilesCollection.prototype._getUser = function (http) {                                                               //
-    var Accounts, cookie, result, user;                                                                                //
+    var cookie, mtok, ref, ref1, result, userId;                                                                       //
     result = {                                                                                                         //
       user: function () {                                                                                              //
         function user() {                                                                                              //
@@ -1488,24 +1548,27 @@ module.runModuleSetters(FilesCollection = function () {                         
     };                                                                                                                 //
     if (Meteor.isServer) {                                                                                             //
       if (http) {                                                                                                      //
-        cookie = http.request.Cookies;                                                                                 //
-        if (_.has(Package, 'accounts-base') && cookie.has('meteor_login_token')) {                                     //
-          if (!Accounts) {                                                                                             //
-            Accounts = Package['accounts-base'].Accounts;                                                              //
+        mtok = null;                                                                                                   //
+        if (http.request.headers['x-mtok']) {                                                                          //
+          mtok = http.request.headers['x-mtok'];                                                                       //
+        } else {                                                                                                       //
+          cookie = http.request.Cookies;                                                                               //
+          if (cookie.has('x_mtok')) {                                                                                  //
+            mtok = cookie.get('x_mtok');                                                                               //
           }                                                                                                            //
-          user = Meteor.users.findOne({                                                                                //
-            'services.resume.loginTokens.hashedToken': Accounts._hashLoginToken(cookie.get('meteor_login_token'))      //
-          });                                                                                                          //
-          if (user) {                                                                                                  //
+        }                                                                                                              //
+        if (mtok) {                                                                                                    //
+          userId = (ref = Meteor.server.sessions) != null ? (ref1 = ref[mtok]) != null ? ref1.userId : void 0 : void 0;
+          if (userId) {                                                                                                //
             result.user = function () {                                                                                //
-              return user;                                                                                             //
+              return Meteor.users.findOne(userId);                                                                     //
             };                                                                                                         //
-            result.userId = user._id;                                                                                  //
+            result.userId = userId;                                                                                    //
           }                                                                                                            //
         }                                                                                                              //
       }                                                                                                                //
     } else {                                                                                                           //
-      if (_.has(Package, 'accounts-base') && Meteor.userId()) {                                                        //
+      if (typeof Meteor.userId === "function" ? Meteor.userId() : void 0) {                                            //
         result.user = function () {                                                                                    //
           return Meteor.user();                                                                                        //
         };                                                                                                             //
@@ -1527,7 +1590,7 @@ module.runModuleSetters(FilesCollection = function () {                         
   FilesCollection.prototype._getExt = function (fileName) {                                                            //
     var extension;                                                                                                     //
     if (!!~fileName.indexOf('.')) {                                                                                    //
-      extension = fileName.split('.').pop();                                                                           //
+      extension = (fileName.split('.').pop().split('?')[0] || '').toLowerCase();                                       //
       return {                                                                                                         //
         ext: extension,                                                                                                //
         extension: extension,                                                                                          //
@@ -1567,12 +1630,12 @@ module.runModuleSetters(FilesCollection = function () {                         
           extension: data.extension                                                                                    //
         }                                                                                                              //
       },                                                                                                               //
-      isVideo: !!~data.type.toLowerCase().indexOf('video'),                                                            //
-      isAudio: !!~data.type.toLowerCase().indexOf('audio'),                                                            //
-      isImage: !!~data.type.toLowerCase().indexOf('image'),                                                            //
-      isText: !!~data.type.toLowerCase().indexOf('text'),                                                              //
-      isJSON: !!~data.type.toLowerCase().indexOf('json'),                                                              //
-      isPDF: !!~data.type.toLowerCase().indexOf('pdf'),                                                                //
+      isVideo: /^video\//i.test(data.type),                                                                            //
+      isAudio: /^audio\//i.test(data.type),                                                                            //
+      isImage: /^image\//i.test(data.type),                                                                            //
+      isText: /^text\//i.test(data.type),                                                                              //
+      isJSON: /application\/json/i.test(data.type),                                                                    //
+      isPDF: /application\/pdf|application\/x-pdf/i.test(data.type),                                                   //
       _storagePath: data._storagePath || this.storagePath,                                                             //
       _downloadRoute: data._downloadRoute || this.downloadRoute,                                                       //
       _collectionName: data._collectionName || this.collectionName                                                     //
@@ -2028,10 +2091,11 @@ module.runModuleSetters(FilesCollection = function () {                         
           console.time('loadFile ' + this.config.file.name);                                                           //
         }                                                                                                              //
         if (Worker && this.config.allowWebWorkers) {                                                                   //
-          this.worker = new Worker('/packages/ostrio_files/worker.js');                                                //
+          this.worker = new Worker(Meteor.absoluteUrl('packages/ostrio_files/worker.min.js'));                         //
         } else {                                                                                                       //
           this.worker = null;                                                                                          //
         }                                                                                                              //
+        this.startTime = {};                                                                                           //
         this.config.debug = this.collection.debug;                                                                     //
         this.currentChunk = 0;                                                                                         //
         this.transferTime = 0;                                                                                         //
@@ -2155,10 +2219,10 @@ module.runModuleSetters(FilesCollection = function () {                         
         }                                                                                                              //
         this.emitEvent('readEnd');                                                                                     //
       }                                                                                                                //
-      if (opts.binData && opts.binData.length) {                                                                       //
+      if (opts.binData) {                                                                                              //
         if (this.config.transport === 'ddp') {                                                                         //
           Meteor.call(this.collection._methodNames._Write, opts, function (error) {                                    //
-            self.transferTime += +new Date() - evt.data.start;                                                         //
+            self.transferTime += +new Date() - self.startTime[opts.chunkId];                                           //
             if (error) {                                                                                               //
               if (self.result.state.get() !== 'aborted') {                                                             //
                 self.emitEvent('end', [error]);                                                                        //
@@ -2166,7 +2230,7 @@ module.runModuleSetters(FilesCollection = function () {                         
             } else {                                                                                                   //
               ++self.sentChunks;                                                                                       //
               if (self.sentChunks >= self.fileLength) {                                                                //
-                self.emitEvent('sendEOF', [opts]);                                                                     //
+                self.emitEvent('sendEOF');                                                                             //
               } else if (self.currentChunk < self.fileLength) {                                                        //
                 self.emitEvent('upload');                                                                              //
               }                                                                                                        //
@@ -2174,13 +2238,16 @@ module.runModuleSetters(FilesCollection = function () {                         
             }                                                                                                          //
           });                                                                                                          //
         } else {                                                                                                       //
-          if (opts != null ? (ref1 = opts.file) != null ? ref1.meta : void 0 : void 0) {                               //
-            opts.file.meta = _fixJSONStringify(opts.file.meta);                                                        //
-          }                                                                                                            //
           HTTP.call('POST', this.collection.downloadRoute + "/" + this.collection.collectionName + "/__upload", {      //
-            data: opts                                                                                                 //
-          }, function (error, result) {                                                                                //
-            self.transferTime += +new Date() - evt.data.start;                                                         //
+            content: opts.binData,                                                                                     //
+            headers: {                                                                                                 //
+              'x-mtok': ((ref1 = Meteor.connection) != null ? ref1._lastSessionId : void 0) || null,                   //
+              'x-fileid': opts.fileId,                                                                                 //
+              'x-chunkid': opts.chunkId,                                                                               //
+              'content-type': 'text/plain'                                                                             //
+            }                                                                                                          //
+          }, function (error) {                                                                                        //
+            self.transferTime += +new Date() - self.startTime[opts.chunkId];                                           //
             if (error) {                                                                                               //
               if ("" + error === "Error: network") {                                                                   //
                 self.result.pause();                                                                                   //
@@ -2192,7 +2259,7 @@ module.runModuleSetters(FilesCollection = function () {                         
             } else {                                                                                                   //
               ++self.sentChunks;                                                                                       //
               if (self.sentChunks >= self.fileLength) {                                                                //
-                self.emitEvent('sendEOF', [opts]);                                                                     //
+                self.emitEvent('sendEOF');                                                                             //
               } else if (self.currentChunk < self.fileLength) {                                                        //
                 self.emitEvent('upload');                                                                              //
               }                                                                                                        //
@@ -2203,8 +2270,8 @@ module.runModuleSetters(FilesCollection = function () {                         
       }                                                                                                                //
     };                                                                                                                 //
                                                                                                                        //
-    UploadInstance.prototype.sendEOF = function (opts) {                                                               //
-      var self;                                                                                                        //
+    UploadInstance.prototype.sendEOF = function () {                                                                   //
+      var opts, ref, self;                                                                                             //
       if (!this.EOFsent) {                                                                                             //
         this.EOFsent = true;                                                                                           //
         self = this;                                                                                                   //
@@ -2218,43 +2285,57 @@ module.runModuleSetters(FilesCollection = function () {                         
           });                                                                                                          //
         } else {                                                                                                       //
           HTTP.call('POST', this.collection.downloadRoute + "/" + this.collection.collectionName + "/__upload", {      //
-            data: opts                                                                                                 //
-          }, function (error, result) {                                                                                //
-            var res;                                                                                                   //
-            res = JSON.parse((result != null ? result.content : void 0) || {});                                        //
-            if (res != null ? res.meta : void 0) {                                                                     //
-              res.meta = _fixJSONParse(res.meta);                                                                      //
+            content: '',                                                                                               //
+            headers: {                                                                                                 //
+              'x-mtok': ((ref = Meteor.connection) != null ? ref._lastSessionId : void 0) || null,                     //
+              'x-eof': '1',                                                                                            //
+              'x-fileId': opts.fileId,                                                                                 //
+              'content-type': 'text/plain'                                                                             //
             }                                                                                                          //
-            self.emitEvent('end', [error, res]);                                                                       //
+          }, function (error, result) {                                                                                //
+            result = JSON.parse((result != null ? result.content : void 0) || {});                                     //
+            if (result != null ? result.meta : void 0) {                                                               //
+              result.meta = _fixJSONParse(result.meta);                                                                //
+            }                                                                                                          //
+            self.emitEvent('end', [error, result]);                                                                    //
           });                                                                                                          //
         }                                                                                                              //
       }                                                                                                                //
     };                                                                                                                 //
                                                                                                                        //
-    UploadInstance.prototype.proceedChunk = function (chunkId, start) {                                                //
+    UploadInstance.prototype.proceedChunk = function (chunkId) {                                                       //
       var chunk, fileReader, self;                                                                                     //
       self = this;                                                                                                     //
       chunk = this.config.file.slice(this.config.chunkSize * (chunkId - 1), this.config.chunkSize * chunkId);          //
-      fileReader = new FileReader();                                                                                   //
-      fileReader.onloadend = function (evt) {                                                                          //
-        var ref, ref1;                                                                                                 //
+      if (FileReader) {                                                                                                //
+        fileReader = new FileReader();                                                                                 //
+        fileReader.onloadend = function (evt) {                                                                        //
+          var ref, ref1;                                                                                               //
+          self.emitEvent('sendChunk', [{                                                                               //
+            data: {                                                                                                    //
+              bin: ((fileReader != null ? fileReader.result : void 0) || ((ref = evt.srcElement) != null ? ref.result : void 0) || ((ref1 = evt.target) != null ? ref1.result : void 0)).split(',')[1],
+              chunkId: chunkId                                                                                         //
+            }                                                                                                          //
+          }]);                                                                                                         //
+        };                                                                                                             //
+        fileReader.onerror = function (e) {                                                                            //
+          self.emitEvent('end', [(e.target || e.srcElement).error]);                                                   //
+        };                                                                                                             //
+        fileReader.readAsDataURL(chunk);                                                                               //
+      } else if (FileReaderSync) {                                                                                     //
+        fileReader = new FileReaderSync();                                                                             //
         self.emitEvent('sendChunk', [{                                                                                 //
           data: {                                                                                                      //
-            bin: ((fileReader != null ? fileReader.result : void 0) || ((ref = evt.srcElement) != null ? ref.result : void 0) || ((ref1 = evt.target) != null ? ref1.result : void 0)).split(',')[1],
-            chunkId: chunkId,                                                                                          //
-            start: start                                                                                               //
+            bin: fileReader.readAsDataURL(chunk).split(',')[1],                                                        //
+            chunkId: chunkId                                                                                           //
           }                                                                                                            //
         }]);                                                                                                           //
-      };                                                                                                               //
-      fileReader.onerror = function (e) {                                                                              //
-        self.emitEvent('end', [(e.target || e.srcElement).error]);                                                     //
-      };                                                                                                               //
-      fileReader.readAsDataURL(chunk);                                                                                 //
+      } else {                                                                                                         //
+        self.emitEvent('end', ['File API is not supported in this Browser!']);                                         //
+      }                                                                                                                //
     };                                                                                                                 //
                                                                                                                        //
     UploadInstance.prototype.upload = function () {                                                                    //
-      var start;                                                                                                       //
-      start = +new Date();                                                                                             //
       if (this.result.onPause.get()) {                                                                                 //
         return;                                                                                                        //
       }                                                                                                                //
@@ -2265,16 +2346,16 @@ module.runModuleSetters(FilesCollection = function () {                         
         ++this.currentChunk;                                                                                           //
         if (this.worker) {                                                                                             //
           this.worker.postMessage({                                                                                    //
-            sentChunks: this.sentChunks,                                                                               //
-            start: start,                                                                                              //
-            currentChunk: this.currentChunk,                                                                           //
-            chunkSize: this.config.chunkSize,                                                                          //
-            file: this.config.file                                                                                     //
+            sc: this.sentChunks,                                                                                       //
+            cc: this.currentChunk,                                                                                     //
+            cs: this.config.chunkSize,                                                                                 //
+            f: this.config.file                                                                                        //
           });                                                                                                          //
         } else {                                                                                                       //
-          this.emitEvent('proceedChunk', [this.currentChunk, start]);                                                  //
+          this.emitEvent('proceedChunk', [this.currentChunk]);                                                         //
         }                                                                                                              //
       }                                                                                                                //
+      this.startTime[this.currentChunk] = +new Date();                                                                 //
     };                                                                                                                 //
                                                                                                                        //
     UploadInstance.prototype.createStreams = function () {                                                             //
@@ -2288,7 +2369,7 @@ module.runModuleSetters(FilesCollection = function () {                         
     };                                                                                                                 //
                                                                                                                        //
     UploadInstance.prototype.prepare = function () {                                                                   //
-      var _len, opts, self;                                                                                            //
+      var _len, handleStart, opts, ref, ref1, self;                                                                    //
       self = this;                                                                                                     //
       this.config.onStart && this.config.onStart.call(this.result, null, this.fileData);                               //
       this.result.emitEvent('start', [null, this.fileData]);                                                           //
@@ -2328,10 +2409,10 @@ module.runModuleSetters(FilesCollection = function () {                         
       if (this.FSName !== this.fileId) {                                                                               //
         opts.FSName = this.FSName;                                                                                     //
       }                                                                                                                //
-      Meteor.call(this.collection._methodNames._Start, opts, function (error) {                                        //
+      handleStart = function handleStart(error) {                                                                      //
         if (error) {                                                                                                   //
           if (self.collection.debug) {                                                                                 //
-            console.error('[FilesCollection] [.call(_Start)] Error:', error);                                          //
+            console.error('[FilesCollection] [_Start] Error:', error);                                                 //
           }                                                                                                            //
           self.emitEvent('end', [error]);                                                                              //
         } else {                                                                                                       //
@@ -2343,7 +2424,21 @@ module.runModuleSetters(FilesCollection = function () {                         
           };                                                                                                           //
           self.emitEvent('createStreams');                                                                             //
         }                                                                                                              //
-      });                                                                                                              //
+      };                                                                                                               //
+      if (this.config.transport === 'ddp') {                                                                           //
+        Meteor.call(this.collection._methodNames._Start, opts, handleStart);                                           //
+      } else {                                                                                                         //
+        if ((ref = opts.file) != null ? ref.meta : void 0) {                                                           //
+          opts.file.meta = _fixJSONStringify(opts.file.meta);                                                          //
+        }                                                                                                              //
+        HTTP.call('POST', this.collection.downloadRoute + "/" + this.collection.collectionName + "/__upload", {        //
+          data: opts,                                                                                                  //
+          headers: {                                                                                                   //
+            'x-start': '1',                                                                                            //
+            'x-mtok': ((ref1 = Meteor.connection) != null ? ref1._lastSessionId : void 0) || null                      //
+          }                                                                                                            //
+        }, handleStart);                                                                                               //
+      }                                                                                                                //
     };                                                                                                                 //
                                                                                                                        //
     UploadInstance.prototype.pipe = function (func) {                                                                  //
@@ -2390,14 +2485,17 @@ module.runModuleSetters(FilesCollection = function () {                         
         this.worker.onmessage = function (evt) {                                                                       //
           if (evt.data.error) {                                                                                        //
             if (self.collection.debug) {                                                                               //
-              console.warn(evt.data.error);                                                                            //
+              console.warn('[FilesCollection] [insert] [worker] [onmessage] [ERROR:]', evt.data.error);                //
             }                                                                                                          //
-            self.emitEvent('proceedChunk', [evt.data.chunkId, evt.data.start]);                                        //
+            self.emitEvent('proceedChunk', [evt.data.chunkId]);                                                        //
           } else {                                                                                                     //
             self.emitEvent('sendChunk', [evt]);                                                                        //
           }                                                                                                            //
         };                                                                                                             //
         this.worker.onerror = function (e) {                                                                           //
+          if (self.collection.debug) {                                                                                 //
+            console.error('[FilesCollection] [insert] [worker] [onerror] [ERROR:]', e);                                //
+          }                                                                                                            //
           self.emitEvent('end', [e.message]);                                                                          //
         };                                                                                                             //
       }                                                                                                                //

@@ -26,12 +26,7 @@ Facebook = {};
 
 var querystring = Npm.require('querystring');
 
-
-OAuth.registerService('facebook', 2, null, function(query) {
-
-  var response = getTokenResponse(query);
-  var accessToken = response.accessToken;
-
+Facebook.handleAuthFromAccessToken = function handleAuthFromAccessToken(accessToken, expiresAt) {
   // include all fields from facebook
   // http://developers.facebook.com/docs/reference/login/public-profile-and-friend-list/
   var whitelisted = ['id', 'email', 'name', 'first_name',
@@ -41,9 +36,8 @@ OAuth.registerService('facebook', 2, null, function(query) {
 
   var serviceData = {
     accessToken: accessToken,
-    expiresAt: (+new Date) + (1000 * response.expiresIn)
+    expiresAt: expiresAt
   };
-
 
   var fields = _.pick(identity, whitelisted);
   _.extend(serviceData, fields);
@@ -52,6 +46,14 @@ OAuth.registerService('facebook', 2, null, function(query) {
     serviceData: serviceData,
     options: {profile: {name: identity.name}}
   };
+};
+
+OAuth.registerService('facebook', 2, null, function(query) {
+  var response = getTokenResponse(query);
+  var accessToken = response.accessToken;
+  var expiresIn = response.expiresIn;
+
+  return Facebook.handleAuthFromAccessToken(accessToken, (+new Date) + (1000 * expiresIn));
 });
 
 // checks whether a string parses as JSON

@@ -51,7 +51,6 @@ if (Meteor.isServer) {                                                 // 14
 }                                                                      //
                                                                        //
 Collections.files = new FilesCollection({                              // 50
-  debug: false,                                                        //
   throttle: false,                                                     //
   chunkSize: 1024 * 1024,                                              //
   storagePath: 'assets/app/uploads/uploadedFiles',                     //

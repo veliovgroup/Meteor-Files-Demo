@@ -180,6 +180,7 @@ install("facebook");
 install("accounts-facebook");
 install("meteor-developer");
 install("accounts-meteor-developer");
+install("shell-server", "meteor/shell-server/main.js");
 install("livedata");
 install("hot-code-push");
 install("launch-screen");

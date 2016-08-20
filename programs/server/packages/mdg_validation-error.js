@@ -5,8 +5,8 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var ECMAScript = Package.ecmascript.ECMAScript;
-var SimpleSchema = Package['aldeed:simple-schema'].SimpleSchema;
-var MongoObject = Package['aldeed:simple-schema'].MongoObject;
+var check = Package.check.check;
+var Match = Package.check.Match;
 var meteorInstall = Package.modules.meteorInstall;
 var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
@@ -21,53 +21,55 @@ var ValidationError;
 
 var require = meteorInstall({"node_modules":{"meteor":{"mdg:validation-error":{"validation-error.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits",function(require,exports,module){
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                          //
-// packages/mdg_validation-error/validation-error.js                                                        //
-//                                                                                                          //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                            //
+//////////////////////////////////////////////////////////////////////////////////////
+//                                                                                  //
+// packages/mdg_validation-error/validation-error.js                                //
+//                                                                                  //
+//////////////////////////////////////////////////////////////////////////////////////
+                                                                                    //
 var _classCallCheck;module.import('babel-runtime/helpers/classCallCheck',{"default":function(v){_classCallCheck=v}});var _possibleConstructorReturn;module.import('babel-runtime/helpers/possibleConstructorReturn',{"default":function(v){_possibleConstructorReturn=v}});var _inherits;module.import('babel-runtime/helpers/inherits',{"default":function(v){_inherits=v}});
-                                                                                                            //
-                                                                                                            //
-/* global ValidationError:true */                                                                           //
-/* global SimpleSchema */                                                                                   //
-                                                                                                            //
-// This is exactly what comes out of SS.                                                                    //
-var errorSchema = new SimpleSchema({                                                                        // 5
-  name: { type: String },                                                                                   // 6
-  type: { type: String },                                                                                   // 7
-  details: { type: Object, blackbox: true, optional: true }                                                 // 8
-});                                                                                                         // 5
-                                                                                                            //
-var errorsSchema = new SimpleSchema({                                                                       // 11
-  errors: { type: Array },                                                                                  // 12
-  'errors.$': { type: errorSchema }                                                                         // 13
-});                                                                                                         // 11
-                                                                                                            //
-ValidationError = function (_Meteor$Error) {                                                                // 16
-  _inherits(_class, _Meteor$Error);                                                                         // 16
-                                                                                                            //
-  function _class(errors) {                                                                                 // 17
-    var message = arguments.length <= 1 || arguments[1] === undefined ? 'Validation Failed' : arguments[1];
-                                                                                                            //
-    _classCallCheck(this, _class);                                                                          // 17
-                                                                                                            //
-    errorsSchema.validate({ errors: errors });                                                              // 18
-                                                                                                            //
-    var _this = _possibleConstructorReturn(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors));
-                                                                                                            //
-    _this.errors = errors;                                                                                  // 22
-    return _this;                                                                                           // 17
-  }                                                                                                         // 23
-                                                                                                            //
-  return _class;                                                                                            // 16
-}(Meteor.Error);                                                                                            // 16
-                                                                                                            //
-// If people use this to check for the error code, we can change it                                         //
-// in future versions                                                                                       //
-ValidationError.ERROR_CODE = 'validation-error';                                                            // 28
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                    //
+                                                                                    //
+// The "details" property of the ValidationError must be an array of objects        //
+// containing at least two properties. The "name" and "type" properties are         //
+// required.                                                                        //
+var errorsPattern = [Match.ObjectIncluding({                                        // 4
+  name: String,                                                                     // 5
+  type: String                                                                      // 6
+})];                                                                                // 4
+                                                                                    //
+ValidationError = function (_Meteor$Error) {                                        // 9
+  _inherits(_class, _Meteor$Error);                                                 // 9
+                                                                                    //
+  function _class(errors) {                                                         // 10
+    var _this, _ret;                                                                // 10
+                                                                                    //
+    var message = arguments.length <= 1 || arguments[1] === undefined ? ValidationError.DEFAULT_MESSAGE : arguments[1];
+                                                                                    //
+    _classCallCheck(this, _class);                                                  // 10
+                                                                                    //
+    check(errors, errorsPattern);                                                   // 11
+    check(message, String);                                                         // 12
+                                                                                    //
+    return _ret = (_this = _possibleConstructorReturn(this, _Meteor$Error.call(this, ValidationError.ERROR_CODE, message, errors)), _this), _possibleConstructorReturn(_this, _ret);
+  }                                                                                 // 15
+                                                                                    //
+  // Static method checking if a given Meteor.Error is an instance of               //
+  // ValidationError.                                                               //
+                                                                                    //
+                                                                                    //
+  _class.is = function is(err) {                                                    // 9
+    return err instanceof Meteor.Error && err.error === ValidationError.ERROR_CODE;
+  };                                                                                // 21
+                                                                                    //
+  return _class;                                                                    // 9
+}(Meteor.Error);                                                                    // 9
+                                                                                    //
+// Universal validation error code to be use in applications and packages.          //
+ValidationError.ERROR_CODE = 'validation-error';                                    // 25
+// Default validation error message that can be changed globally.                   //
+ValidationError.DEFAULT_MESSAGE = 'Validation failed';                              // 27
+//////////////////////////////////////////////////////////////////////////////////////
 
 }]}}}},{"extensions":[".js",".json"]});
 require("./node_modules/meteor/mdg:validation-error/validation-error.js");

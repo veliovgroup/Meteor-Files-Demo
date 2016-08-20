@@ -66,7 +66,7 @@ if (process.env['ACCOUNTS_FACEBOOK_ID'] && process.env['ACCOUNTS_FACEBOOK_SEC'])
 }                                                                      //
                                                                        //
 Meteor.methods({                                                       // 44
-  'getServiceConfiguration': function() {                              //
+  getServiceConfiguration: function() {                                //
     return _sc;                                                        // 46
   }                                                                    //
 });                                                                    //
