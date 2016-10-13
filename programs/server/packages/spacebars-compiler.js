@@ -4,10 +4,10 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
+var _ = Package.underscore._;
 var HTML = Package.htmljs.HTML;
 var HTMLTools = Package['html-tools'].HTMLTools;
 var BlazeTools = Package['blaze-tools'].BlazeTools;
-var _ = Package.underscore._;
 
 /* Package-scope variables */
 var SpacebarsCompiler, TemplateTag, ReactComponentSiblingForbidder;

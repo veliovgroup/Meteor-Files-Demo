@@ -62,7 +62,7 @@ _app.createThumbnails = function(collection, fileRef, cb) {            // 4
           }, _app.NOOP);                                               //
           return _.each(sizes, function(size, name) {                  //
             var copyPaste, heightNew, heightRatio, img, path, updateAndSave, widthNew, widthRatio, x, y;
-            path = collection.storagePath + "/" + name + "-" + fileRef._id + "." + fileRef.extension;
+            path = (collection.storagePath(fileRef)) + "/" + name + "-" + fileRef._id + "." + fileRef.extension;
             copyPaste = function() {                                   //
               fs.copy(fileRef.path, path, function(error) {            //
                 return bound(function() {                              //

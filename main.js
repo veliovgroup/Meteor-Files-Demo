@@ -4,7 +4,6 @@
 // not already added any `debugger` statements to your code, feel free to 
 // do so now, wait for the server to restart, then reload this page and 
 // click the |▶ button to continue.
-// edit: tot test Heroku issue
 process.argv.splice(2, 0, 'program.json');
 process.chdir(require('path').join(__dirname, 'programs', 'server'));
 require('./programs/server/boot.js');

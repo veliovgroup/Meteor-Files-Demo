@@ -30,13 +30,22 @@ SimpleSchema.extendOptions({
   sparse: Match.Optional(Boolean),
 });
 
-// Define validation error messages
-SimpleSchema.messages({
-  notUnique: "[label] must be unique",
-});
+// Define validation error messages (legacy)
+if (!SimpleSchema.version || SimpleSchema.version < 2) {
+  SimpleSchema.messages({
+    notUnique: '[label] must be unique',
+  });
+}
 
 if (Meteor.isServer) {
   Collection2.on('schema.attached', function (collection, ss) {
+    // Define validation error messages
+    if (ss.version >= 2) {
+      ss.messageBox.messages({
+        notUnique: '{{label}} must be unique',
+      });
+    }
+
     function ensureIndex(index, indexName, unique, sparse) {
       Meteor.startup(function () {
         collection._collection._ensureIndex(index, {
@@ -47,7 +56,7 @@ if (Meteor.isServer) {
         });
       });
     }
-  
+
     function dropIndex(indexName) {
       Meteor.startup(function () {
         try {
@@ -57,9 +66,11 @@ if (Meteor.isServer) {
         }
       });
     }
-  
+
+    const propName = ss.version === 2 ? 'mergedSchema' : 'schema';
+
     // Loop over fields definitions and ensure collection indexes (server side only)
-    _.each(ss.schema(), function(definition, fieldName) {
+    _.each(ss[propName](), function(definition, fieldName) {
       if ('index' in definition || definition.unique === true) {
         var index = {}, indexValue;
         // If they specified `unique: true` but not `index`,
@@ -76,10 +87,10 @@ if (Meteor.isServer) {
         index[idxFieldName] = indexValue;
         var unique = !!definition.unique && (indexValue === 1 || indexValue === -1);
         var sparse = definition.sparse || false;
-  
+
         // If unique and optional, force sparse to prevent errors
         if (!sparse && unique && definition.optional) sparse = true;
-  
+
         if (indexValue === false) {
           dropIndex(indexName);
         } else {

@@ -2,22 +2,22 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "2f6cab29fde3caa3c6d3c9c155574c67b871d10e.js",
+      "path": "86c7c23ee8c22b44bb2fae5512ae1933ebef83cd.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/2f6cab29fde3caa3c6d3c9c155574c67b871d10e.js?meteor_js_resource=true",
-      "size": 814911,
-      "hash": "2f6cab29fde3caa3c6d3c9c155574c67b871d10e"
+      "url": "/86c7c23ee8c22b44bb2fae5512ae1933ebef83cd.js?meteor_js_resource=true",
+      "size": 824245,
+      "hash": "86c7c23ee8c22b44bb2fae5512ae1933ebef83cd"
     },
     {
-      "path": "89ea08d3ff45d25ece72d82c3d43544bb033fe43.css",
+      "path": "e380b548797be2ed2824e9a41081d85983773961.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/89ea08d3ff45d25ece72d82c3d43544bb033fe43.css?meteor_css_resource=true",
-      "size": 68223,
-      "hash": "89ea08d3ff45d25ece72d82c3d43544bb033fe43"
+      "url": "/e380b548797be2ed2824e9a41081d85983773961.css?meteor_css_resource=true",
+      "size": 69807,
+      "hash": "e380b548797be2ed2824e9a41081d85983773961"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",
@@ -25,8 +25,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.eot",
-      "size": 70807,
-      "hash": "986eed8dca049714e43eeebcb3932741a4bec76d"
+      "size": 76518,
+      "hash": "965ce8f688fedbeed504efd498bc9c1622d12362"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.svg",
@@ -34,8 +34,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.svg",
-      "size": 365616,
-      "hash": "b06b5c8f67fd632cdc62a33b62ae4f74194131b3"
+      "size": 391622,
+      "hash": "c0522272bbaef2acb3d341912754d6ea2d0ecfc0"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.ttf",
@@ -43,8 +43,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.ttf",
-      "size": 142072,
-      "hash": "6484f1af6b485d5096b71b344e67f4164c33dd1f"
+      "size": 152796,
+      "hash": "61d8d967807ef12598d81582fa95b9f600c3ee01"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff",
@@ -52,8 +52,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff",
-      "size": 83588,
-      "hash": "4a313eb93b959cc4154c684b915b0a31ddb68d84"
+      "size": 90412,
+      "hash": "6d7e6a5fc802b13694d8820fc0138037c0977d2e"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff2",
@@ -61,8 +61,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/fontawesome-webfont.woff2",
-      "size": 66624,
-      "hash": "638c652d623280a58144f93e7b552c66d1667a11"
+      "size": 71896,
+      "hash": "97e438cc545714309882fbceadbf344fcaddcec5"
     },
     {
       "path": "packages/fortawesome_fontawesome/upstream/fonts/FontAwesome.otf",
@@ -70,8 +70,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/fortawesome_fontawesome/upstream/fonts/FontAwesome.otf",
-      "size": 109688,
-      "hash": "42c179eef588854b5ec151bcf6a3f58aa8b79b11"
+      "size": 124988,
+      "hash": "1b22f17fdc38070de50e6d1ab3a32da71aa2d819"
     },
     {
       "path": "packages/ostrio_files/worker.min.js",
@@ -79,8 +79,8 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/ostrio_files/worker.min.js",
-      "size": 601,
-      "hash": "3a55af4b3b7863c5f88d5d9efc93cb89710ae076"
+      "size": 722,
+      "hash": "ca9b94a7e94c74543f5c322eaf1ac33c631e95bd"
     },
     {
       "path": "packages/oauth/end_of_popup_response.js",

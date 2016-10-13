@@ -36,6 +36,8 @@ if (typeof Mongo === "undefined") {
   Mongo.Collection = Meteor.Collection;
 }
 
+var addValidationErrorsPropName = SimpleSchema.version >= 2 ? 'addValidationErrors' : 'addInvalidKeys';
+
 /**
  * Mongo.Collection.prototype.attachSchema
  * @param {SimpleSchema|Object} ss - SimpleSchema instance or a schema definition object
@@ -64,7 +66,13 @@ Mongo.Collection.prototype.attachSchema = function c2AttachSchema(ss, options) {
 
   // If we've already attached one schema, we combine both into a new schema unless options.replace is `true`
   if (self._c2._simpleSchema && options.replace !== true) {
-    ss = new SimpleSchema([self._c2._simpleSchema, ss]);
+    if (ss.version >= 2) {
+      var newSS = new SimpleSchema(self._c2._simpleSchema);
+      newSS.extend(ss);
+      ss = newSS;
+    } else {
+      ss = new SimpleSchema([self._c2._simpleSchema, ss]);
+    }
   }
 
   var selector = options.selector;
@@ -94,7 +102,11 @@ Mongo.Collection.prototype.attachSchema = function c2AttachSchema(ss, options) {
         // We found a schema with an identical selector in our array,
         if (options.replace !== true) {
           // Merge with existing schema unless options.replace is `true`
-          obj._c2._simpleSchemas[schemaIndex].schema = new SimpleSchema([obj._c2._simpleSchemas[schemaIndex].schema, ss]);
+          if (obj._c2._simpleSchemas[schemaIndex].schema.version >= 2) {
+            obj._c2._simpleSchemas[schemaIndex].schema.extend(ss);
+          } else {
+            obj._c2._simpleSchemas[schemaIndex].schema = new SimpleSchema([obj._c2._simpleSchemas[schemaIndex].schema, ss]);
+          }
         } else {
           // If options.repalce is `true` replace existing schema with new schema
           obj._c2._simpleSchemas[schemaIndex].schema = ss;
@@ -336,6 +348,7 @@ function doValidate(type, args, getAutoValues, userId, isFromTrustedCode) {
   function doClean(docToClean, getAutoValues, filter, autoConvert, removeEmptyStrings, trimStrings) {
     // Clean the doc/modifier in place
     schema.clean(docToClean, {
+      mutate: true,
       filter: filter,
       autoConvert: autoConvert,
       getAutoValues: getAutoValues,
@@ -457,7 +470,8 @@ function doValidate(type, args, getAutoValues, userId, isFromTrustedCode) {
 }
 
 function getErrorObject(context) {
-  var message, invalidKeys = context.invalidKeys();
+  var message;
+  var invalidKeys = SimpleSchema.version >= 2 ? context.validationErrors() : context.invalidKeys();
   if (invalidKeys.length) {
     message = context.keyErrorMessage(invalidKeys[0].name);
   } else {
@@ -477,7 +491,8 @@ function getErrorObject(context) {
 function addUniqueError(context, errorMessage) {
   var name = errorMessage.split('c2_')[1].split(' ')[0];
   var val = errorMessage.split('dup key:')[1].split('"')[1];
-  context.addInvalidKeys([{
+
+  context[addValidationErrorsPropName]([{
     name: name,
     type: 'notUnique',
     value: val
@@ -506,7 +521,7 @@ function wrapCallbackForParsingServerErrors(validationContext, cb) {
         error.reason === "INVALID" &&
         typeof error.details === "string") {
       var invalidKeysFromServer = EJSON.parse(error.details);
-      validationContext.addInvalidKeys(invalidKeysFromServer);
+      validationContext[addValidationErrorsPropName](invalidKeysFromServer);
       args[0] = getErrorObject(validationContext);
     }
     // Handle Mongo unique index errors, which are forwarded to the client as 409 errors
@@ -562,6 +577,7 @@ function defineDeny(c, options) {
       insert: function(userId, doc) {
         // Referenced doc is cleaned in place
         c.simpleSchema(doc).clean(doc, {
+          mutate: true,
           isModifier: false,
           // We don't do these here because they are done on the client if desired
           filter: false,
@@ -584,6 +600,7 @@ function defineDeny(c, options) {
       update: function(userId, doc, fields, modifier) {
         // Referenced modifier is cleaned in place
         c.simpleSchema(modifier).clean(modifier, {
+          mutate: true,
           isModifier: true,
           // We don't do these here because they are done on the client if desired
           filter: false,

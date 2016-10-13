@@ -51,27 +51,31 @@ if (Meteor.isServer) {                                                 // 14
 }                                                                      //
                                                                        //
 Collections.files = new FilesCollection({                              // 50
-  throttle: false,                                                     //
-  chunkSize: 1024 * 1024,                                              //
   storagePath: 'assets/app/uploads/uploadedFiles',                     //
   collectionName: 'uploadedFiles',                                     //
   allowClientCode: true,                                               //
   "protected": function(fileObj) {                                     //
     var ref4, ref5;                                                    // 58
-    if (!((ref4 = fileObj.meta) != null ? ref4.secured : void 0)) {    //
-      return true;                                                     // 59
-    } else if (((ref5 = fileObj.meta) != null ? ref5.secured : void 0) && this.userId === fileObj.userId) {
-      return true;                                                     // 61
+    if (fileObj) {                                                     //
+      if (!((ref4 = fileObj.meta) != null ? ref4.secured : void 0)) {  //
+        return true;                                                   // 60
+      } else if (((ref5 = fileObj.meta) != null ? ref5.secured : void 0) && this.userId === fileObj.userId) {
+        return true;                                                   // 62
+      }                                                                //
     }                                                                  //
-    return false;                                                      // 62
+    return false;                                                      // 63
   },                                                                   //
   onBeforeRemove: function(cursor) {                                   //
-    var res, self;                                                     // 64
+    var res, self;                                                     // 65
     self = this;                                                       //
     res = cursor.map(function(file) {                                  //
-      return (file != null ? file.userId : void 0) === self.userId;    // 66
+      if ((file != null ? file.userId : void 0) && _.isString(file.userId)) {
+        return file.userId === self.userId;                            // 68
+      } else {                                                         //
+        return false;                                                  // 70
+      }                                                                //
     });                                                                //
-    return !~res.indexOf(false);                                       // 67
+    return !~res.indexOf(false);                                       // 71
   },                                                                   //
   onBeforeUpload: function() {                                         //
     if (this.file.size <= 1024 * 1024 * 128) {                         //
@@ -81,7 +85,7 @@ Collections.files = new FilesCollection({                              // 50
     }                                                                  //
   },                                                                   //
   downloadCallback: function(fileObj) {                                //
-    var ref4;                                                          // 71
+    var ref4;                                                          // 75
     if (((ref4 = this.params) != null ? ref4.query.download : void 0) === 'true') {
       Collections.files.collection.update(fileObj._id, {               //
         $inc: {                                                        //
@@ -89,10 +93,10 @@ Collections.files = new FilesCollection({                              // 50
         }                                                              //
       });                                                              //
     }                                                                  //
-    return true;                                                       // 73
+    return true;                                                       // 77
   },                                                                   //
   interceptDownload: function(http, fileRef, version) {                //
-    var path, ref4, ref5, ref6;                                        // 75
+    var path, ref4, ref5, ref6;                                        // 79
     if (useDropBox || useS3) {                                         //
       path = fileRef != null ? (ref4 = fileRef.versions) != null ? (ref5 = ref4[version]) != null ? (ref6 = ref5.meta) != null ? ref6.pipeFrom : void 0 : void 0 : void 0 : void 0;
       if (path) {                                                      //
@@ -100,21 +104,21 @@ Collections.files = new FilesCollection({                              // 50
           url: path,                                                   //
           headers: _.pick(http.request.headers, 'range', 'accept-language', 'accept', 'cache-control', 'pragma', 'connection', 'upgrade-insecure-requests', 'user-agent')
         }));                                                           //
-        return true;                                                   // 93
+        return true;                                                   // 97
       } else {                                                         //
-        return false;                                                  // 97
+        return false;                                                  // 101
       }                                                                //
     } else {                                                           //
-      return false;                                                    // 99
+      return false;                                                    // 103
     }                                                                  //
   }                                                                    //
 });                                                                    //
                                                                        //
-if (Meteor.isServer) {                                                 // 101
+if (Meteor.isServer) {                                                 // 105
   Collections.files.denyClient();                                      //
   Collections.files.collection.attachSchema(Collections.files.schema);
   Collections.files.on('afterUpload', function(fileRef) {              //
-    var makeUrl, readFile, self, sendToStorage, writeToDB;             // 106
+    var makeUrl, readFile, self, sendToStorage, writeToDB;             // 110
     self = this;                                                       //
     if (useDropBox) {                                                  //
       makeUrl = function(stat, fileRef, version, triesUrl) {           //
@@ -126,7 +130,7 @@ if (Meteor.isServer) {                                                 // 101
           downloadHack: true                                           //
         }, function(error, xml) {                                      //
           return bound(function() {                                    //
-            var upd;                                                   // 111
+            var upd;                                                   // 115
             if (error) {                                               //
               if (triesUrl < 10) {                                     //
                 Meteor.setTimeout(function() {                         //
@@ -214,11 +218,11 @@ if (Meteor.isServer) {                                                 // 101
     } else if (useS3) {                                                //
       sendToStorage = function(fileRef) {                              //
         _.each(fileRef.versions, function(vRef, version) {             //
-          var filePath;                                                // 186
+          var filePath;                                                // 190
           filePath = "files/" + (Random.id()) + "-" + version + "." + fileRef.extension;
           client.putFile(vRef.path, filePath, function(error, res) {   //
             return bound(function() {                                  //
-              var upd;                                                 // 188
+              var upd;                                                 // 192
               if (error) {                                             //
                 console.error(error);                                  //
               } else {                                                 //
@@ -257,11 +261,11 @@ if (Meteor.isServer) {                                                 // 101
   if (useDropBox || useS3) {                                           //
     _origRemove = Collections.files.remove;                            //
     Collections.files.remove = function(search) {                      //
-      var cursor;                                                      // 224
+      var cursor;                                                      // 228
       cursor = this.collection.find(search);                           //
       cursor.forEach(function(fileRef) {                               //
         _.each(fileRef.versions, function(vRef, version) {             //
-          var ref4;                                                    // 227
+          var ref4;                                                    // 231
           if (vRef != null ? (ref4 = vRef.meta) != null ? ref4.pipePath : void 0 : void 0) {
             if (useDropBox) {                                          //
               client.remove(vRef.meta.pipePath, function(error) {      //
@@ -294,7 +298,7 @@ if (Meteor.isServer) {                                                 // 101
     }, _app.NOOP);                                                     //
   }, 120000);                                                          //
   Meteor.publish('latest', function(take, userOnly) {                  //
-    var selector;                                                      // 259
+    var selector;                                                      // 263
     if (take == null) {                                                //
       take = 10;                                                       //
     }                                                                  //
@@ -322,7 +326,7 @@ if (Meteor.isServer) {                                                 // 101
         ]                                                              //
       };                                                               //
     }                                                                  //
-    return Collections.files.find(selector, {                          // 273
+    return Collections.files.find(selector, {                          // 277
       limit: take,                                                     //
       sort: {                                                          //
         'meta.created_at': -1                                          //
@@ -349,7 +353,7 @@ if (Meteor.isServer) {                                                 // 101
   });                                                                  //
   Meteor.publish('file', function(_id) {                               //
     check(_id, String);                                                //
-    return Collections.files.find({                                    // 297
+    return Collections.files.find({                                    // 301
       $or: [                                                           //
         {                                                              //
           _id: _id,                                                    //
@@ -381,7 +385,7 @@ if (Meteor.isServer) {                                                 // 101
   });                                                                  //
   Meteor.methods({                                                     //
     filesLenght: function(userOnly) {                                  //
-      var selector;                                                    // 326
+      var selector;                                                    // 330
       if (userOnly == null) {                                          //
         userOnly = false;                                              //
       }                                                                //
@@ -405,7 +409,7 @@ if (Meteor.isServer) {                                                 // 101
           ]                                                            //
         };                                                             //
       }                                                                //
-      return Collections.files.find(selector).count();                 // 339
+      return Collections.files.find(selector).count();                 // 343
     },                                                                 //
     unblame: function(_id) {                                           //
       check(_id, String);                                              //
@@ -416,7 +420,7 @@ if (Meteor.isServer) {                                                 // 101
           'meta.blamed': -1                                            //
         }                                                              //
       }, _app.NOOP);                                                   //
-      return true;                                                     // 344
+      return true;                                                     // 348
     },                                                                 //
     blame: function(_id) {                                             //
       check(_id, String);                                              //
@@ -427,10 +431,10 @@ if (Meteor.isServer) {                                                 // 101
           'meta.blamed': 1                                             //
         }                                                              //
       }, _app.NOOP);                                                   //
-      return true;                                                     // 349
+      return true;                                                     // 353
     },                                                                 //
     changeAccess: function(_id) {                                      //
-      var file;                                                        // 352
+      var file;                                                        // 356
       check(_id, String);                                              //
       if (Meteor.userId()) {                                           //
         file = Collections.files.findOne({                             //
@@ -443,13 +447,13 @@ if (Meteor.isServer) {                                                 // 101
               'meta.unlisted': file.meta.unlisted ? false : true       //
             }                                                          //
           }, _app.NOOP);                                               //
-          return true;                                                 // 357
+          return true;                                                 // 361
         }                                                              //
       }                                                                //
-      throw new Meteor.Error(401, 'Access denied!');                   // 358
+      throw new Meteor.Error(401, 'Access denied!');                   // 362
     },                                                                 //
     changePrivacy: function(_id) {                                     //
-      var file;                                                        // 361
+      var file;                                                        // 365
       check(_id, String);                                              //
       if (Meteor.userId()) {                                           //
         file = Collections.files.findOne({                             //
@@ -463,10 +467,10 @@ if (Meteor.isServer) {                                                 // 101
               'meta.secured': file.meta.secured ? false : true         //
             }                                                          //
           }, _app.NOOP);                                               //
-          return true;                                                 // 366
+          return true;                                                 // 370
         }                                                              //
       }                                                                //
-      throw new Meteor.Error(401, 'Access denied!');                   // 367
+      throw new Meteor.Error(401, 'Access denied!');                   // 371
     }                                                                  //
   });                                                                  //
 }                                                                      //

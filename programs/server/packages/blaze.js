@@ -9,9 +9,9 @@ var Deps = Package.tracker.Deps;
 var check = Package.check.check;
 var Match = Package.check.Match;
 var _ = Package.underscore._;
-var HTML = Package.htmljs.HTML;
 var ObserveSequence = Package['observe-sequence'].ObserveSequence;
 var ReactiveVar = Package['reactive-var'].ReactiveVar;
+var HTML = Package.htmljs.HTML;
 
 /* Package-scope variables */
 var Blaze, UI, Handlebars;

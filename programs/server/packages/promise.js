@@ -69,7 +69,7 @@ exports.Promise.prototype.done = function (onFulfilled, onRejected) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 exports.name = "meteor-promise";
-exports.version = "0.7.2";
+exports.version = "0.7.4";
 exports.main = "promise_server.js";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,13 +196,25 @@ function wrapCallback(callback, Promise, dynamics) {
     return callback;
   }
 
-  return function (arg) {
+  // Don't wrap callbacks that are flagged as not wanting to be called in a
+  // fiber.
+  if (callback._meteorPromiseAlreadyWrapped) {
+    return callback;
+  }
+
+  var result = function (arg) {
     return fiberPool.run({
       callback: callback,
       args: [arg], // Avoid dealing with arguments objects.
       dynamics: dynamics
     }, Promise);
   };
+
+  // Flag this callback as not wanting to be called in a fiber because it is
+  // already creating a fiber.
+  result._meteorPromiseAlreadyWrapped = true;
+
+  return result;
 }
 
 function cloneFiberOwnProperties(fiber) {
@@ -300,7 +312,7 @@ function FiberPool(targetFiberCount) {
           setImmediate(entry.resolve.bind(entry, result));
 
         } catch (error) {
-          entry.reject(error);
+          setImmediate(entry.reject.bind(entry, error));
         }
 
         // Remove all own properties of the fiber before returning it to
@@ -730,11 +742,11 @@ function doResolve(fn, promise) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}]},"node_modules":{"asap":{"raw.js":["domain",function(require,exports,module){
+}]}},"asap":{"raw.js":["domain",function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
-// node_modules/meteor/promise/node_modules/promise/node_modules/asap/raw.js                                        //
+// node_modules/meteor/promise/node_modules/asap/raw.js                                                             //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
@@ -842,7 +854,7 @@ function requestFlush() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}]}}}}}}}},{"extensions":[".js",".json"]});
+}]}}}}}},{"extensions":[".js",".json"]});
 var exports = require("./node_modules/meteor/promise/server.js");
 
 /* Exports */
