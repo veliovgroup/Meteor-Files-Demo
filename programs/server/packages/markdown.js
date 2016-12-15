@@ -1487,5 +1487,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=markdown.js.map

@@ -240,5 +240,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=autoupdate.js.map

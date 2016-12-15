@@ -134,5 +134,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=cfs_graphicsmagick.js.map

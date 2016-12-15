@@ -60,8 +60,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,            
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE                                                  //
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                                             //
  */                                                                                                                //
-var                                                                                                                //
-    __cookies,                                                                                                     //
+var __cookies,                                                                                                     //
     __middlewareHandler,                                                                                           //
     decode,                                                                                                        //
     encode,                                                                                                        //
@@ -193,7 +192,7 @@ serialize = function serialize(name, val, opt) {                                
   }                                                                                                                //
   opt.expires = opt.expires || opt.expire;                                                                         //
   if (opt.expires) {                                                                                               //
-    if (opt.expires === Infinity) {                                                                                //
+    if (opt.expires === 2e308) {                                                                                   //
       pairs.push('Expires=Fri, 31 Dec 9999 23:59:59 GMT');                                                         //
     } else if (opt.expires instanceof Date) {                                                                      //
       pairs.push('Expires=' + opt.expires.toUTCString());                                                          //
@@ -223,7 +222,7 @@ serialize = function serialize(name, val, opt) {                                
  */                                                                                                                //
                                                                                                                    //
 tryDecode = function tryDecode(str, decode) {                                                                      //
-  var e, error;                                                                                                    //
+  var e;                                                                                                           //
   try {                                                                                                            //
     return decode(str);                                                                                            //
   } catch (error) {                                                                                                //

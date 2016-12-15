@@ -1,1 +1,0 @@
-{"version":3,"sources":["meteor://💻app/packages/ostrio_spiderable-middleware/lib/meteor.js"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;AAAA,kD","file":"/packages/ostrio_spiderable-middleware.js","sourcesContent":["Spiderable = Npm.require(\"spiderable-middleware\");"]}

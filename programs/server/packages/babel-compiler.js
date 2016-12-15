@@ -19,12 +19,12 @@ var Babel, BabelCompiler;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
                                                                               //
-var meteorBabel = Npm.require('meteor-babel');
-
 /**
  * Returns a new object containing default options appropriate for
  */
 function getDefaultOptions(extraFeatures) {
+  var meteorBabel = Npm.require('meteor-babel');
+
   // See https://github.com/meteor/babel/blob/master/options.js for more
   // information about what the default options are.
   var options = meteorBabel.getDefaultOptions(extraFeatures);
@@ -43,12 +43,13 @@ Babel = {
   validateExtraFeatures: Function.prototype,
 
   compile: function (source, options) {
+    var meteorBabel = Npm.require('meteor-babel');
     options = options || getDefaultOptions();
     return meteorBabel.compile(source, options);
   },
 
   setCacheDir: function (cacheDir) {
-    meteorBabel.setCacheDir(cacheDir);
+    Npm.require('meteor-babel').setCacheDir(cacheDir);
   }
 };
 
@@ -135,16 +136,13 @@ BCp.processOneFileForTarget = function (inputFile, source) {
       // compilation, give it the following file extension: .es5.js
       ! excludedFileExtensionPattern.test(inputFilePath)) {
 
-    var targetCouldBeInternetExplorer8 =
-      inputFile.getArch() === "web.browser";
-
     var extraFeatures = Object.assign({}, this.extraFeatures);
 
     if (! extraFeatures.hasOwnProperty("jscript")) {
       // Perform some additional transformations to improve compatibility
       // in older browsers (e.g. wrapping named function expressions, per
       // http://kiro.me/blog/nfe_dilemma.html).
-      extraFeatures.jscript = targetCouldBeInternetExplorer8;
+      extraFeatures.jscript = true;
     }
 
     var babelOptions = Babel.getDefaultOptions(extraFeatures);
@@ -408,5 +406,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=babel-compiler.js.map

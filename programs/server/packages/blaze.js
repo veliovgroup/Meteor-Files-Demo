@@ -57,6 +57,30 @@ Blaze._warn = function (msg) {
   }
 };
 
+var nativeBind = Function.prototype.bind;
+
+// An implementation of _.bind which allows better optimization.
+// See: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+if (nativeBind) {
+  Blaze._bind = function (func, obj) {
+    if (arguments.length === 2) {
+      return nativeBind.call(func, obj);
+    }
+
+    // Copy the arguments so this function can be optimized.
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    return nativeBind.apply(func, args.slice(1));
+  };
+}
+else {
+  // A slower but backwards compatible version.
+  Blaze._bind = _.bind;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
@@ -336,9 +360,6 @@ Blaze.View.prototype.autorun = function (f, _inViewScope, displayName) {
   if (this._isInRender) {
     throw new Error("Can't call View#autorun from inside render(); try calling it from the created or rendered callback");
   }
-  if (Tracker.active) {
-    throw new Error("Can't call View#autorun from a Tracker Computation; try calling it from the created or rendered callback");
-  }
 
   var templateInstanceFunc = Blaze.Template._currentTemplateInstanceFunc;
 
@@ -546,7 +567,7 @@ Blaze._materializeView = function (view, parentView, _workStack, _intoArray) {
         _intoArray.push(domrange);
       });
       // now push the task that calculates initialContents
-      _workStack.push(_.bind(Blaze._materializeDOM, null,
+      _workStack.push(Blaze._bind(Blaze._materializeDOM, null,
                              lastHtmljs, initialContents, view, _workStack));
     }
   });
@@ -1449,12 +1470,12 @@ Blaze.registerHelper = function (name, func) {
 // Also documented as Template.deregisterHelper
 Blaze.deregisterHelper = function(name) {
   delete Blaze._globalHelpers[name];
-}
+};
 
 var bindIfIsFunction = function (x, target) {
   if (typeof x !== 'function')
     return x;
-  return _.bind(x, target);
+  return Blaze._bind(x, target);
 };
 
 // If `x` is a function, binds the value of `this` for that function
@@ -1584,7 +1605,7 @@ Blaze.View.prototype.lookup = function (name, _options) {
   var foundTemplate;
 
   if (this.templateInstance) {
-    boundTmplInstance = _.bind(this.templateInstance, this);
+    boundTmplInstance = Blaze._bind(this.templateInstance, this);
   }
 
   // 0. looking up the parent data context with the special "../" syntax
@@ -2185,7 +2206,7 @@ Template.prototype.events = function (eventMap) {
         if (data == null)
           data = {};
         var args = Array.prototype.slice.call(arguments);
-        var tmplInstanceFunc = _.bind(view.templateInstance, view);
+        var tmplInstanceFunc = Blaze._bind(view.templateInstance, view);
         args.splice(1, 0, tmplInstanceFunc());
 
         return Template._withTemplateInstanceFunc(tmplInstanceFunc, function () {
@@ -2313,5 +2334,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=blaze.js.map

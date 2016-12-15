@@ -1,9 +1,6 @@
 (function () {
 
 /* Imports */
-var Meteor = Package.meteor.Meteor;
-var global = Package.meteor.global;
-var meteorEnv = Package.meteor.meteorEnv;
 var DDP = Package['ddp-client'].DDP;
 var DDPServer = Package['ddp-server'].DDPServer;
 

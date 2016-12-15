@@ -188,5 +188,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=mrt_filesize.js.map

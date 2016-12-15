@@ -16,6 +16,8 @@ var makeInstaller, meteorInstall;
 /////////////////////////////////////////////////////////////////////////////
                                                                            //
 makeInstaller = function (options) {
+  "use strict";
+
   options = options || {};
 
   // These file extensions will be appended to required module identifiers
@@ -25,6 +27,11 @@ makeInstaller = function (options) {
   // If defined, the options.onInstall function will be called any time
   // new modules are installed.
   var onInstall = options.onInstall;
+
+  // If defined, each module-specific require function will be passed to
+  // this function, along with the module.id of the parent module, and
+  // the result will be used in place of the original require function.
+  var wrapRequire = options.wrapRequire;
 
   // If defined, the options.override function will be called before
   // looking up any top-level package identifiers in node_modules
@@ -110,6 +117,10 @@ makeInstaller = function (options) {
       }
 
       throw error;
+    }
+
+    if (isFunction(wrapRequire)) {
+      require = wrapRequire(require, file.m.id);
     }
 
     require.resolve = function (id) {
@@ -408,6 +419,15 @@ var hasOwn = options.hasOwnProperty;
 // RegExp matching strings that don't start with a `.` or a `/`.
 var topLevelIdPattern = /^[^./]/;
 
+if (typeof Profile === "function" &&
+    process.env.METEOR_PROFILE) {
+  options.wrapRequire = function (require) {
+    return Profile(function (id) {
+      return "require(" + JSON.stringify(id) + ")";
+    }, require);
+  };
+}
+
 // This function will be called whenever a module identifier that hasn't
 // been installed is required. For backwards compatibility, and so that we
 // can require binary dependencies on the server, we implement the
@@ -491,5 +511,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=modules-runtime.js.map

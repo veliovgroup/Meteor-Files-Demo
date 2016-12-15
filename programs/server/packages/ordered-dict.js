@@ -242,5 +242,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=ordered-dict.js.map

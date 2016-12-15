@@ -36,7 +36,7 @@ var require = meteorInstall({"node_modules":{"meteor":{"ostrio:files":{"files.co
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 __coffeescriptShare = typeof __coffeescriptShare === 'object' ? __coffeescriptShare : {}; var share = __coffeescriptShare;
-module.export({FilesCollection:function(){return FilesCollection}});var FileCursor, FilesCollection, FilesCursor, NOOP, Throttle, bound, events, fileType, _fixJSONParse, _fixJSONStringify, formatFleURL, fs, nodePath, request, writeStream;
+module.export({FilesCollection:function(){return FilesCollection}});var FileCursor, FilesCursor, NOOP, Throttle, bound, events, fileType, _fixJSONParse, _fixJSONStringify, formatFleURL, fs, nodePath, request, writeStream;
                                                                                                                       //
 NOOP = function NOOP() {};                                                                                            //
                                                                                                                       //
@@ -69,36 +69,29 @@ if (Meteor.isServer) {                                                          
   @summary writableStream wrapper class, makes sure chunks is written in given order. Implementation of queue stream.
    */                                                                                                                 //
   writeStream = function () {                                                                                         //
-    function writeStream(path1, maxLength, file1) {                                                                   //
+    function writeStream(path1, maxLength, file1, permissions) {                                                      //
       var self;                                                                                                       //
       this.path = path1;                                                                                              //
       this.maxLength = maxLength;                                                                                     //
       this.file = file1;                                                                                              //
+      this.permissions = permissions;                                                                                 //
       if (!this.path || !_.isString(this.path)) {                                                                     //
         return;                                                                                                       //
       }                                                                                                               //
       self = this;                                                                                                    //
-      fs.ensureFileSync(this.path);                                                                                   //
-      this.stream = fs.createWriteStream(this.path, {                                                                 //
-        flags: 'a',                                                                                                   //
-        mode: self.permissions,                                                                                       //
-        highWaterMark: 0                                                                                              //
+      this.fd = null;                                                                                                 //
+      fs.open(this.path, 'w+', this.permissions, function (error, fd) {                                               //
+        return bound(function () {                                                                                    //
+          if (error) {                                                                                                //
+            throw new Meteor.Error(500, '[FilesCollection] [writeStream] [Exception:]', error);                       //
+          } else {                                                                                                    //
+            self.fd = fd;                                                                                             //
+          }                                                                                                           //
+        });                                                                                                           //
       });                                                                                                             //
-      this.drained = true;                                                                                            //
+      this.ended = false;                                                                                             //
       this.aborted = false;                                                                                           //
       this.writtenChunks = 0;                                                                                         //
-      this.stream.on('drain', function () {                                                                           //
-        return bound(function () {                                                                                    //
-          ++self.writtenChunks;                                                                                       //
-          self.drained = true;                                                                                        //
-        });                                                                                                           //
-      });                                                                                                             //
-      this.stream.on('error', function (error) {                                                                      //
-        return bound(function () {                                                                                    //
-          console.error("[FilesCollection] [writeStream] [ERROR:]", error);                                           //
-          self.abort();                                                                                               //
-        });                                                                                                           //
-      });                                                                                                             //
     }                                                                                                                 //
                                                                                                                       //
     /*                                                                                                                //
@@ -112,16 +105,33 @@ if (Meteor.isServer) {                                                          
      */                                                                                                               //
                                                                                                                       //
     writeStream.prototype.write = function (num, chunk, callback) {                                                   //
-      var self;                                                                                                       //
-      if (!this.aborted && !this.stream._writableState.ended && num > this.writtenChunks) {                           //
-        if (this.drained && num === this.writtenChunks + 1) {                                                         //
-          this.drained = false;                                                                                       //
-          this.stream.write(chunk, callback);                                                                         //
-          return true;                                                                                                //
+      var _stream, self;                                                                                              //
+      if (!this.aborted && !this.ended) {                                                                             //
+        self = this;                                                                                                  //
+        if (this.fd) {                                                                                                //
+          _stream = fs.createWriteStream(this.path, {                                                                 //
+            flags: 'r+',                                                                                              //
+            mode: this.permissions,                                                                                   //
+            highWaterMark: 0,                                                                                         //
+            fd: this.fd,                                                                                              //
+            autoClose: true,                                                                                          //
+            start: (num - 1) * this.file.chunkSize                                                                    //
+          });                                                                                                         //
+          _stream.on('error', function (error) {                                                                      //
+            return bound(function () {                                                                                //
+              console.error("[FilesCollection] [writeStream] [ERROR:]", error);                                       //
+              self.abort();                                                                                           //
+            });                                                                                                       //
+          });                                                                                                         //
+          _stream.write(chunk, function () {                                                                          //
+            return bound(function () {                                                                                //
+              ++self.writtenChunks;                                                                                   //
+              callback && callback();                                                                                 //
+            });                                                                                                       //
+          });                                                                                                         //
         } else {                                                                                                      //
-          self = this;                                                                                                //
           Meteor.setTimeout(function () {                                                                             //
-            self.write(num, chunk);                                                                                   //
+            self.write(num, chunk, callback);                                                                         //
           }, 25);                                                                                                     //
         }                                                                                                             //
       }                                                                                                               //
@@ -138,9 +148,15 @@ if (Meteor.isServer) {                                                          
                                                                                                                       //
     writeStream.prototype.end = function (callback) {                                                                 //
       var self;                                                                                                       //
-      if (!this.aborted && !this.stream._writableState.ended) {                                                       //
+      if (!this.aborted && !this.ended) {                                                                             //
         if (this.writtenChunks === this.maxLength) {                                                                  //
-          this.stream.end(callback);                                                                                  //
+          self = this;                                                                                                //
+          fs.close(this.fd, function () {                                                                             //
+            return bound(function () {                                                                                //
+              self.ended = true;                                                                                      //
+              callback && callback(true);                                                                             //
+            });                                                                                                       //
+          });                                                                                                         //
           return true;                                                                                                //
         } else {                                                                                                      //
           self = this;                                                                                                //
@@ -148,6 +164,8 @@ if (Meteor.isServer) {                                                          
             self.end(callback);                                                                                       //
           }, 25);                                                                                                     //
         }                                                                                                             //
+      } else {                                                                                                        //
+        callback && callback(false);                                                                                  //
       }                                                                                                               //
       return false;                                                                                                   //
     };                                                                                                                //
@@ -155,12 +173,27 @@ if (Meteor.isServer) {                                                          
     /*                                                                                                                //
     @memberOf writeStream                                                                                             //
     @name abort                                                                                                       //
-    @summary Aborts writing to writableStream, prevent memory leaks caused by unsatisfied queue                       //
+    @param {Function} callback - Callback                                                                             //
+    @summary Aborts writing to writableStream, removes created file                                                   //
     @returns {Boolean} - True                                                                                         //
      */                                                                                                               //
                                                                                                                       //
-    writeStream.prototype.abort = function () {                                                                       //
+    writeStream.prototype.abort = function (callback) {                                                               //
       this.aborted = true;                                                                                            //
+      fs.unlink(this.path, callback || NOOP);                                                                         //
+      return true;                                                                                                    //
+    };                                                                                                                //
+                                                                                                                      //
+    /*                                                                                                                //
+    @memberOf writeStream                                                                                             //
+    @name stop                                                                                                        //
+    @summary Stop writing to writableStream                                                                           //
+    @returns {Boolean} - True                                                                                         //
+     */                                                                                                               //
+                                                                                                                      //
+    writeStream.prototype.stop = function () {                                                                        //
+      this.aborted = true;                                                                                            //
+      this.ended = true;                                                                                              //
       return true;                                                                                                    //
     };                                                                                                                //
                                                                                                                       //
@@ -805,10 +838,10 @@ module.runModuleSetters(FilesCollection = function () {                         
         });                                                                                                           //
       }                                                                                                               //
       check(this.onbeforeunloadMessage, Match.OneOf(String, Function));                                               //
-      if ((typeof window !== "undefined" && window !== null ? window.Worker : void 0) && (typeof window !== "undefined" && window !== null ? window.Blob : void 0)) {
+      _URL = window.URL || window.webkitURL || window.mozURL || window.msURL || window.oURL || false;                 //
+      if ((typeof window !== "undefined" && window !== null ? window.Worker : void 0) && (typeof window !== "undefined" && window !== null ? window.Blob : void 0) && _URL) {
         this._supportWebWorker = true;                                                                                //
-        _URL = window.URL || window.webkitURL || window.mozURL;                                                       //
-        this._webWorkerUrl = _URL.createObjectURL(new Blob(['"use strict";self.onmessage=function(a){if(a.data.ib===!0)postMessage({bin:a.data.f.slice(a.data.cs*(a.data.cc-1),a.data.cs*a.data.cc),chunkId:a.data.cc});else{var b;self.FileReader?(b=new FileReader,b.onloadend=function(c){postMessage({bin:(b.result||c.srcElement||c.target).split(",")[1],chunkId:a.data.cc,s:a.data.s})},b.onerror=function(a){throw(a.target||a.srcElement).error},b.readAsDataURL(a.data.f.slice(a.data.cs*(a.data.cc-1),a.data.cs*a.data.cc))):self.FileReaderSync?(b=new FileReaderSync,postMessage({bin:b.readAsDataURL(a.data.f.slice(a.data.cs*(a.data.cc-1),a.data.cs*a.data.cc)).split(",")[1],chunkId:a.data.cc})):postMessage({bin:null,chunkId:a.data.cc,error:"File API is not supported in WebWorker!"})}};'], {
+        this._webWorkerUrl = _URL.createObjectURL(new Blob(['!function(a){"use strict";a.onmessage=function(b){var c=b.data.f.slice(b.data.cs*(b.data.cc-1),b.data.cs*b.data.cc);if(b.data.ib===!0)postMessage({bin:c,chunkId:b.data.cc});else{var d;a.FileReader?(d=new FileReader,d.onloadend=function(a){postMessage({bin:(d.result||a.srcElement||a.target).split(",")[1],chunkId:b.data.cc,s:b.data.s})},d.onerror=function(a){throw(a.target||a.srcElement).error},d.readAsDataURL(c,b.data.cs*b.data.cc)):a.FileReaderSync?(d=new FileReaderSync,postMessage({bin:d.readAsDataURL(c).split(",")[1],chunkId:b.data.cc})):postMessage({bin:null,chunkId:b.data.cc,error:"File API is not supported in WebWorker!"})}}}(this);'], {
           type: 'application/javascript'                                                                              //
         }));                                                                                                          //
       } else if (typeof window !== "undefined" && window !== null ? window.Worker : void 0) {                         //
@@ -876,7 +909,7 @@ module.runModuleSetters(FilesCollection = function () {                         
           return headers;                                                                                             //
         };                                                                                                            //
       }                                                                                                               //
-      if (this["public"] && (!storagePath || !_.isString(storagePath))) {                                             //
+      if (this["public"] && !storagePath) {                                                                           //
         throw new Meteor.Error(500, "[FilesCollection." + this.collectionName + "] \"storagePath\" must be set on \"public\" collections! Note: \"storagePath\" must be equal on be inside of your web/proxy-server (absolute) root.");
       }                                                                                                               //
       if (this.debug) {                                                                                               //
@@ -886,7 +919,7 @@ module.runModuleSetters(FilesCollection = function () {                         
         mode: this.parentDirPermissions                                                                               //
       }, function (error) {                                                                                           //
         if (error) {                                                                                                  //
-          throw new Meteor.Error(401, "[FilesCollection." + self.collectionName + "] Path \"" + self.storagePath + "\" is not writable!", error);
+          throw new Meteor.Error(401, "[FilesCollection." + self.collectionName + "] Path \"" + self.storagePath({}) + "\" is not writable!", error);
         }                                                                                                             //
       });                                                                                                             //
       check(this.strict, Boolean);                                                                                    //
@@ -910,30 +943,36 @@ module.runModuleSetters(FilesCollection = function () {                         
         background: true                                                                                              //
       });                                                                                                             //
       _preCollectionCursor = this._preCollection.find({});                                                            //
-      _preCollectionCursor.observeChanges({                                                                           //
+      _preCollectionCursor.observe({                                                                                  //
         removed: function () {                                                                                        //
-          function removed(_id) {                                                                                     //
+          function removed(doc) {                                                                                     //
             var ref;                                                                                                  //
             if (self.debug) {                                                                                         //
-              console.info("[FilesCollection] [_preCollectionCursor.observeChanges] [removed]: " + _id);              //
+              console.info("[FilesCollection] [_preCollectionCursor.observe] [removed]: " + doc._id);                 //
             }                                                                                                         //
-            if ((ref = self._currentUploads) != null ? ref[_id] : void 0) {                                           //
-              self._currentUploads[_id].end();                                                                        //
-              self._currentUploads[_id].abort();                                                                      //
-              delete self._currentUploads[_id];                                                                       //
+            if ((ref = self._currentUploads) != null ? ref[doc._id] : void 0) {                                       //
+              self._currentUploads[doc._id].stop();                                                                   //
+              self._currentUploads[doc._id].end();                                                                    //
             }                                                                                                         //
+            if (!doc.isFinished) {                                                                                    //
+              if (self.debug) {                                                                                       //
+                console.info("[FilesCollection] [_preCollectionCursor.observe] [removeUnfinishedUpload]: " + doc.file.path);
+              }                                                                                                       //
+              self._currentUploads[doc._id].abort();                                                                  //
+            }                                                                                                         //
+            delete self._currentUploads[doc._id];                                                                     //
           }                                                                                                           //
                                                                                                                       //
           return removed;                                                                                             //
         }()                                                                                                           //
       });                                                                                                             //
       this._createStream = function (_id, path, opts) {                                                               //
-        return self._currentUploads[_id] = new writeStream(path, opts.fileLength, opts);                              //
+        return self._currentUploads[_id] = new writeStream(path, opts.fileLength, opts, self.permissions);            //
       };                                                                                                              //
       this._continueUpload = function (_id) {                                                                         //
         var contUpld, ref, ref1;                                                                                      //
         if ((ref = self._currentUploads) != null ? (ref1 = ref[_id]) != null ? ref1.file : void 0 : void 0) {         //
-          if (!self._currentUploads[_id].stream._writableState.ended) {                                               //
+          if (!self._currentUploads[_id].aborted && !self._currentUploads[_id].ended) {                               //
             return self._currentUploads[_id].file;                                                                    //
           } else {                                                                                                    //
             self._createStream(_id, self._currentUploads[_id].file.file.path, self._currentUploads[_id].file);        //
@@ -1099,7 +1138,7 @@ module.runModuleSetters(FilesCollection = function () {                         
             });                                                                                                       //
             request.on('end', function () {                                                                           //
               return bound(function () {                                                                              //
-                var _continueUpload, error, error1, opts, ref, ref1, ref2, ref3, ref4, result, user;                  //
+                var _continueUpload, error, opts, ref, ref1, ref2, ref3, result, user;                                //
                 try {                                                                                                 //
                   if (request.headers['x-mtok'] && ((ref = Meteor.server.sessions) != null ? ref[request.headers['x-mtok']] : void 0)) {
                     user = {                                                                                          //
@@ -1118,7 +1157,11 @@ module.runModuleSetters(FilesCollection = function () {                         
                     if (request.headers['x-eof'] === '1') {                                                           //
                       opts.eof = true;                                                                                //
                     } else {                                                                                          //
-                      opts.binData = new Buffer(body, 'base64');                                                      //
+                      if (typeof Buffer.from === 'function') {                                                        //
+                        opts.binData = Buffer.from(body, 'base64');                                                   //
+                      } else {                                                                                        //
+                        opts.binData = new Buffer(body, 'base64');                                                    //
+                      }                                                                                               //
                       opts.chunkId = parseInt(request.headers['x-chunkid']);                                          //
                     }                                                                                                 //
                     _continueUpload = self._continueUpload(opts.fileId);                                              //
@@ -1127,12 +1170,15 @@ module.runModuleSetters(FilesCollection = function () {                         
                     }                                                                                                 //
                     ref2 = self._prepareUpload(_.extend(opts, _continueUpload), user.userId, 'HTTP'), result = ref2.result, opts = ref2.opts;
                     if (opts.eof) {                                                                                   //
-                      Meteor.wrapAsync(self._handleUpload.bind(self, result, opts))();                                //
-                      response.writeHead(200);                                                                        //
-                      if (result != null ? (ref3 = result.file) != null ? ref3.meta : void 0 : void 0) {              //
-                        result.file.meta = _fixJSONStringify(result.file.meta);                                       //
-                      }                                                                                               //
-                      response.end(JSON.stringify(result));                                                           //
+                      self._handleUpload(result, opts, function () {                                                  //
+                        var ref3;                                                                                     //
+                        response.writeHead(200);                                                                      //
+                        if (result != null ? (ref3 = result.file) != null ? ref3.meta : void 0 : void 0) {            //
+                          result.file.meta = _fixJSONStringify(result.file.meta);                                     //
+                        }                                                                                             //
+                        response.end(JSON.stringify(result));                                                         //
+                      });                                                                                             //
+                      return;                                                                                         //
                     } else {                                                                                          //
                       self.emit('_handleUpload', result, opts, NOOP);                                                 //
                     }                                                                                                 //
@@ -1144,7 +1190,7 @@ module.runModuleSetters(FilesCollection = function () {                         
                     if (self.debug) {                                                                                 //
                       console.info("[FilesCollection] [File Start HTTP] " + opts.file.name + " - " + opts.fileId);    //
                     }                                                                                                 //
-                    if (opts != null ? (ref4 = opts.file) != null ? ref4.meta : void 0 : void 0) {                    //
+                    if (opts != null ? (ref3 = opts.file) != null ? ref3.meta : void 0 : void 0) {                    //
                       opts.file.meta = _fixJSONParse(opts.file.meta);                                                 //
                     }                                                                                                 //
                     result = self._prepareUpload(_.clone(opts), user.userId, 'Start Method').result;                  //
@@ -1302,7 +1348,7 @@ module.runModuleSetters(FilesCollection = function () {                         
         }                                                                                                             //
       };                                                                                                              //
       _methods[self._methodNames._Write] = function (opts) {                                                          //
-        var _continueUpload, e, error1, ref, result;                                                                  //
+        var _continueUpload, e, ref, result;                                                                          //
         check(opts, {                                                                                                 //
           eof: Match.Optional(Boolean),                                                                               //
           fileId: String,                                                                                             //
@@ -1334,11 +1380,15 @@ module.runModuleSetters(FilesCollection = function () {                         
         return true;                                                                                                  //
       };                                                                                                              //
       _methods[self._methodNames._Abort] = function (_id) {                                                           //
-        var _continueUpload, ref, ref1;                                                                               //
+        var _continueUpload, ref, ref1, ref2;                                                                         //
         check(_id, String);                                                                                           //
         _continueUpload = self._continueUpload(_id);                                                                  //
         if (self.debug) {                                                                                             //
           console.info("[FilesCollection] [Abort Method]: " + _id + " - " + (_continueUpload != null ? (ref = _continueUpload.file) != null ? ref.path : void 0 : void 0));
+        }                                                                                                             //
+        if ((ref1 = self._currentUploads) != null ? ref1[_id] : void 0) {                                             //
+          self._currentUploads[_id].stop();                                                                           //
+          self._currentUploads[_id].abort();                                                                          //
         }                                                                                                             //
         if (_continueUpload) {                                                                                        //
           self._preCollection.remove({                                                                                //
@@ -1347,7 +1397,7 @@ module.runModuleSetters(FilesCollection = function () {                         
           self.remove({                                                                                               //
             _id: _id                                                                                                  //
           });                                                                                                         //
-          if (_continueUpload != null ? (ref1 = _continueUpload.file) != null ? ref1.path : void 0 : void 0) {        //
+          if (_continueUpload != null ? (ref2 = _continueUpload.file) != null ? ref2.path : void 0 : void 0) {        //
             self.unlink({                                                                                             //
               _id: _id,                                                                                               //
               path: _continueUpload.file.path                                                                         //
@@ -1457,23 +1507,31 @@ module.runModuleSetters(FilesCollection = function () {                         
           console.error('[FilesCollection] [Upload] [_finishUpload] Error:', error);                                  //
         }                                                                                                             //
       } else {                                                                                                        //
-        self._preCollection.remove({                                                                                  //
+        self._preCollection.update({                                                                                  //
           _id: opts.fileId                                                                                            //
-        }, function (error) {                                                                                         //
-          if (error) {                                                                                                //
-            cb && cb(error);                                                                                          //
-            if (self.debug) {                                                                                         //
-              console.error('[FilesCollection] [Upload] [_finishUpload] Error:', error);                              //
-            }                                                                                                         //
-          } else {                                                                                                    //
-            result._id = _id;                                                                                         //
-            if (self.debug) {                                                                                         //
-              console.info("[FilesCollection] [Upload] [finish(ed)Upload] -> " + result.path);                        //
-            }                                                                                                         //
-            self.onAfterUpload && self.onAfterUpload.call(self, result);                                              //
-            self.emit('afterUpload', result);                                                                         //
-            cb && cb(null, result);                                                                                   //
+        }, {                                                                                                          //
+          $set: {                                                                                                     //
+            isFinished: true                                                                                          //
           }                                                                                                           //
+        }, function () {                                                                                              //
+          self._preCollection.remove({                                                                                //
+            _id: opts.fileId                                                                                          //
+          }, function (error) {                                                                                       //
+            if (error) {                                                                                              //
+              cb && cb(error);                                                                                        //
+              if (self.debug) {                                                                                       //
+                console.error('[FilesCollection] [Upload] [_finishUpload] Error:', error);                            //
+              }                                                                                                       //
+            } else {                                                                                                  //
+              result._id = _id;                                                                                       //
+              if (self.debug) {                                                                                       //
+                console.info("[FilesCollection] [Upload] [finish(ed)Upload] -> " + result.path);                      //
+              }                                                                                                       //
+              self.onAfterUpload && self.onAfterUpload.call(self, result);                                            //
+              self.emit('afterUpload', result);                                                                       //
+              cb && cb(null, result);                                                                                 //
+            }                                                                                                         //
+          });                                                                                                         //
         });                                                                                                           //
       }                                                                                                               //
     });                                                                                                               //
@@ -1488,10 +1546,10 @@ module.runModuleSetters(FilesCollection = function () {                         
    */                                                                                                                 //
                                                                                                                       //
   FilesCollection.prototype._handleUpload = Meteor.isServer ? function (result, opts, cb) {                           //
-    var e, error1, self;                                                                                              //
-    self = this;                                                                                                      //
+    var e, self;                                                                                                      //
     try {                                                                                                             //
       if (opts.eof) {                                                                                                 //
+        self = this;                                                                                                  //
         this._currentUploads[result._id].end(function () {                                                            //
           return bound(function () {                                                                                  //
             self.emit('_finishUpload', result, opts, cb);                                                             //
@@ -1502,6 +1560,9 @@ module.runModuleSetters(FilesCollection = function () {                         
       }                                                                                                               //
     } catch (error1) {                                                                                                //
       e = error1;                                                                                                     //
+      if (this.debug) {                                                                                               //
+        console.warn("[_handleUpload] [EXCEPTION:]", e);                                                              //
+      }                                                                                                               //
       cb && cb(e);                                                                                                    //
     }                                                                                                                 //
   } : void 0;                                                                                                         //
@@ -1516,7 +1577,7 @@ module.runModuleSetters(FilesCollection = function () {                         
    */                                                                                                                 //
                                                                                                                       //
   FilesCollection.prototype._getMimeType = function (fileData) {                                                      //
-    var br, buf, error, error1, ext, fd, mime, ref;                                                                   //
+    var br, buf, error, ext, fd, mime, ref;                                                                           //
     check(fileData, Object);                                                                                          //
     if (fileData != null ? fileData.type : void 0) {                                                                  //
       mime = fileData.type;                                                                                           //
@@ -1657,6 +1718,7 @@ module.runModuleSetters(FilesCollection = function () {                         
       meta: data.meta,                                                                                                //
       type: data.type,                                                                                                //
       size: data.size,                                                                                                //
+      userId: data.userId || null,                                                                                    //
       versions: {                                                                                                     //
         original: {                                                                                                   //
           path: data.path,                                                                                            //
@@ -1687,6 +1749,7 @@ module.runModuleSetters(FilesCollection = function () {                         
   @param {String} opts.name - File name, alias: `fileName`                                                            //
   @param {String} opts.type - File mime-type                                                                          //
   @param {Object} opts.meta - File additional meta-data                                                               //
+  @param {String} opts.userId - UserId, default *null*                                                                //
   @param {Function} callback - function(error, fileObj){...}                                                          //
   @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                    //
   @summary Write buffer to FS and add to FilesCollection Collection                                                   //
@@ -1735,6 +1798,7 @@ module.runModuleSetters(FilesCollection = function () {                         
       meta: opts.meta,                                                                                                //
       type: opts.type,                                                                                                //
       size: opts.size,                                                                                                //
+      userId: opts.userId,                                                                                            //
       extension: extension                                                                                            //
     });                                                                                                               //
     result._id = fileId;                                                                                              //
@@ -1747,17 +1811,19 @@ module.runModuleSetters(FilesCollection = function () {                         
         if (error) {                                                                                                  //
           callback && callback(error);                                                                                //
         } else {                                                                                                      //
-          self.collection.insert(_.clone(result), function (error) {                                                  //
+          self.collection.insert(result, function (error, _id) {                                                      //
+            var fileRef;                                                                                              //
             if (error) {                                                                                              //
               callback && callback(error);                                                                            //
               if (self.debug) {                                                                                       //
                 console.warn("[FilesCollection] [write] [insert] Error: " + fileName + " -> " + self.collectionName, error);
               }                                                                                                       //
             } else {                                                                                                  //
-              callback && callback(null, result);                                                                     //
+              fileRef = self.collection.findOne(_id);                                                                 //
+              callback && callback(null, fileRef);                                                                    //
               if (proceedAfterUpload === true) {                                                                      //
-                self.onAfterUpload && self.onAfterUpload.call(self, result);                                          //
-                self.emit('afterUpload', result);                                                                     //
+                self.onAfterUpload && self.onAfterUpload.call(self, fileRef);                                         //
+                self.emit('afterUpload', fileRef);                                                                    //
               }                                                                                                       //
               if (self.debug) {                                                                                       //
                 console.info("[FilesCollection] [write]: " + fileName + " -> " + self.collectionName);                //
@@ -1779,6 +1845,7 @@ module.runModuleSetters(FilesCollection = function () {                         
   @param {String} opts.name - File name, alias: `fileName`                                                            //
   @param {String} opts.type - File mime-type                                                                          //
   @param {Object} opts.meta - File additional meta-data                                                               //
+  @param {String} opts.userId - UserId, default *null*                                                                //
   @param {Function} callback - function(error, fileObj){...}                                                          //
   @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                    //
   @summary Download file, write stream to FS and add to FilesCollection Collection                                    //
@@ -1818,17 +1885,19 @@ module.runModuleSetters(FilesCollection = function () {                         
     opts.path = "" + this.storagePath(opts) + nodePath.sep + FSName + extensionWithDot;                               //
     storeResult = function storeResult(result, callback) {                                                            //
       result._id = fileId;                                                                                            //
-      self.collection.insert(result, function (error) {                                                               //
+      self.collection.insert(result, function (error, _id) {                                                          //
+        var fileRef;                                                                                                  //
         if (error) {                                                                                                  //
           callback && callback(error);                                                                                //
           if (self.debug) {                                                                                           //
             console.error("[FilesCollection] [load] [insert] Error: " + fileName + " -> " + self.collectionName, error);
           }                                                                                                           //
         } else {                                                                                                      //
-          callback && callback(null, result);                                                                         //
+          fileRef = self.collection.findOne(_id);                                                                     //
+          callback && callback(null, fileRef);                                                                        //
           if (proceedAfterUpload === true) {                                                                          //
-            self.onAfterUpload && self.onAfterUpload.call(self, result);                                              //
-            self.emit('afterUpload', result);                                                                         //
+            self.onAfterUpload && self.onAfterUpload.call(self, fileRef);                                             //
+            self.emit('afterUpload', fileRef);                                                                        //
           }                                                                                                           //
           if (self.debug) {                                                                                           //
             console.info("[FilesCollection] [load] [insert] " + fileName + " -> " + self.collectionName);             //
@@ -1859,6 +1928,7 @@ module.runModuleSetters(FilesCollection = function () {                         
                 path: opts.path                                                                                       //
               }),                                                                                                     //
               size: opts.size || parseInt(response.headers['content-length'] || 0),                                   //
+              userId: opts.userId,                                                                                    //
               extension: extension                                                                                    //
             });                                                                                                       //
             if (!result.size) {                                                                                       //
@@ -1891,9 +1961,10 @@ module.runModuleSetters(FilesCollection = function () {                         
   @name addFile                                                                                                       //
   @param {String} path - Path to file                                                                                 //
   @param {String} opts - Object with file-data                                                                        //
-  @param {String} opts.type - File mime-type                                                                          //
-  @param {Object} opts.meta - File additional meta-data                                                               //
-  @param {Function} callback - function(error, fileObj){...}                                                          //
+  @param {String} opts.type   - File mime-type                                                                        //
+  @param {Object} opts.meta   - File additional meta-data                                                             //
+  @param {String} opts.userId -  UserId, default *null*                                                               //
+  @param {Function} callback  - function(error, fileObj){...}                                                         //
   @param {Boolean} proceedAfterUpload - Proceed onAfterUpload hook                                                    //
   @summary Add file from FS to FilesCollection                                                                        //
   @returns {FilesCollection} Instance                                                                                 //
@@ -1949,21 +2020,23 @@ module.runModuleSetters(FilesCollection = function () {                         
             meta: opts.meta,                                                                                          //
             type: opts.type,                                                                                          //
             size: opts.size,                                                                                          //
+            userId: opts.userId,                                                                                      //
             extension: extension,                                                                                     //
             _storagePath: path.replace("" + nodePath.sep + fileName, '')                                              //
           });                                                                                                         //
-          result._id = Random.id();                                                                                   //
-          self.collection.insert(_.clone(result), function (error) {                                                  //
+          self.collection.insert(result, function (error, _id) {                                                      //
+            var fileRef;                                                                                              //
             if (error) {                                                                                              //
               callback && callback(error);                                                                            //
               if (self.debug) {                                                                                       //
                 console.warn("[FilesCollection] [addFile] [insert] Error: " + fileName + " -> " + self.collectionName, error);
               }                                                                                                       //
             } else {                                                                                                  //
-              callback && callback(null, result);                                                                     //
+              fileRef = self.collection.findOne(_id);                                                                 //
+              callback && callback(null, fileRef);                                                                    //
               if (proceedAfterUpload === true) {                                                                      //
-                self.onAfterUpload && self.onAfterUpload.call(self, result);                                          //
-                self.emit('afterUpload', result);                                                                     //
+                self.onAfterUpload && self.onAfterUpload.call(self, fileRef);                                         //
+                self.emit('afterUpload', fileRef);                                                                    //
               }                                                                                                       //
               if (self.debug) {                                                                                       //
                 console.info("[FilesCollection] [addFile]: " + fileName + " -> " + self.collectionName);              //
@@ -2080,7 +2153,7 @@ module.runModuleSetters(FilesCollection = function () {                         
     UploadInstance.prototype.__proto__ = EventEmitter.prototype;                                                      //
                                                                                                                       //
     function UploadInstance(config1, collection) {                                                                    //
-      var _file, base, base1, base2, base3, base4, base5, error1, self, wwError;                                      //
+      var _file, base, base1, base2, base3, base4, base5, self, wwError;                                              //
       this.config = config1;                                                                                          //
       this.collection = collection;                                                                                   //
       EventEmitter.call(this);                                                                                        //
@@ -2190,8 +2263,8 @@ module.runModuleSetters(FilesCollection = function () {                         
         this.sentChunks = 0;                                                                                          //
         this.fileLength = 1;                                                                                          //
         this.EOFsent = false;                                                                                         //
-        this.FSName = this.collection.namingFunction ? this.collection.namingFunction(this.fileData) : this.fileId;   //
         this.fileId = Random.id();                                                                                    //
+        this.FSName = this.collection.namingFunction ? this.collection.namingFunction(this.fileData) : this.fileId;   //
         this.pipes = [];                                                                                              //
         this.fileData = _.extend(this.fileData, this.collection._getExt(self.fileData.name), {                        //
           mime: this.collection._getMimeType(this.fileData)                                                           //
@@ -2897,28 +2970,29 @@ module.runModuleSetters(FilesCollection = function () {                         
   @name unlink                                                                                                        //
   @param {Object} fileRef - fileObj                                                                                   //
   @param {String} version - [Optional] file's version                                                                 //
+  @param {Function} callback - [Optional] callback function                                                           //
   @summary Unlink files and it's versions from FS                                                                     //
   @returns {FilesCollection} Instance                                                                                 //
    */                                                                                                                 //
                                                                                                                       //
-  FilesCollection.prototype.unlink = Meteor.isServer ? function (fileRef, version) {                                  //
+  FilesCollection.prototype.unlink = Meteor.isServer ? function (fileRef, version, callback) {                        //
     var ref, ref1;                                                                                                    //
     if (this.debug) {                                                                                                 //
       console.info("[FilesCollection] [unlink(" + fileRef._id + ", " + version + ")]");                               //
     }                                                                                                                 //
     if (version) {                                                                                                    //
       if (((ref = fileRef.versions) != null ? ref[version] : void 0) && ((ref1 = fileRef.versions[version]) != null ? ref1.path : void 0)) {
-        fs.unlink(fileRef.versions[version].path, NOOP);                                                              //
+        fs.unlink(fileRef.versions[version].path, callback || NOOP);                                                  //
       }                                                                                                               //
     } else {                                                                                                          //
       if (fileRef.versions && !_.isEmpty(fileRef.versions)) {                                                         //
         _.each(fileRef.versions, function (vRef) {                                                                    //
           return bound(function () {                                                                                  //
-            fs.unlink(vRef.path, NOOP);                                                                               //
+            fs.unlink(vRef.path, callback || NOOP);                                                                   //
           });                                                                                                         //
         });                                                                                                           //
       } else {                                                                                                        //
-        fs.unlink(fileRef.path, NOOP);                                                                                //
+        fs.unlink(fileRef.path, callback || NOOP);                                                                    //
       }                                                                                                               //
     }                                                                                                                 //
     return this;                                                                                                      //
@@ -3224,7 +3298,7 @@ formatFleURL = function formatFleURL(fileRef, version) {                        
     ext = '';                                                                                                         //
   }                                                                                                                   //
   if (fileRef["public"] === true) {                                                                                   //
-    return root + (version === 'original' ? fileRef._downloadRoute + "/" + fileRef._id + ext : fileRef._downloadRoute + "/" + version + "-" + fileRef._id + ext);
+    return root + (version === 'original' ? fileRef._downloadRoute + "/" + fileRef._id + ext : "/" + fileRef._downloadRoute + "/" + version + "-" + fileRef._id + ext);
   } else {                                                                                                            //
     return root + (fileRef._downloadRoute + "/" + fileRef._collectionName + "/" + fileRef._id + "/" + version + "/" + fileRef._id + ext);
   }                                                                                                                   //
@@ -3277,7 +3351,7 @@ Meteor.Files = FilesCollection;                                                 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){_typeof=v}});                         //
-/*!                                                                                                                   //
+/*!                                                                                                                   // 1
  * EventEmitter v4.2.11 - git.io/ee                                                                                   //
  * Unlicense - http://unlicense.org/                                                                                  //
  * Oliver Caldwell - http://oli.me.uk/                                                                                //
@@ -3285,7 +3359,7 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
  */                                                                                                                   //
                                                                                                                       //
 ;(function () {module.export({EventEmitter:function(){return EventEmitter}});                                         // 8
-  /**                                                                                                                 //
+  /**                                                                                                                 // 9
    * Class for managing events.                                                                                       //
    * Can be extended to provide event functionality in other classes.                                                 //
    *                                                                                                                  //
@@ -3293,12 +3367,12 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    */                                                                                                                 //
   function EventEmitter() {}                                                                                          // 15
                                                                                                                       //
-  // Shortcuts to improve speed and size                                                                              //
+  // Shortcuts to improve speed and size                                                                              // 17
   var proto = EventEmitter.prototype;                                                                                 // 18
   var exports = this;                                                                                                 // 19
   var originalGlobalValue = exports.EventEmitter;                                                                     // 20
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 22
    * Finds the index of the listener for the event in its storage array.                                              //
    *                                                                                                                  //
    * @param {Function[]} listeners Array of listeners to search through.                                              //
@@ -3317,7 +3391,7 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
     return -1;                                                                                                        // 38
   }                                                                                                                   // 39
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 41
    * Alias a method while keeping the context correct, to allow for overwriting of target method.                     //
    *                                                                                                                  //
    * @param {String} name The name of the target method.                                                              //
@@ -3325,12 +3399,16 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @api private                                                                                                     //
    */                                                                                                                 //
   function alias(name) {                                                                                              // 48
-    return function aliasClosure() {                                                                                  // 49
-      return this[name].apply(this, arguments);                                                                       // 50
-    };                                                                                                                // 51
+    return function () {                                                                                              // 49
+      function aliasClosure() {                                                                                       // 49
+        return this[name].apply(this, arguments);                                                                     // 50
+      }                                                                                                               // 51
+                                                                                                                      //
+      return aliasClosure;                                                                                            // 49
+    }();                                                                                                              // 49
   }                                                                                                                   // 52
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 54
    * Returns the listener array for the specified event.                                                              //
    * Will initialise the event object and listener arrays if required.                                                //
    * Will return an object if you use a regex search. The object contains keys for each matched event. So /ba[rz]/ might return an object containing bar and baz. But only if you have either defined them with defineEvent or added some listeners to them.
@@ -3339,63 +3417,75 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {String|RegExp} evt Name of the event to return the listeners from.                                       //
    * @return {Function[]|Object} All listener functions for the event.                                                //
    */                                                                                                                 //
-  proto.getListeners = function getListeners(evt) {                                                                   // 63
-    var events = this._getEvents();                                                                                   // 64
-    var response = void 0;                                                                                            // 65
-    var key = void 0;                                                                                                 // 66
+  proto.getListeners = function () {                                                                                  // 63
+    function getListeners(evt) {                                                                                      // 63
+      var events = this._getEvents();                                                                                 // 64
+      var response = void 0;                                                                                          // 65
+      var key = void 0;                                                                                               // 66
                                                                                                                       //
-    // Return a concatenated array of all matching events if                                                          //
-    // the selector is a regular expression.                                                                          //
-    if (evt instanceof RegExp) {                                                                                      // 70
-      response = {};                                                                                                  // 71
-      for (key in events) {                                                                                           // 72
-        if (events.hasOwnProperty(key) && evt.test(key)) {                                                            // 73
-          response[key] = events[key];                                                                                // 74
-        }                                                                                                             // 75
-      }                                                                                                               // 76
-    } else {                                                                                                          // 77
-      response = events[evt] || (events[evt] = []);                                                                   // 79
-    }                                                                                                                 // 80
+      // Return a concatenated array of all matching events if                                                        // 68
+      // the selector is a regular expression.                                                                        // 69
+      if (evt instanceof RegExp) {                                                                                    // 70
+        response = {};                                                                                                // 71
+        for (key in meteorBabelHelpers.sanitizeForInObject(events)) {                                                 // 72
+          if (events.hasOwnProperty(key) && evt.test(key)) {                                                          // 73
+            response[key] = events[key];                                                                              // 74
+          }                                                                                                           // 75
+        }                                                                                                             // 76
+      } else {                                                                                                        // 77
+        response = events[evt] || (events[evt] = []);                                                                 // 79
+      }                                                                                                               // 80
                                                                                                                       //
-    return response;                                                                                                  // 82
-  };                                                                                                                  // 83
+      return response;                                                                                                // 82
+    }                                                                                                                 // 83
                                                                                                                       //
-  /**                                                                                                                 //
+    return getListeners;                                                                                              // 63
+  }();                                                                                                                // 63
+                                                                                                                      //
+  /**                                                                                                                 // 85
    * Takes a list of listener objects and flattens it into a list of listener functions.                              //
    *                                                                                                                  //
    * @param {Object[]} listeners Raw listener objects.                                                                //
    * @return {Function[]} Just the listener functions.                                                                //
    */                                                                                                                 //
-  proto.flattenListeners = function flattenListeners(listeners) {                                                     // 91
-    var flatListeners = [];                                                                                           // 92
-    var i = void 0;                                                                                                   // 93
+  proto.flattenListeners = function () {                                                                              // 91
+    function flattenListeners(listeners) {                                                                            // 91
+      var flatListeners = [];                                                                                         // 92
+      var i = void 0;                                                                                                 // 93
                                                                                                                       //
-    for (i = 0; i < listeners.length; i += 1) {                                                                       // 95
-      flatListeners.push(listeners[i].listener);                                                                      // 96
-    }                                                                                                                 // 97
+      for (i = 0; i < listeners.length; i += 1) {                                                                     // 95
+        flatListeners.push(listeners[i].listener);                                                                    // 96
+      }                                                                                                               // 97
                                                                                                                       //
-    return flatListeners;                                                                                             // 99
-  };                                                                                                                  // 100
+      return flatListeners;                                                                                           // 99
+    }                                                                                                                 // 100
                                                                                                                       //
-  /**                                                                                                                 //
+    return flattenListeners;                                                                                          // 91
+  }();                                                                                                                // 91
+                                                                                                                      //
+  /**                                                                                                                 // 102
    * Fetches the requested listeners via getListeners but will always return the results inside an object. This is mainly for internal use but others may find it useful.
    *                                                                                                                  //
    * @param {String|RegExp} evt Name of the event to return the listeners from.                                       //
    * @return {Object} All listener functions for an event in an object.                                               //
    */                                                                                                                 //
-  proto.getListenersAsObject = function getListenersAsObject(evt) {                                                   // 108
-    var listeners = this.getListeners(evt);                                                                           // 109
-    var response = void 0;                                                                                            // 110
+  proto.getListenersAsObject = function () {                                                                          // 108
+    function getListenersAsObject(evt) {                                                                              // 108
+      var listeners = this.getListeners(evt);                                                                         // 109
+      var response = void 0;                                                                                          // 110
                                                                                                                       //
-    if (listeners instanceof Array) {                                                                                 // 112
-      response = {};                                                                                                  // 113
-      response[evt] = listeners;                                                                                      // 114
-    }                                                                                                                 // 115
+      if (listeners instanceof Array) {                                                                               // 112
+        response = {};                                                                                                // 113
+        response[evt] = listeners;                                                                                    // 114
+      }                                                                                                               // 115
                                                                                                                       //
-    return response || listeners;                                                                                     // 117
-  };                                                                                                                  // 118
+      return response || listeners;                                                                                   // 117
+    }                                                                                                                 // 118
                                                                                                                       //
-  /**                                                                                                                 //
+    return getListenersAsObject;                                                                                      // 108
+  }();                                                                                                                // 108
+                                                                                                                      //
+  /**                                                                                                                 // 120
    * Adds a listener function to the specified event.                                                                 //
    * The listener will not be added if it is a duplicate.                                                             //
    * If the listener returns true then it will be removed after it is called.                                         //
@@ -3405,29 +3495,33 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function} listener Method to be called when the event is emitted. If the function returns true then it will be removed after calling.
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.addListener = function addListener(evt, listener) {                                                           // 130
-    var listeners = this.getListenersAsObject(evt);                                                                   // 131
-    var listenerIsWrapped = (typeof listener === 'undefined' ? 'undefined' : _typeof(listener)) === 'object';         // 132
-    var key = void 0;                                                                                                 // 133
+  proto.addListener = function () {                                                                                   // 130
+    function addListener(evt, listener) {                                                                             // 130
+      var listeners = this.getListenersAsObject(evt);                                                                 // 131
+      var listenerIsWrapped = (typeof listener === 'undefined' ? 'undefined' : _typeof(listener)) === 'object';       // 132
+      var key = void 0;                                                                                               // 133
                                                                                                                       //
-    for (key in listeners) {                                                                                          // 135
-      if (listeners.hasOwnProperty(key) && indexOfListener(listeners[key], listener) === -1) {                        // 136
-        listeners[key].push(listenerIsWrapped ? listener : {                                                          // 137
-          listener: listener,                                                                                         // 138
-          once: false                                                                                                 // 139
-        });                                                                                                           // 137
-      }                                                                                                               // 141
-    }                                                                                                                 // 142
+      for (key in meteorBabelHelpers.sanitizeForInObject(listeners)) {                                                // 135
+        if (listeners.hasOwnProperty(key) && indexOfListener(listeners[key], listener) === -1) {                      // 136
+          listeners[key].push(listenerIsWrapped ? listener : {                                                        // 137
+            listener: listener,                                                                                       // 138
+            once: false                                                                                               // 139
+          });                                                                                                         // 137
+        }                                                                                                             // 141
+      }                                                                                                               // 142
                                                                                                                       //
-    return this;                                                                                                      // 144
-  };                                                                                                                  // 145
+      return this;                                                                                                    // 144
+    }                                                                                                                 // 145
                                                                                                                       //
-  /**                                                                                                                 //
+    return addListener;                                                                                               // 130
+  }();                                                                                                                // 130
+                                                                                                                      //
+  /**                                                                                                                 // 147
    * Alias of addListener                                                                                             //
    */                                                                                                                 //
   proto.on = alias('addListener');                                                                                    // 150
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 152
    * Semi-alias of addListener. It will add a listener that will be                                                   //
    * automatically removed after its first execution.                                                                 //
    *                                                                                                                  //
@@ -3435,44 +3529,56 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function} listener Method to be called when the event is emitted. If the function returns true then it will be removed after calling.
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.addOnceListener = function addOnceListener(evt, listener) {                                                   // 160
-    return this.addListener(evt, {                                                                                    // 161
-      listener: listener,                                                                                             // 162
-      once: true                                                                                                      // 163
-    });                                                                                                               // 161
-  };                                                                                                                  // 165
+  proto.addOnceListener = function () {                                                                               // 160
+    function addOnceListener(evt, listener) {                                                                         // 160
+      return this.addListener(evt, {                                                                                  // 161
+        listener: listener,                                                                                           // 162
+        once: true                                                                                                    // 163
+      });                                                                                                             // 161
+    }                                                                                                                 // 165
                                                                                                                       //
-  /**                                                                                                                 //
+    return addOnceListener;                                                                                           // 160
+  }();                                                                                                                // 160
+                                                                                                                      //
+  /**                                                                                                                 // 167
    * Alias of addOnceListener.                                                                                        //
    */                                                                                                                 //
   proto.once = alias('addOnceListener');                                                                              // 170
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 172
    * Defines an event name. This is required if you want to use a regex to add a listener to multiple events at once. If you don't do this then how do you expect it to know what event to add to? Should it just add to every possible match for a regex? No. That is scary and bad.
    * You need to tell it what event names should be matched by a regex.                                               //
    *                                                                                                                  //
    * @param {String} evt Name of the event to create.                                                                 //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.defineEvent = function defineEvent(evt) {                                                                     // 179
-    this.getListeners(evt);                                                                                           // 180
-    return this;                                                                                                      // 181
-  };                                                                                                                  // 182
+  proto.defineEvent = function () {                                                                                   // 179
+    function defineEvent(evt) {                                                                                       // 179
+      this.getListeners(evt);                                                                                         // 180
+      return this;                                                                                                    // 181
+    }                                                                                                                 // 182
                                                                                                                       //
-  /**                                                                                                                 //
+    return defineEvent;                                                                                               // 179
+  }();                                                                                                                // 179
+                                                                                                                      //
+  /**                                                                                                                 // 184
    * Uses defineEvent to define multiple events.                                                                      //
    *                                                                                                                  //
    * @param {String[]} evts An array of event names to define.                                                        //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.defineEvents = function defineEvents(evts) {                                                                  // 190
-    for (var i = 0; i < evts.length; i += 1) {                                                                        // 191
-      this.defineEvent(evts[i]);                                                                                      // 192
-    }                                                                                                                 // 193
-    return this;                                                                                                      // 194
-  };                                                                                                                  // 195
+  proto.defineEvents = function () {                                                                                  // 190
+    function defineEvents(evts) {                                                                                     // 190
+      for (var i = 0; i < evts.length; i += 1) {                                                                      // 191
+        this.defineEvent(evts[i]);                                                                                    // 192
+      }                                                                                                               // 193
+      return this;                                                                                                    // 194
+    }                                                                                                                 // 195
                                                                                                                       //
-  /**                                                                                                                 //
+    return defineEvents;                                                                                              // 190
+  }();                                                                                                                // 190
+                                                                                                                      //
+  /**                                                                                                                 // 197
    * Removes a listener function from the specified event.                                                            //
    * When passed a regular expression as the event name, it will remove the listener from all events that match it.   //
    *                                                                                                                  //
@@ -3480,30 +3586,34 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function} listener Method to remove from the event.                                                      //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.removeListener = function removeListener(evt, listener) {                                                     // 205
-    var listeners = this.getListenersAsObject(evt);                                                                   // 206
-    var index = void 0;                                                                                               // 207
-    var key = void 0;                                                                                                 // 208
+  proto.removeListener = function () {                                                                                // 205
+    function removeListener(evt, listener) {                                                                          // 205
+      var listeners = this.getListenersAsObject(evt);                                                                 // 206
+      var index = void 0;                                                                                             // 207
+      var key = void 0;                                                                                               // 208
                                                                                                                       //
-    for (key in listeners) {                                                                                          // 210
-      if (listeners.hasOwnProperty(key)) {                                                                            // 211
-        index = indexOfListener(listeners[key], listener);                                                            // 212
+      for (key in meteorBabelHelpers.sanitizeForInObject(listeners)) {                                                // 210
+        if (listeners.hasOwnProperty(key)) {                                                                          // 211
+          index = indexOfListener(listeners[key], listener);                                                          // 212
                                                                                                                       //
-        if (index !== -1) {                                                                                           // 214
-          listeners[key].splice(index, 1);                                                                            // 215
-        }                                                                                                             // 216
-      }                                                                                                               // 217
-    }                                                                                                                 // 218
+          if (index !== -1) {                                                                                         // 214
+            listeners[key].splice(index, 1);                                                                          // 215
+          }                                                                                                           // 216
+        }                                                                                                             // 217
+      }                                                                                                               // 218
                                                                                                                       //
-    return this;                                                                                                      // 220
-  };                                                                                                                  // 221
+      return this;                                                                                                    // 220
+    }                                                                                                                 // 221
                                                                                                                       //
-  /**                                                                                                                 //
+    return removeListener;                                                                                            // 205
+  }();                                                                                                                // 205
+                                                                                                                      //
+  /**                                                                                                                 // 223
    * Alias of removeListener                                                                                          //
    */                                                                                                                 //
   proto.off = alias('removeListener');                                                                                // 226
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 228
    * Adds listeners in bulk using the manipulateListeners method.                                                     //
    * If you pass an object as the second argument you can add to multiple events at once. The object should contain key value pairs of events and listeners or listener arrays. You can also pass it an event name and an array of listeners to be added.
    * You can also pass it a regular expression to add the array of listeners to all events that match it.             //
@@ -3513,12 +3623,16 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function[]} [listeners] An optional array of listener functions to add.                                  //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.addListeners = function addListeners(evt, listeners) {                                                        // 238
-    // Pass through to manipulateListeners                                                                            //
-    return this.manipulateListeners(false, evt, listeners);                                                           // 240
-  };                                                                                                                  // 241
+  proto.addListeners = function () {                                                                                  // 238
+    function addListeners(evt, listeners) {                                                                           // 238
+      // Pass through to manipulateListeners                                                                          // 239
+      return this.manipulateListeners(false, evt, listeners);                                                         // 240
+    }                                                                                                                 // 241
                                                                                                                       //
-  /**                                                                                                                 //
+    return addListeners;                                                                                              // 238
+  }();                                                                                                                // 238
+                                                                                                                      //
+  /**                                                                                                                 // 243
    * Removes listeners in bulk using the manipulateListeners method.                                                  //
    * If you pass an object as the second argument you can remove from multiple events at once. The object should contain key value pairs of events and listeners or listener arrays.
    * You can also pass it an event name and an array of listeners to be removed.                                      //
@@ -3528,12 +3642,16 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function[]} [listeners] An optional array of listener functions to remove.                               //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.removeListeners = function removeListeners(evt, listeners) {                                                  // 253
-    // Pass through to manipulateListeners                                                                            //
-    return this.manipulateListeners(true, evt, listeners);                                                            // 255
-  };                                                                                                                  // 256
+  proto.removeListeners = function () {                                                                               // 253
+    function removeListeners(evt, listeners) {                                                                        // 253
+      // Pass through to manipulateListeners                                                                          // 254
+      return this.manipulateListeners(true, evt, listeners);                                                          // 255
+    }                                                                                                                 // 256
                                                                                                                       //
-  /**                                                                                                                 //
+    return removeListeners;                                                                                           // 253
+  }();                                                                                                                // 253
+                                                                                                                      //
+  /**                                                                                                                 // 258
    * Edits listeners in bulk. The addListeners and removeListeners methods both use this to do their job. You should really use those instead, this is a little lower level.
    * The first argument will determine if the listeners are removed (true) or added (false).                          //
    * If you pass an object as the second argument you can add/remove from multiple events at once. The object should contain key value pairs of events and listeners or listener arrays.
@@ -3545,39 +3663,43 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Function[]} [listeners] An optional array of listener functions to add/remove.                           //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.manipulateListeners = function manipulateListeners(remove, evt, listeners) {                                  // 270
-    var i = void 0;                                                                                                   // 271
-    var value = void 0;                                                                                               // 272
-    var single = remove ? this.removeListener : this.addListener;                                                     // 273
-    var multiple = remove ? this.removeListeners : this.addListeners;                                                 // 274
+  proto.manipulateListeners = function () {                                                                           // 270
+    function manipulateListeners(remove, evt, listeners) {                                                            // 270
+      var i = void 0;                                                                                                 // 271
+      var value = void 0;                                                                                             // 272
+      var single = remove ? this.removeListener : this.addListener;                                                   // 273
+      var multiple = remove ? this.removeListeners : this.addListeners;                                               // 274
                                                                                                                       //
-    // If evt is an object then pass each of its properties to this method                                            //
-    if ((typeof evt === 'undefined' ? 'undefined' : _typeof(evt)) === 'object' && !(evt instanceof RegExp)) {         // 277
-      for (i in evt) {                                                                                                // 278
-        if (evt.hasOwnProperty(i) && (value = evt[i])) {                                                              // 279
-          // Pass the single listener straight through to the singular method                                         //
-          if (typeof value === 'function') {                                                                          // 281
-            single.call(this, i, value);                                                                              // 282
-          } else {                                                                                                    // 283
-            // Otherwise pass back to the multiple function                                                           //
-            multiple.call(this, i, value);                                                                            // 286
-          }                                                                                                           // 287
-        }                                                                                                             // 288
-      }                                                                                                               // 289
-    } else {                                                                                                          // 290
-      // So evt must be a string                                                                                      //
-      // And listeners must be an array of listeners                                                                  //
-      // Loop over it and pass each one to the multiple method                                                        //
-      i = listeners.length;                                                                                           // 295
-      while (i--) {                                                                                                   // 296
-        single.call(this, evt, listeners[i]);                                                                         // 297
-      }                                                                                                               // 298
-    }                                                                                                                 // 299
+      // If evt is an object then pass each of its properties to this method                                          // 276
+      if ((typeof evt === 'undefined' ? 'undefined' : _typeof(evt)) === 'object' && !(evt instanceof RegExp)) {       // 277
+        for (i in meteorBabelHelpers.sanitizeForInObject(evt)) {                                                      // 278
+          if (evt.hasOwnProperty(i) && (value = evt[i])) {                                                            // 279
+            // Pass the single listener straight through to the singular method                                       // 280
+            if (typeof value === 'function') {                                                                        // 281
+              single.call(this, i, value);                                                                            // 282
+            } else {                                                                                                  // 283
+              // Otherwise pass back to the multiple function                                                         // 285
+              multiple.call(this, i, value);                                                                          // 286
+            }                                                                                                         // 287
+          }                                                                                                           // 288
+        }                                                                                                             // 289
+      } else {                                                                                                        // 290
+        // So evt must be a string                                                                                    // 292
+        // And listeners must be an array of listeners                                                                // 293
+        // Loop over it and pass each one to the multiple method                                                      // 294
+        i = listeners.length;                                                                                         // 295
+        while (i--) {                                                                                                 // 296
+          single.call(this, evt, listeners[i]);                                                                       // 297
+        }                                                                                                             // 298
+      }                                                                                                               // 299
                                                                                                                       //
-    return this;                                                                                                      // 301
-  };                                                                                                                  // 302
+      return this;                                                                                                    // 301
+    }                                                                                                                 // 302
                                                                                                                       //
-  /**                                                                                                                 //
+    return manipulateListeners;                                                                                       // 270
+  }();                                                                                                                // 270
+                                                                                                                      //
+  /**                                                                                                                 // 304
    * Removes all listeners from a specified event.                                                                    //
    * If you do not specify an event then all listeners will be removed.                                               //
    * That means every event will be emptied.                                                                          //
@@ -3586,38 +3708,42 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {String|RegExp} [evt] Optional name of the event to remove all listeners for. Will remove from every event if not passed.
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.removeEvent = function removeEvent(evt) {                                                                     // 313
-    var type = typeof evt === 'undefined' ? 'undefined' : _typeof(evt);                                               // 314
-    var events = this._getEvents();                                                                                   // 315
-    var key = void 0;                                                                                                 // 316
+  proto.removeEvent = function () {                                                                                   // 313
+    function removeEvent(evt) {                                                                                       // 313
+      var type = typeof evt === 'undefined' ? 'undefined' : _typeof(evt);                                             // 314
+      var events = this._getEvents();                                                                                 // 315
+      var key = void 0;                                                                                               // 316
                                                                                                                       //
-    // Remove different things depending on the state of evt                                                          //
-    if (type === 'string') {                                                                                          // 319
-      // Remove all listeners for the specified event                                                                 //
-      delete events[evt];                                                                                             // 321
-    } else if (evt instanceof RegExp) {                                                                               // 322
-      // Remove all events matching the regex.                                                                        //
-      for (key in events) {                                                                                           // 325
-        if (events.hasOwnProperty(key) && evt.test(key)) {                                                            // 326
-          delete events[key];                                                                                         // 327
-        }                                                                                                             // 328
-      }                                                                                                               // 329
-    } else {                                                                                                          // 330
-      // Remove all listeners in all events                                                                           //
-      delete this._events;                                                                                            // 333
-    }                                                                                                                 // 334
+      // Remove different things depending on the state of evt                                                        // 318
+      if (type === 'string') {                                                                                        // 319
+        // Remove all listeners for the specified event                                                               // 320
+        delete events[evt];                                                                                           // 321
+      } else if (evt instanceof RegExp) {                                                                             // 322
+        // Remove all events matching the regex.                                                                      // 324
+        for (key in meteorBabelHelpers.sanitizeForInObject(events)) {                                                 // 325
+          if (events.hasOwnProperty(key) && evt.test(key)) {                                                          // 326
+            delete events[key];                                                                                       // 327
+          }                                                                                                           // 328
+        }                                                                                                             // 329
+      } else {                                                                                                        // 330
+        // Remove all listeners in all events                                                                         // 332
+        delete this._events;                                                                                          // 333
+      }                                                                                                               // 334
                                                                                                                       //
-    return this;                                                                                                      // 336
-  };                                                                                                                  // 337
+      return this;                                                                                                    // 336
+    }                                                                                                                 // 337
                                                                                                                       //
-  /**                                                                                                                 //
+    return removeEvent;                                                                                               // 313
+  }();                                                                                                                // 313
+                                                                                                                      //
+  /**                                                                                                                 // 339
    * Alias of removeEvent.                                                                                            //
    *                                                                                                                  //
    * Added to mirror the node API.                                                                                    //
    */                                                                                                                 //
   proto.removeAllListeners = alias('removeEvent');                                                                    // 344
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 346
    * Emits an event of your choice.                                                                                   //
    * When emitted, every listener attached to that event will be executed.                                            //
    * If you pass the optional argument array then those arguments will be passed to every listener upon execution.    //
@@ -3629,46 +3755,50 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {Array} [args] Optional array of arguments to be passed to each listener.                                 //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.emitEvent = function emitEvent(evt, args) {                                                                   // 358
-    var listenersMap = this.getListenersAsObject(evt);                                                                // 359
-    var listeners = void 0;                                                                                           // 360
-    var listener = void 0;                                                                                            // 361
-    var i = void 0;                                                                                                   // 362
-    var key = void 0;                                                                                                 // 363
-    var response = void 0;                                                                                            // 364
+  proto.emitEvent = function () {                                                                                     // 358
+    function emitEvent(evt, args) {                                                                                   // 358
+      var listenersMap = this.getListenersAsObject(evt);                                                              // 359
+      var listeners = void 0;                                                                                         // 360
+      var listener = void 0;                                                                                          // 361
+      var i = void 0;                                                                                                 // 362
+      var key = void 0;                                                                                               // 363
+      var response = void 0;                                                                                          // 364
                                                                                                                       //
-    for (key in listenersMap) {                                                                                       // 366
-      if (listenersMap.hasOwnProperty(key)) {                                                                         // 367
-        listeners = listenersMap[key].slice(0);                                                                       // 368
-        i = listeners.length;                                                                                         // 369
+      for (key in meteorBabelHelpers.sanitizeForInObject(listenersMap)) {                                             // 366
+        if (listenersMap.hasOwnProperty(key)) {                                                                       // 367
+          listeners = listenersMap[key].slice(0);                                                                     // 368
+          i = listeners.length;                                                                                       // 369
                                                                                                                       //
-        while (i--) {                                                                                                 // 371
-          // If the listener returns true then it shall be removed from the event                                     //
-          // The function is executed either with a basic call or an apply if there is an args array                  //
-          listener = listeners[i];                                                                                    // 374
+          while (i--) {                                                                                               // 371
+            // If the listener returns true then it shall be removed from the event                                   // 372
+            // The function is executed either with a basic call or an apply if there is an args array                // 373
+            listener = listeners[i];                                                                                  // 374
                                                                                                                       //
-          if (listener.once === true) {                                                                               // 376
-            this.removeListener(evt, listener.listener);                                                              // 377
-          }                                                                                                           // 378
+            if (listener.once === true) {                                                                             // 376
+              this.removeListener(evt, listener.listener);                                                            // 377
+            }                                                                                                         // 378
                                                                                                                       //
-          response = listener.listener.apply(this, args || []);                                                       // 380
+            response = listener.listener.apply(this, args || []);                                                     // 380
                                                                                                                       //
-          if (response === this._getOnceReturnValue()) {                                                              // 382
-            this.removeListener(evt, listener.listener);                                                              // 383
-          }                                                                                                           // 384
-        }                                                                                                             // 385
-      }                                                                                                               // 386
-    }                                                                                                                 // 387
+            if (response === this._getOnceReturnValue()) {                                                            // 382
+              this.removeListener(evt, listener.listener);                                                            // 383
+            }                                                                                                         // 384
+          }                                                                                                           // 385
+        }                                                                                                             // 386
+      }                                                                                                               // 387
                                                                                                                       //
-    return this;                                                                                                      // 389
-  };                                                                                                                  // 390
+      return this;                                                                                                    // 389
+    }                                                                                                                 // 390
                                                                                                                       //
-  /**                                                                                                                 //
+    return emitEvent;                                                                                                 // 358
+  }();                                                                                                                // 358
+                                                                                                                      //
+  /**                                                                                                                 // 392
    * Alias of emitEvent                                                                                               //
    */                                                                                                                 //
   proto.trigger = alias('emitEvent');                                                                                 // 395
                                                                                                                       //
-  /**                                                                                                                 //
+  /**                                                                                                                 // 397
    * Subtly different from emitEvent in that it will pass its arguments on to the listeners, as opposed to taking a single array of arguments to pass on.
    * As with emitEvent, you can pass a regex in place of the event name to emit to all events that match it.          //
    *                                                                                                                  //
@@ -3676,12 +3806,16 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {...*} Optional additional arguments to be passed to each listener.                                       //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.emit = function emit(evt) {                                                                                   // 405
-    var args = Array.prototype.slice.call(arguments, 1);                                                              // 406
-    return this.emitEvent(evt, args);                                                                                 // 407
-  };                                                                                                                  // 408
+  proto.emit = function () {                                                                                          // 405
+    function emit(evt) {                                                                                              // 405
+      var args = Array.prototype.slice.call(arguments, 1);                                                            // 406
+      return this.emitEvent(evt, args);                                                                               // 407
+    }                                                                                                                 // 408
                                                                                                                       //
-  /**                                                                                                                 //
+    return emit;                                                                                                      // 405
+  }();                                                                                                                // 405
+                                                                                                                      //
+  /**                                                                                                                 // 410
    * Sets the current value to check against when executing listeners. If a                                           //
    * listeners return value matches the one set here then it will be removed                                          //
    * after execution. This value defaults to true.                                                                    //
@@ -3689,12 +3823,16 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @param {*} value The new value to check for when executing listeners.                                            //
    * @return {Object} Current instance of EventEmitter for chaining.                                                  //
    */                                                                                                                 //
-  proto.setOnceReturnValue = function setOnceReturnValue(value) {                                                     // 418
-    this._onceReturnValue = value;                                                                                    // 419
-    return this;                                                                                                      // 420
-  };                                                                                                                  // 421
+  proto.setOnceReturnValue = function () {                                                                            // 418
+    function setOnceReturnValue(value) {                                                                              // 418
+      this._onceReturnValue = value;                                                                                  // 419
+      return this;                                                                                                    // 420
+    }                                                                                                                 // 421
                                                                                                                       //
-  /**                                                                                                                 //
+    return setOnceReturnValue;                                                                                        // 418
+  }();                                                                                                                // 418
+                                                                                                                      //
+  /**                                                                                                                 // 423
    * Fetches the current value to check against when executing listeners. If                                          //
    * the listeners return value matches this one then it should be removed                                            //
    * automatically. It will return true by default.                                                                   //
@@ -3702,35 +3840,47 @@ var _typeof;module.import('babel-runtime/helpers/typeof',{"default":function(v){
    * @return {*|Boolean} The current value to check for or the default, true.                                         //
    * @api private                                                                                                     //
    */                                                                                                                 //
-  proto._getOnceReturnValue = function _getOnceReturnValue() {                                                        // 431
-    if (this.hasOwnProperty('_onceReturnValue')) {                                                                    // 432
-      return this._onceReturnValue;                                                                                   // 433
-    } else {                                                                                                          // 434
-      return true;                                                                                                    // 436
-    }                                                                                                                 // 437
-  };                                                                                                                  // 438
+  proto._getOnceReturnValue = function () {                                                                           // 431
+    function _getOnceReturnValue() {                                                                                  // 431
+      if (this.hasOwnProperty('_onceReturnValue')) {                                                                  // 432
+        return this._onceReturnValue;                                                                                 // 433
+      } else {                                                                                                        // 434
+        return true;                                                                                                  // 436
+      }                                                                                                               // 437
+    }                                                                                                                 // 438
                                                                                                                       //
-  /**                                                                                                                 //
+    return _getOnceReturnValue;                                                                                       // 431
+  }();                                                                                                                // 431
+                                                                                                                      //
+  /**                                                                                                                 // 440
    * Fetches the events object and creates one if required.                                                           //
    *                                                                                                                  //
    * @return {Object} The events storage object.                                                                      //
    * @api private                                                                                                     //
    */                                                                                                                 //
-  proto._getEvents = function _getEvents() {                                                                          // 446
-    return this._events || (this._events = {});                                                                       // 447
-  };                                                                                                                  // 448
+  proto._getEvents = function () {                                                                                    // 446
+    function _getEvents() {                                                                                           // 446
+      return this._events || (this._events = {});                                                                     // 447
+    }                                                                                                                 // 448
                                                                                                                       //
-  /**                                                                                                                 //
+    return _getEvents;                                                                                                // 446
+  }();                                                                                                                // 446
+                                                                                                                      //
+  /**                                                                                                                 // 450
    * Reverts the global {@link EventEmitter} to its previous value and returns a reference to this version.           //
    *                                                                                                                  //
    * @return {Function} Non conflicting EventEmitter class.                                                           //
    */                                                                                                                 //
-  EventEmitter.noConflict = function noConflict() {                                                                   // 455
-    exports.EventEmitter = originalGlobalValue;                                                                       // 456
-    return EventEmitter;                                                                                              // 457
-  };                                                                                                                  // 458
+  EventEmitter.noConflict = function () {                                                                             // 455
+    function noConflict() {                                                                                           // 455
+      exports.EventEmitter = originalGlobalValue;                                                                     // 456
+      return EventEmitter;                                                                                            // 457
+    }                                                                                                                 // 458
                                                                                                                       //
-  // Expose the class                                                                                                 //
+    return noConflict;                                                                                                // 455
+  }();                                                                                                                // 455
+                                                                                                                      //
+  // Expose the class                                                                                                 // 460
                                                                                                                       // 461
 }).call(this);                                                                                                        // 462
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

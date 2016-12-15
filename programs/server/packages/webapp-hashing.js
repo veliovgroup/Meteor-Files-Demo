@@ -30,20 +30,20 @@ var crypto = Npm.require("crypto");                                             
                                                                                                 //
 WebAppHashing = {};                                                                             // 3
                                                                                                 //
-// Calculate a hash of all the client resources downloaded by the                               //
-// browser, including the application HTML, runtime config, code, and                           //
-// static files.                                                                                //
-//                                                                                              //
-// This hash *must* change if any resources seen by the browser                                 //
-// change, and ideally *doesn't* change for any server-only changes                             //
-// (but the second is a performance enhancement, not a hard                                     //
-// requirement).                                                                                //
+// Calculate a hash of all the client resources downloaded by the                               // 5
+// browser, including the application HTML, runtime config, code, and                           // 6
+// static files.                                                                                // 7
+//                                                                                              // 8
+// This hash *must* change if any resources seen by the browser                                 // 9
+// change, and ideally *doesn't* change for any server-only changes                             // 10
+// (but the second is a performance enhancement, not a hard                                     // 11
+// requirement).                                                                                // 12
                                                                                                 //
 WebAppHashing.calculateClientHash = function (manifest, includeFilter, runtimeConfigOverride) {
   var hash = crypto.createHash('sha1');                                                         // 16
                                                                                                 //
-  // Omit the old hashed client values in the new hash. These may be                            //
-  // modified in the new boilerplate.                                                           //
+  // Omit the old hashed client values in the new hash. These may be                            // 18
+  // modified in the new boilerplate.                                                           // 19
   var runtimeCfg = _.omit(__meteor_runtime_config__, ['autoupdateVersion', 'autoupdateVersionRefreshable', 'autoupdateVersionCordova']);
                                                                                                 //
   if (runtimeConfigOverride) {                                                                  // 24
@@ -66,7 +66,7 @@ WebAppHashing.calculateCordovaCompatibilityHash = function (platformVersion, plu
                                                                                                 //
   hash.update(platformVersion);                                                                 // 44
                                                                                                 //
-  // Sort plugins first so iteration order doesn't affect the hash                              //
+  // Sort plugins first so iteration order doesn't affect the hash                              // 46
   var plugins = Object.keys(pluginVersions).sort();                                             // 47
   for (var _iterator = plugins, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
     var _ref;                                                                                   // 48

@@ -21,12 +21,12 @@ var OAuth1Binding, OAuth1Test;
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                     //
-// packages/oauth1/oauth1_binding.js                                                                   //
-//                                                                                                     //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                       //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                      //
+// packages/oauth1/oauth1_binding.js                                                                    //
+//                                                                                                      //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                        //
 var crypto = Npm.require("crypto");
 var querystring = Npm.require("querystring");
 var urlModule = Npm.require("url");
@@ -225,7 +225,7 @@ OAuth1Binding.prototype._getAuthHeaderString = function(headers) {
   }).sort().join(', ');
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 
@@ -236,13 +236,34 @@ OAuth1Binding.prototype._getAuthHeaderString = function(headers) {
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                     //
-// packages/oauth1/oauth1_server.js                                                                    //
-//                                                                                                     //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                       //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                      //
+// packages/oauth1/oauth1_server.js                                                                     //
+//                                                                                                      //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                        //
 var url = Npm.require("url");
+
+OAuth._queryParamsWithAuthTokenUrl = function (authUrl, oauthBinding, params, whitelistedQueryParams) {
+  params = params || {};
+  var redirectUrlObj = url.parse(authUrl, true);
+
+  _.extend(
+    redirectUrlObj.query,
+    _.pick(params.query, whitelistedQueryParams),
+    {
+      oauth_token: oauthBinding.requestToken,
+    }
+  );
+
+  // Clear the `search` so it is rebuilt by Node's `url` from the `query` above.
+  // Using previous versions of the Node `url` module, this was just set to ""
+  // However, Node 6 docs seem to indicate that this should be `undefined`.
+  delete redirectUrlObj.search;
+
+  // Reconstruct the URL back with provided query parameters merged with oauth_token
+  return url.format(redirectUrlObj);
+};
 
 // connect middleware
 OAuth._requestHandlers['1'] = function (service, query, res) {
@@ -274,19 +295,19 @@ OAuth._requestHandlers['1'] = function (service, query, res) {
       oauthBinding.requestTokenSecret);
 
     // support for scope/name parameters
-    var redirectUrl = undefined;
+    var redirectUrl;
+    var authParams = {
+      query: query
+    };
+
     if(typeof urls.authenticate === "function") {
-      redirectUrl = urls.authenticate(oauthBinding, {
-        query: query
-      });
+      redirectUrl = urls.authenticate(oauthBinding, authParams);
     } else {
-      // Parse the URL to support additional query parameters in urls.authenticate
-      var redirectUrlObj = url.parse(urls.authenticate, true);
-      redirectUrlObj.query = redirectUrlObj.query || {};
-      redirectUrlObj.query.oauth_token = oauthBinding.requestToken;
-      redirectUrlObj.search = '';
-      // Reconstruct the URL back with provided query parameters merged with oauth_token
-      redirectUrl = url.format(redirectUrlObj);
+      redirectUrl = OAuth._queryParamsWithAuthTokenUrl(
+        urls.authenticate,
+        oauthBinding,
+        authParams
+      );
     }
 
     // redirect to provider login, which will redirect back to "step 2" below
@@ -337,7 +358,7 @@ OAuth._requestHandlers['1'] = function (service, query, res) {
   }
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 
@@ -348,12 +369,12 @@ OAuth._requestHandlers['1'] = function (service, query, res) {
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                     //
-// packages/oauth1/oauth1_pending_request_tokens.js                                                    //
-//                                                                                                     //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                       //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                      //
+// packages/oauth1/oauth1_pending_request_tokens.js                                                     //
+//                                                                                                      //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                        //
 //
 // _pendingRequestTokens are request tokens that have been received
 // but not yet fully authorized (processed).
@@ -441,7 +462,7 @@ OAuth._retrieveRequestToken = function (key) {
   }
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 
@@ -457,5 +478,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=oauth1.js.map

@@ -1343,5 +1343,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=perak_markdown.js.map

@@ -370,5 +370,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=binary-heap.js.map

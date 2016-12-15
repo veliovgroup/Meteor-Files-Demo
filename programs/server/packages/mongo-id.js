@@ -130,5 +130,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=mongo-id.js.map

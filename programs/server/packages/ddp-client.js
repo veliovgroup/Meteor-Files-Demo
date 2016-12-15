@@ -2415,5 +2415,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=ddp-client.js.map

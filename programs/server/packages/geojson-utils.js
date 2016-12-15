@@ -427,5 +427,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=geojson-utils.js.map

@@ -285,5 +285,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=diff-sequence.js.map

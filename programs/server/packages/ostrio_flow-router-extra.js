@@ -16,800 +16,310 @@ var Deps = Package.tracker.Deps;
 var ReactiveDict = Package['reactive-dict'].ReactiveDict;
 var ReactiveVar = Package['reactive-var'].ReactiveVar;
 var EJSON = Package.ejson.EJSON;
+var ECMAScript = Package.ecmascript.ECMAScript;
 var HTML = Package.htmljs.HTML;
+var Symbol = Package['ecmascript-runtime'].Symbol;
+var Map = Package['ecmascript-runtime'].Map;
+var Set = Package['ecmascript-runtime'].Set;
+var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
+var Promise = Package.promise.Promise;
 
 /* Package-scope variables */
 var Router, Group, Route, FlowRouter;
 
 var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra":{"server":{"router.js":["qs",function(require){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// packages/ostrio_flow-router-extra/server/router.js                                                                 //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-var Qs = require('qs');
-
-Router = function () {
-  this._routes = [];
-  this._routesMap = {};
-  this.subscriptions = Function.prototype;
-
-  // holds onRoute callbacks
-  this._onRouteCallbacks = [];
-};
-
-Router.prototype.route = function(pathDef, options) {
-  if (!/^\/.*/.test(pathDef)) {
-    var message = "route's path must start with '/'";
-    throw new Error(message);
-  }
-  
-  options = options || {};
-  var route = new Route(this, pathDef, options);
-  this._routes.push(route);
-
-  if (options.name) {
-    this._routesMap[options.name] = route;
-  }
-
-  this._triggerRouteRegister(route);
-  return route;
-};
-
-Router.prototype.group = function(options) {
-  return new Group(this, options);
-};
-
-Router.prototype.path = function(pathDef, fields, queryParams) {
-  if (this._routesMap[pathDef]) {
-    pathDef = this._routesMap[pathDef].path;
-  }
-
-  fields = fields || {};
-  var regExp = /(:[\w\(\)\\\+\*\.\?]+)+/g;
-  var path = pathDef.replace(regExp, function(key) {
-    var firstRegexpChar = key.indexOf("(");
-    // get the content behind : and (\\d+/)
-    key = key.substring(1, (firstRegexpChar > 0)? firstRegexpChar: undefined);
-    // remove +?*
-    key = key.replace(/[\+\*\?]+/g, "");
-
-    return fields[key] || "";
-  });
-
-  path = path.replace(/\/\/+/g, "/"); // Replace multiple slashes with single slash
-
-  // remove trailing slash
-  // but keep the root slash if it's the only one
-  path = path.match(/^\/{1}$/) ? path: path.replace(/\/$/, "");
-
-  var strQueryParams = Qs.stringify(queryParams || {});
-  if(strQueryParams) {
-    path += "?" + strQueryParams;
-  }
-
-  return path;
-};
-
-Router.prototype.onRouteRegister = function(cb) {
-  this._onRouteCallbacks.push(cb);
-};
-
-Router.prototype._triggerRouteRegister = function(currentRoute) {
-  // We should only need to send a safe set of fields on the route
-  // object.
-  // This is not to hide what's inside the route object, but to show 
-  // these are the public APIs
-  var routePublicApi = _.pick(currentRoute, 'name', 'pathDef', 'path');
-  var omittingOptionFields = [
-    'triggersEnter', 'triggersExit', 'action', 'subscriptions', 'name'
-  ];
-  routePublicApi.options = _.omit(currentRoute.options, omittingOptionFields);
-
-  _.each(this._onRouteCallbacks, function(cb) {
-    cb(routePublicApi);
-  });
-};
-
-
-Router.prototype.go = function() {
-  // client only
-};
-
-
-Router.prototype.current = function() {
-  // client only
-};
-
-
-Router.prototype.triggers = {
-  enter: function() {
-    // client only
-  },
-  exit: function() {
-    // client only
-  }
-};
-
-Router.prototype.middleware = function() {
-  // client only
-};
-
-
-Router.prototype.getState = function() {
-  // client only
-};
-
-
-Router.prototype.getAllStates = function() {
-  // client only
-};
-
-
-Router.prototype.setState = function() {
-  // client only
-};
-
-
-Router.prototype.removeState = function() {
-  // client only
-};
-
-
-Router.prototype.clearStates = function() {
-  // client only
-};
-
-
-Router.prototype.ready = function() {
-  // client only
-};
-
-
-Router.prototype.initialize = function() {
-  // client only
-};
-
-Router.prototype.wait = function() {
-  // client only
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// packages/ostrio_flow-router-extra/server/router.js                                              //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
+var Qs = require('qs');                                                                            // 1
+                                                                                                   //
+Router = function Router() {                                                                       // 3
+  this._routes = [];                                                                               // 4
+  this._routesMap = {};                                                                            // 5
+  this.subscriptions = Function.prototype;                                                         // 6
+                                                                                                   //
+  // holds onRoute callbacks                                                                       // 8
+  this._onRouteCallbacks = [];                                                                     // 9
+};                                                                                                 // 10
+                                                                                                   //
+Router.prototype.route = function (pathDef, options) {                                             // 12
+  if (!/^\/.*/.test(pathDef)) {                                                                    // 13
+    var message = "route's path must start with '/'";                                              // 14
+    throw new Error(message);                                                                      // 15
+  }                                                                                                // 16
+                                                                                                   //
+  options = options || {};                                                                         // 18
+  var route = new Route(this, pathDef, options);                                                   // 19
+  this._routes.push(route);                                                                        // 20
+                                                                                                   //
+  if (options.name) {                                                                              // 22
+    this._routesMap[options.name] = route;                                                         // 23
+  }                                                                                                // 24
+                                                                                                   //
+  this._triggerRouteRegister(route);                                                               // 26
+  return route;                                                                                    // 27
+};                                                                                                 // 28
+                                                                                                   //
+Router.prototype.group = function (options) {                                                      // 30
+  return new Group(this, options);                                                                 // 31
+};                                                                                                 // 32
+                                                                                                   //
+Router.prototype.path = function (pathDef, fields, queryParams) {                                  // 34
+  if (this._routesMap[pathDef]) {                                                                  // 35
+    pathDef = this._routesMap[pathDef].path;                                                       // 36
+  }                                                                                                // 37
+                                                                                                   //
+  fields = fields || {};                                                                           // 39
+  var regExp = /(:[\w\(\)\\\+\*\.\?]+)+/g;                                                         // 40
+  var path = pathDef.replace(regExp, function (key) {                                              // 41
+    var firstRegexpChar = key.indexOf("(");                                                        // 42
+    // get the content behind : and (\\d+/)                                                        // 43
+    key = key.substring(1, firstRegexpChar > 0 ? firstRegexpChar : undefined);                     // 44
+    // remove +?*                                                                                  // 45
+    key = key.replace(/[\+\*\?]+/g, "");                                                           // 46
+                                                                                                   //
+    return fields[key] || "";                                                                      // 48
+  });                                                                                              // 49
+                                                                                                   //
+  path = path.replace(/\/\/+/g, "/"); // Replace multiple slashes with single slash                // 51
+                                                                                                   //
+  // remove trailing slash                                                                         // 53
+  // but keep the root slash if it's the only one                                                  // 54
+  path = path.match(/^\/{1}$/) ? path : path.replace(/\/$/, "");                                   // 55
+                                                                                                   //
+  var strQueryParams = Qs.stringify(queryParams || {});                                            // 57
+  if (strQueryParams) {                                                                            // 58
+    path += "?" + strQueryParams;                                                                  // 59
+  }                                                                                                // 60
+                                                                                                   //
+  return path;                                                                                     // 62
+};                                                                                                 // 63
+                                                                                                   //
+Router.prototype.onRouteRegister = function (cb) {                                                 // 65
+  this._onRouteCallbacks.push(cb);                                                                 // 66
+};                                                                                                 // 67
+                                                                                                   //
+Router.prototype._triggerRouteRegister = function (currentRoute) {                                 // 69
+  // We should only need to send a safe set of fields on the route                                 // 70
+  // object.                                                                                       // 71
+  // This is not to hide what's inside the route object, but to show                               // 72
+  // these are the public APIs                                                                     // 73
+  var routePublicApi = _.pick(currentRoute, 'name', 'pathDef', 'path');                            // 74
+  var omittingOptionFields = ['triggersEnter', 'triggersExit', 'action', 'subscriptions', 'name'];
+  routePublicApi.options = _.omit(currentRoute.options, omittingOptionFields);                     // 78
+                                                                                                   //
+  _.each(this._onRouteCallbacks, function (cb) {                                                   // 80
+    cb(routePublicApi);                                                                            // 81
+  });                                                                                              // 82
+};                                                                                                 // 83
+                                                                                                   //
+Router.prototype.go = function () {                                                                // 86
+  // client only                                                                                   // 87
+};                                                                                                 // 88
+                                                                                                   //
+Router.prototype.current = function () {                                                           // 91
+  // client only                                                                                   // 92
+};                                                                                                 // 93
+                                                                                                   //
+Router.prototype.triggers = {                                                                      // 96
+  enter: function () {                                                                             // 97
+    function enter() {                                                                             // 97
+      // client only                                                                               // 98
+    }                                                                                              // 99
+                                                                                                   //
+    return enter;                                                                                  // 97
+  }(),                                                                                             // 97
+  exit: function () {                                                                              // 100
+    function exit() {                                                                              // 100
+      // client only                                                                               // 101
+    }                                                                                              // 102
+                                                                                                   //
+    return exit;                                                                                   // 100
+  }()                                                                                              // 100
+};                                                                                                 // 96
+                                                                                                   //
+Router.prototype.middleware = function () {                                                        // 105
+  // client only                                                                                   // 106
+};                                                                                                 // 107
+                                                                                                   //
+Router.prototype.getState = function () {                                                          // 110
+  // client only                                                                                   // 111
+};                                                                                                 // 112
+                                                                                                   //
+Router.prototype.getAllStates = function () {                                                      // 115
+  // client only                                                                                   // 116
+};                                                                                                 // 117
+                                                                                                   //
+Router.prototype.setState = function () {                                                          // 120
+  // client only                                                                                   // 121
+};                                                                                                 // 122
+                                                                                                   //
+Router.prototype.removeState = function () {                                                       // 125
+  // client only                                                                                   // 126
+};                                                                                                 // 127
+                                                                                                   //
+Router.prototype.clearStates = function () {                                                       // 130
+  // client only                                                                                   // 131
+};                                                                                                 // 132
+                                                                                                   //
+Router.prototype.ready = function () {                                                             // 135
+  // client only                                                                                   // 136
+};                                                                                                 // 137
+                                                                                                   //
+Router.prototype.initialize = function () {                                                        // 140
+  // client only                                                                                   // 141
+};                                                                                                 // 142
+                                                                                                   //
+Router.prototype.wait = function () {                                                              // 144
+  // client only                                                                                   // 145
+};                                                                                                 // 146
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"group.js":function(){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// packages/ostrio_flow-router-extra/server/group.js                                                                  //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-Group = function(router, options) {
-  options = options || {};
-  this.prefix = options.prefix || '';
-  this.options = options;
-  this._router = router;
-};
-
-Group.prototype.route = function(pathDef, options) {
-  pathDef = this.prefix + pathDef;
-  return this._router.route(pathDef, options);
-};
-
-Group.prototype.group = function(options) {
-  var group = new Group(this._router, options);
-  group.parent = this;
-
-  return group;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// packages/ostrio_flow-router-extra/server/group.js                                               //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
+Group = function Group(router, options) {                                                          // 1
+  options = options || {};                                                                         // 2
+  this.prefix = options.prefix || '';                                                              // 3
+  this.options = options;                                                                          // 4
+  this._router = router;                                                                           // 5
+};                                                                                                 // 6
+                                                                                                   //
+Group.prototype.route = function (pathDef, options) {                                              // 8
+  pathDef = this.prefix + pathDef;                                                                 // 9
+  return this._router.route(pathDef, options);                                                     // 10
+};                                                                                                 // 11
+                                                                                                   //
+Group.prototype.group = function (options) {                                                       // 13
+  var group = new Group(this._router, options);                                                    // 14
+  group.parent = this;                                                                             // 15
+                                                                                                   //
+  return group;                                                                                    // 17
+};                                                                                                 // 18
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"route.js":function(){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// packages/ostrio_flow-router-extra/server/route.js                                                                  //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-Route = function(router, pathDef, options) {
-  options = options || {};
-  this.options = options;
-  this.name = options.name;
-  this.pathDef = pathDef;
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// packages/ostrio_flow-router-extra/server/route.js                                               //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
+Route = function Route(router, pathDef, options) {                                                 // 1
+  options = options || {};                                                                         // 2
+  this.options = options;                                                                          // 3
+  this.name = options.name;                                                                        // 4
+  this.pathDef = pathDef;                                                                          // 5
+                                                                                                   //
+  // Route.path is deprecated and will be removed in 3.0                                           // 7
+  this.path = pathDef;                                                                             // 8
+                                                                                                   //
+  this.action = options.action || Function.prototype;                                              // 10
+  this.subscriptions = options.subscriptions || Function.prototype;                                // 11
+  this._subsMap = {};                                                                              // 12
+};                                                                                                 // 13
+                                                                                                   //
+Route.prototype.register = function (name, sub, options) {                                         // 16
+  this._subsMap[name] = sub;                                                                       // 17
+};                                                                                                 // 18
+                                                                                                   //
+Route.prototype.subscription = function (name) {                                                   // 21
+  return this._subsMap[name];                                                                      // 22
+};                                                                                                 // 23
+                                                                                                   //
+Route.prototype.middleware = function (middleware) {};                                             // 26
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Route.path is deprecated and will be removed in 3.0
-  this.path = pathDef;
+},"_init.js":function(require,exports,module){
 
-  this.action = options.action || Function.prototype;
-  this.subscriptions = options.subscriptions || Function.prototype;
-  this._subsMap = {};
-};
-
-
-Route.prototype.register = function(name, sub, options) {
-  this._subsMap[name] = sub;
-};
-
-
-Route.prototype.subscription = function(name) {
-  return this._subsMap[name];
-};
-
-
-Route.prototype.middleware = function(middleware) {
- 
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"_init.js":function(){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// packages/ostrio_flow-router-extra/server/_init.js                                                                  //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-// Export Router Instance
-FlowRouter = new Router();
-FlowRouter.Router = Router;
-FlowRouter.Route = Route;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// packages/ostrio_flow-router-extra/server/_init.js                                               //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
+module.export({FlowRouter:function(){return FlowRouter}});// Export Router Instance                // 1
+module.runModuleSetters(FlowRouter = new Router());                                                // 2
+FlowRouter.Router = Router;                                                                        // 3
+FlowRouter.Route = Route;                                                                          // 4
+                                                                                                   //
+                                                                                                   // 6
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"lib":{"router.js":function(){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// packages/ostrio_flow-router-extra/lib/router.js                                                                    //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-Router.prototype.url = function() {
-  // We need to remove the leading base path, or "/", as it will be inserted
-  // automatically by `Meteor.absoluteUrl` as documented in:
-  // http://docs.meteor.com/#/full/meteor_absoluteurl
-  var completePath = this.path.apply(this, arguments);
-  var basePath = this._basePath || '/';
-  var pathWithoutBase = completePath.replace(new RegExp('^' + basePath), '');
-  return Meteor.absoluteUrl(pathWithoutBase);
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// packages/ostrio_flow-router-extra/lib/router.js                                                 //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
+Router.prototype.url = function () {                                                               // 1
+  // We need to remove the leading base path, or "/", as it will be inserted                       // 2
+  // automatically by `Meteor.absoluteUrl` as documented in:                                       // 3
+  // http://docs.meteor.com/#/full/meteor_absoluteurl                                              // 4
+  var completePath = this.path.apply(this, arguments);                                             // 5
+  var basePath = this._basePath || '/';                                                            // 6
+  var pathWithoutBase = completePath.replace(new RegExp('^' + basePath), '');                      // 7
+  return Meteor.absoluteUrl(pathWithoutBase);                                                      // 8
+};                                                                                                 // 9
+                                                                                                   //
+Meteor.startup(function () {                                                                       // 11
+  Package['kadira:flow-router'] = Package['ostrio:flow-router-extra'];                             // 12
+});                                                                                                // 13
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"node_modules":{"qs":{"package.json":function(require,exports){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// ../npm/node_modules/qs/package.json                                                                                //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// ../../.2.12.6.4i0xse++os+web.browser+web.cordova/npm/node_modules/qs/package.json               //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
 exports.name = "qs";
-exports.version = "6.1.0";
+exports.version = "6.3.0";
 exports.main = "lib/index.js";
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"lib":{"index.js":["./stringify","./parse",function(require,exports,module){
+},"lib":{"index.js":function(require,exports,module){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/index.js                                          //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                 //
+// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/index.js                       //
+//                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                   //
 'use strict';
 
-var Stringify = require('./stringify');
-var Parse = require('./parse');
+var stringify = require('./stringify');
+var parse = require('./parse');
+var formats = require('./formats');
 
 module.exports = {
-    stringify: Stringify,
-    parse: Parse
+    formats: formats,
+    parse: parse,
+    stringify: stringify
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"stringify.js":["./utils",function(require,exports,module){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/stringify.js                                      //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-'use strict';
-
-var Utils = require('./utils');
-
-var internals = {
-    delimiter: '&',
-    arrayPrefixGenerators: {
-        brackets: function (prefix) {
-            return prefix + '[]';
-        },
-        indices: function (prefix, key) {
-            return prefix + '[' + key + ']';
-        },
-        repeat: function (prefix) {
-            return prefix;
-        }
-    },
-    strictNullHandling: false,
-    skipNulls: false,
-    encode: true
-};
-
-internals.stringify = function (object, prefix, generateArrayPrefix, strictNullHandling, skipNulls, encode, filter, sort, allowDots) {
-    var obj = object;
-    if (typeof filter === 'function') {
-        obj = filter(prefix, obj);
-    } else if (Utils.isBuffer(obj)) {
-        obj = String(obj);
-    } else if (obj instanceof Date) {
-        obj = obj.toISOString();
-    } else if (obj === null) {
-        if (strictNullHandling) {
-            return encode ? Utils.encode(prefix) : prefix;
-        }
-
-        obj = '';
-    }
-
-    if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-        if (encode) {
-            return [Utils.encode(prefix) + '=' + Utils.encode(obj)];
-        }
-        return [prefix + '=' + obj];
-    }
-
-    var values = [];
-
-    if (typeof obj === 'undefined') {
-        return values;
-    }
-
-    var objKeys;
-    if (Array.isArray(filter)) {
-        objKeys = filter;
-    } else {
-        var keys = Object.keys(obj);
-        objKeys = sort ? keys.sort(sort) : keys;
-    }
-
-    for (var i = 0; i < objKeys.length; ++i) {
-        var key = objKeys[i];
-
-        if (skipNulls && obj[key] === null) {
-            continue;
-        }
-
-        if (Array.isArray(obj)) {
-            values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, skipNulls, encode, filter, sort, allowDots));
-        } else {
-            values = values.concat(internals.stringify(obj[key], prefix + (allowDots ? '.' + key : '[' + key + ']'), generateArrayPrefix, strictNullHandling, skipNulls, encode, filter, sort, allowDots));
-        }
-    }
-
-    return values;
-};
-
-module.exports = function (object, opts) {
-    var obj = object;
-    var options = opts || {};
-    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
-    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
-    var skipNulls = typeof options.skipNulls === 'boolean' ? options.skipNulls : internals.skipNulls;
-    var encode = typeof options.encode === 'boolean' ? options.encode : internals.encode;
-    var sort = typeof options.sort === 'function' ? options.sort : null;
-    var allowDots = typeof options.allowDots === 'undefined' ? false : options.allowDots;
-    var objKeys;
-    var filter;
-    if (typeof options.filter === 'function') {
-        filter = options.filter;
-        obj = filter('', obj);
-    } else if (Array.isArray(options.filter)) {
-        objKeys = filter = options.filter;
-    }
-
-    var keys = [];
-
-    if (typeof obj !== 'object' || obj === null) {
-        return '';
-    }
-
-    var arrayFormat;
-    if (options.arrayFormat in internals.arrayPrefixGenerators) {
-        arrayFormat = options.arrayFormat;
-    } else if ('indices' in options) {
-        arrayFormat = options.indices ? 'indices' : 'repeat';
-    } else {
-        arrayFormat = 'indices';
-    }
-
-    var generateArrayPrefix = internals.arrayPrefixGenerators[arrayFormat];
-
-    if (!objKeys) {
-        objKeys = Object.keys(obj);
-    }
-
-    if (sort) {
-        objKeys.sort(sort);
-    }
-
-    for (var i = 0; i < objKeys.length; ++i) {
-        var key = objKeys[i];
-
-        if (skipNulls && obj[key] === null) {
-            continue;
-        }
-
-        keys = keys.concat(internals.stringify(obj[key], key, generateArrayPrefix, strictNullHandling, skipNulls, encode, filter, sort, allowDots));
-    }
-
-    return keys.join(delimiter);
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}],"utils.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/utils.js                                          //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-'use strict';
-
-var hexTable = (function () {
-    var array = new Array(256);
-    for (var i = 0; i < 256; ++i) {
-        array[i] = '%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase();
-    }
-
-    return array;
-}());
-
-exports.arrayToObject = function (source, options) {
-    var obj = options.plainObjects ? Object.create(null) : {};
-    for (var i = 0; i < source.length; ++i) {
-        if (typeof source[i] !== 'undefined') {
-            obj[i] = source[i];
-        }
-    }
-
-    return obj;
-};
-
-exports.merge = function (target, source, options) {
-    if (!source) {
-        return target;
-    }
-
-    if (typeof source !== 'object') {
-        if (Array.isArray(target)) {
-            target.push(source);
-        } else if (typeof target === 'object') {
-            target[source] = true;
-        } else {
-            return [target, source];
-        }
-
-        return target;
-    }
-
-    if (typeof target !== 'object') {
-        return [target].concat(source);
-    }
-
-    var mergeTarget = target;
-    if (Array.isArray(target) && !Array.isArray(source)) {
-        mergeTarget = exports.arrayToObject(target, options);
-    }
-
-	return Object.keys(source).reduce(function (acc, key) {
-        var value = source[key];
-
-        if (Object.prototype.hasOwnProperty.call(acc, key)) {
-            acc[key] = exports.merge(acc[key], value, options);
-        } else {
-            acc[key] = value;
-        }
-		return acc;
-    }, mergeTarget);
-};
-
-exports.decode = function (str) {
-    try {
-        return decodeURIComponent(str.replace(/\+/g, ' '));
-    } catch (e) {
-        return str;
-    }
-};
-
-exports.encode = function (str) {
-    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
-    // It has been adapted here for stricter adherence to RFC 3986
-    if (str.length === 0) {
-        return str;
-    }
-
-    var string = typeof str === 'string' ? str : String(str);
-
-    var out = '';
-    for (var i = 0; i < string.length; ++i) {
-        var c = string.charCodeAt(i);
-
-        if (
-            c === 0x2D || // -
-            c === 0x2E || // .
-            c === 0x5F || // _
-            c === 0x7E || // ~
-            (c >= 0x30 && c <= 0x39) || // 0-9
-            (c >= 0x41 && c <= 0x5A) || // a-z
-            (c >= 0x61 && c <= 0x7A) // A-Z
-        ) {
-            out += string.charAt(i);
-            continue;
-        }
-
-        if (c < 0x80) {
-            out = out + hexTable[c];
-            continue;
-        }
-
-        if (c < 0x800) {
-            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        if (c < 0xD800 || c >= 0xE000) {
-            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        i += 1;
-        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
-        out += (hexTable[0xF0 | (c >> 18)] + hexTable[0x80 | ((c >> 12) & 0x3F)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
-    }
-
-    return out;
-};
-
-exports.compact = function (obj, references) {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
-    }
-
-    var refs = references || [];
-    var lookup = refs.indexOf(obj);
-    if (lookup !== -1) {
-        return refs[lookup];
-    }
-
-    refs.push(obj);
-
-    if (Array.isArray(obj)) {
-        var compacted = [];
-
-        for (var i = 0; i < obj.length; ++i) {
-            if (typeof obj[i] !== 'undefined') {
-                compacted.push(obj[i]);
-            }
-        }
-
-        return compacted;
-    }
-
-    var keys = Object.keys(obj);
-    for (var j = 0; j < keys.length; ++j) {
-        var key = keys[j];
-        obj[key] = exports.compact(obj[key], refs);
-    }
-
-    return obj;
-};
-
-exports.isRegExp = function (obj) {
-    return Object.prototype.toString.call(obj) === '[object RegExp]';
-};
-
-exports.isBuffer = function (obj) {
-    if (obj === null || typeof obj === 'undefined') {
-        return false;
-    }
-
-    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-},"parse.js":["./utils",function(require,exports,module){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/parse.js                                          //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-'use strict';
-
-var Utils = require('./utils');
-
-var internals = {
-    delimiter: '&',
-    depth: 5,
-    arrayLimit: 20,
-    parameterLimit: 1000,
-    strictNullHandling: false,
-    plainObjects: false,
-    allowPrototypes: false,
-    allowDots: false
-};
-
-internals.parseValues = function (str, options) {
-    var obj = {};
-    var parts = str.split(options.delimiter, options.parameterLimit === Infinity ? undefined : options.parameterLimit);
-
-    for (var i = 0; i < parts.length; ++i) {
-        var part = parts[i];
-        var pos = part.indexOf(']=') === -1 ? part.indexOf('=') : part.indexOf(']=') + 1;
-
-        if (pos === -1) {
-            obj[Utils.decode(part)] = '';
-
-            if (options.strictNullHandling) {
-                obj[Utils.decode(part)] = null;
-            }
-        } else {
-            var key = Utils.decode(part.slice(0, pos));
-            var val = Utils.decode(part.slice(pos + 1));
-
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                obj[key] = [].concat(obj[key]).concat(val);
-            } else {
-                obj[key] = val;
-            }
-        }
-    }
-
-    return obj;
-};
-
-internals.parseObject = function (chain, val, options) {
-    if (!chain.length) {
-        return val;
-    }
-
-    var root = chain.shift();
-
-    var obj;
-    if (root === '[]') {
-        obj = [];
-        obj = obj.concat(internals.parseObject(chain, val, options));
-    } else {
-        obj = options.plainObjects ? Object.create(null) : {};
-        var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
-        var index = parseInt(cleanRoot, 10);
-        if (
-            !isNaN(index) &&
-            root !== cleanRoot &&
-            String(index) === cleanRoot &&
-            index >= 0 &&
-            (options.parseArrays && index <= options.arrayLimit)
-        ) {
-            obj = [];
-            obj[index] = internals.parseObject(chain, val, options);
-        } else {
-            obj[cleanRoot] = internals.parseObject(chain, val, options);
-        }
-    }
-
-    return obj;
-};
-
-internals.parseKeys = function (givenKey, val, options) {
-    if (!givenKey) {
-        return;
-    }
-
-    // Transform dot notation to bracket notation
-    var key = options.allowDots ? givenKey.replace(/\.([^\.\[]+)/g, '[$1]') : givenKey;
-
-    // The regex chunks
-
-    var parent = /^([^\[\]]*)/;
-    var child = /(\[[^\[\]]*\])/g;
-
-    // Get the parent
-
-    var segment = parent.exec(key);
-
-    // Stash the parent if it exists
-
-    var keys = [];
-    if (segment[1]) {
-        // If we aren't using plain objects, optionally prefix keys
-        // that would overwrite object prototype properties
-        if (!options.plainObjects && Object.prototype.hasOwnProperty(segment[1])) {
-            if (!options.allowPrototypes) {
-                return;
-            }
-        }
-
-        keys.push(segment[1]);
-    }
-
-    // Loop through children appending to the array until we hit depth
-
-    var i = 0;
-    while ((segment = child.exec(key)) !== null && i < options.depth) {
-        i += 1;
-        if (!options.plainObjects && Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
-            if (!options.allowPrototypes) {
-                continue;
-            }
-        }
-        keys.push(segment[1]);
-    }
-
-    // If there's a remainder, just add whatever is left
-
-    if (segment) {
-        keys.push('[' + key.slice(segment.index) + ']');
-    }
-
-    return internals.parseObject(keys, val, options);
-};
-
-module.exports = function (str, opts) {
-    var options = opts || {};
-    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
-    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
-    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
-    options.parseArrays = options.parseArrays !== false;
-    options.allowDots = typeof options.allowDots === 'boolean' ? options.allowDots : internals.allowDots;
-    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : internals.plainObjects;
-    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : internals.allowPrototypes;
-    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
-    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
-
-    if (
-        str === '' ||
-        str === null ||
-        typeof str === 'undefined'
-    ) {
-        return options.plainObjects ? Object.create(null) : {};
-    }
-
-    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
-    var obj = options.plainObjects ? Object.create(null) : {};
-
-    // Iterate over the keys and setup the new object
-
-    var keys = Object.keys(tempObj);
-    for (var i = 0; i < keys.length; ++i) {
-        var key = keys[i];
-        var newObj = internals.parseKeys(key, tempObj[key], options);
-        obj = Utils.merge(obj, newObj, options);
-    }
-
-    return Utils.compact(obj);
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}]}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}}},{"extensions":[".js",".json"]});
 require("./node_modules/meteor/ostrio:flow-router-extra/server/router.js");
 require("./node_modules/meteor/ostrio:flow-router-extra/server/group.js");
 require("./node_modules/meteor/ostrio:flow-router-extra/server/route.js");
-require("./node_modules/meteor/ostrio:flow-router-extra/server/_init.js");
+var exports = require("./node_modules/meteor/ostrio:flow-router-extra/server/_init.js");
 require("./node_modules/meteor/ostrio:flow-router-extra/lib/router.js");
 
 /* Exports */
@@ -817,7 +327,7 @@ if (typeof Package === 'undefined') Package = {};
 (function (pkg, symbols) {
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['ostrio:flow-router-extra'] = {}, {
+})(Package['ostrio:flow-router-extra'] = exports, {
   FlowRouter: FlowRouter
 });
 

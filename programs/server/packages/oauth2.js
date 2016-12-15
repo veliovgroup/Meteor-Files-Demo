@@ -53,5 +53,3 @@ if (typeof Package === 'undefined') Package = {};
 Package.oauth2 = {};
 
 })();
-
-//# sourceMappingURL=oauth2.js.map

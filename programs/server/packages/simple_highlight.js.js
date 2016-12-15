@@ -144,5 +144,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=simple_highlight.js.js.map

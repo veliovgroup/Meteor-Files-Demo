@@ -54,5 +54,3 @@ if (typeof Package === 'undefined') Package = {};
 Package['accounts-meteor-developer'] = {};
 
 })();
-
-//# sourceMappingURL=accounts-meteor-developer.js.map

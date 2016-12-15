@@ -52,5 +52,3 @@ if (typeof Package === 'undefined') Package = {};
 Package['accounts-facebook'] = {};
 
 })();
-
-//# sourceMappingURL=accounts-facebook.js.map

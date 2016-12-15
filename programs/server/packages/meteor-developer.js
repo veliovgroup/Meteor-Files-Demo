@@ -164,5 +164,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=meteor-developer.js.map

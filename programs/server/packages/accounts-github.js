@@ -48,5 +48,3 @@ if (typeof Package === 'undefined') Package = {};
 Package['accounts-github'] = {};
 
 })();
-
-//# sourceMappingURL=accounts-github.js.map

@@ -142,5 +142,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=boilerplate-generator.js.map

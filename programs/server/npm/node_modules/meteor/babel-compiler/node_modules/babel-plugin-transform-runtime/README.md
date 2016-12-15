@@ -40,8 +40,10 @@ Add the following line to your `.babelrc` file:
 {
   "plugins": [
     ["transform-runtime", {
-      "polyfill": false,
-      "regenerator": true
+      "helpers": false, // defaults to true
+      "polyfill": false, // defaults to true
+      "regenerator": true, // defaults to true
+      "moduleName": "babel-runtime" // defaults to "babel-runtime"
     }]
   ]
 }

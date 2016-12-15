@@ -144,5 +144,3 @@ if (typeof Package === 'undefined') Package = {};
 Package['accounts-oauth'] = {};
 
 })();
-
-//# sourceMappingURL=accounts-oauth.js.map

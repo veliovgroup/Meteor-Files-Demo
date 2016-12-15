@@ -175,5 +175,3 @@ if (typeof Package === 'undefined') Package = {};
 });
 
 })();
-
-//# sourceMappingURL=callback-hook.js.map

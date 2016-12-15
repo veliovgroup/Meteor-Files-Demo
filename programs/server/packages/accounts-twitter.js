@@ -53,5 +53,3 @@ if (typeof Package === 'undefined') Package = {};
 Package['accounts-twitter'] = {};
 
 })();
-
-//# sourceMappingURL=accounts-twitter.js.map
