@@ -11,6 +11,7 @@ var Match = Package.check.Match;
 var _ = Package.underscore._;
 var ObserveSequence = Package['observe-sequence'].ObserveSequence;
 var ReactiveVar = Package['reactive-var'].ReactiveVar;
+var OrderedDict = Package['ordered-dict'].OrderedDict;
 var HTML = Package.htmljs.HTML;
 
 /* Package-scope variables */
@@ -31,6 +32,8 @@ var Blaze, UI, Handlebars;
 Blaze = {};
 
 // Utility to HTML-escape a string.  Included for legacy reasons.
+// TODO: Should be replaced with _.escape once underscore is upgraded to a newer
+//       version which escapes ` (backtick) as well. Underscore 1.5.2 does not.
 Blaze._escape = (function() {
   var escape_map = {
     "<": "&lt;",
@@ -522,14 +525,12 @@ Blaze._materializeView = function (view, parentView, _workStack, _intoArray) {
       var htmljs = view._render();
       view._isInRender = false;
 
-      if (! c.firstRun) {
+      if (! c.firstRun && ! Blaze._isContentEqual(lastHtmljs, htmljs)) {
         Tracker.nonreactive(function doMaterialize() {
           // re-render
           var rangesAndNodes = Blaze._materializeDOM(htmljs, [], view);
-          if (! Blaze._isContentEqual(lastHtmljs, htmljs)) {
-            domrange.setMembers(rangesAndNodes);
-            Blaze._fireCallbacks(view, 'rendered');
-          }
+          domrange.setMembers(rangesAndNodes);
+          Blaze._fireCallbacks(view, 'rendered');
         });
       }
       lastHtmljs = htmljs;

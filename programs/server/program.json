@@ -249,6 +249,7 @@
       "path": "packages/cfs_graphicsmagick.js"
     },
     {
+      "sourceMap": "packages/ostrio_cookies.js.map",
       "path": "packages/ostrio_cookies.js"
     },
     {
@@ -283,11 +284,9 @@
       "path": "packages/ostrio_fps-meter.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/ostrio_flow-router-title/demo/node_modules",
       "path": "packages/ostrio_flow-router-title.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/ostrio_flow-router-meta/demo/node_modules",
       "path": "packages/ostrio_flow-router-meta.js"
     },
     {

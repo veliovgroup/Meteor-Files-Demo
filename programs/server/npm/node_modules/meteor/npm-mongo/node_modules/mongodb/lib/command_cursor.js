@@ -1,19 +1,11 @@
 "use strict";
 
 var inherits = require('util').inherits
-  , f = require('util').format
-  , toError = require('./utils').toError
-  , getSingleProperty = require('./utils').getSingleProperty
-  , formattedOrderClause = require('./utils').formattedOrderClause
-  , handleCallback = require('./utils').handleCallback
-  , Logger = require('mongodb-core').Logger
-  , EventEmitter = require('events').EventEmitter
   , ReadPreference = require('./read_preference')
   , MongoError = require('mongodb-core').MongoError
   , Readable = require('stream').Readable || require('readable-stream').Readable
   , Define = require('./metadata')
   , CoreCursor = require('./cursor')
-  , Query = require('mongodb-core').Query
   , CoreReadPreference = require('mongodb-core').ReadPreference;
 
 /**
@@ -64,7 +56,6 @@ var inherits = require('util').inherits
  */
 var CommandCursor = function(bson, ns, cmd, options, topology, topologyOptions) {
   CoreCursor.apply(this, Array.prototype.slice.call(arguments, 0));
-  var self = this;
   var state = CommandCursor.INIT;
   var streamOptions = {};
 
@@ -163,7 +154,7 @@ CommandCursor.prototype.setReadPreference = function(r) {
   if(this.s.state != CommandCursor.INIT) throw MongoError.create({message: 'cannot change cursor readPreference after cursor has been accessed', driver:true});
 
   if(r instanceof ReadPreference) {
-    this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, {maxStalenessMS: r.maxStalenessMS});
+    this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, {maxStalenessSeconds: r.maxStalenessSeconds});
   } else if(typeof r == 'string') {
     this.s.options.readPreference = new CoreReadPreference(r);
   } else if(r instanceof CoreReadPreference) {

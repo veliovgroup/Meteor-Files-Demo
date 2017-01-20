@@ -1,9 +1,9 @@
 {
   "dependencies": {
     "ClientStorage": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/ClientStorage/-/ClientStorage-2.1.0.tgz",
-      "from": "ClientStorage@2.1.0"
+      "version": "2.1.1",
+      "resolved": "https://registry.npmjs.org/ClientStorage/-/ClientStorage-2.1.1.tgz",
+      "from": "ClientStorage@2.1.1"
     }
   }
 }

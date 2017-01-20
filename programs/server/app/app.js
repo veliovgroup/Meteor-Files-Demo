@@ -153,7 +153,6 @@ if (Meteor.isClient) {                                                          
   Template._layout.events({                                                                                           //
     'click [data-show-project-info]': function(e, template) {                                                         //
       e.preventDefault();                                                                                             //
-      $('.gh-ribbon').toggle();                                                                                       //
       _app.showProjectInfo.set(!_app.showProjectInfo.get());                                                          //
       return false;                                                                                                   //
     }                                                                                                                 //
@@ -172,7 +171,7 @@ if (Meteor.isClient) {                                                          
     smartypants: false                                                                                                //
   });                                                                                                                 //
   Meteor.startup(function() {                                                                                         //
-    var FPS, regStop;                                                                                                 // 116
+    var FPS, regStop;                                                                                                 // 115
     $('html').attr('itemscope', '');                                                                                  //
     $('html').attr('itemtype', 'http://schema.org/WebPage');                                                          //
     $('html').attr('xmlns:og', 'http://ogp.me/ns#');                                                                  //

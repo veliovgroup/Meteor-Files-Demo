@@ -9,7 +9,6 @@ var parse = require('./url_parser')
   , Logger = require('mongodb-core').Logger
   , MongoError = require('mongodb-core').MongoError
   , Db = require('./db')
-  , dns = require('dns')
   , f = require('util').format
   , shallowClone = require('./utils').shallowClone;
 
@@ -161,14 +160,14 @@ function translateOptions(options) {
     options.readPreference.tags = options.readPreferenceTags || options.read_preference_tags;
   }
 
-  // Do we have maxStalenessMS
-  if(options.maxStalenessMS) {
-    options.readPreference.maxStalenessMS = options.maxStalenessMS;
+  // Do we have maxStalenessSeconds
+  if(options.maxStalenessSeconds) {
+    options.readPreference.maxStalenessSeconds = options.maxStalenessSeconds;
   }
 
   // Set the socket and connection timeouts
-  if(!options.socketTimeoutMS == null) options.socketTimeoutMS = 30000;
-  if(!options.connectTimeoutMS == null) options.connectTimeoutMS = 30000;
+  if(options.socketTimeoutMS == null) options.socketTimeoutMS = 30000;
+  if(options.connectTimeoutMS == null) options.connectTimeoutMS = 30000;
 
   // Create server instances
   return options.servers.map(function(serverObj) {
@@ -293,8 +292,8 @@ var connect = function(url, options, callback) {
   _finalOptions = createUnifiedOptions(_finalOptions, options);
 
   // Check if we have connection and socket timeout set
-  if(!_finalOptions.socketTimeoutMS == null) _finalOptions.socketTimeoutMS = 120000;
-  if(!_finalOptions.connectTimeoutMS == null) _finalOptions.connectTimeoutMS = 120000;
+  if(_finalOptions.socketTimeoutMS == null) _finalOptions.socketTimeoutMS = 30000;
+  if(_finalOptions.connectTimeoutMS == null) _finalOptions.connectTimeoutMS = 30000;
 
   // Failure modes
   if(object.servers.length == 0) {

@@ -4,9 +4,7 @@ var ReadPreference = require('./read_preference'),
   parser = require('url'),
   f = require('util').format;
 
-module.exports = function(url, options) {
-  // Ensure we have a default options object if none set
-  options = options || {};
+module.exports = function(url) {
   // Variables
   var connection_part = '';
   var auth_part = '';
@@ -85,7 +83,7 @@ module.exports = function(url, options) {
     }
   }
 
-  for(var i = 0; i < hosts.length; i++) {
+  for(i = 0; i < hosts.length; i++) {
     var r = parser.parse(f('mongodb://%s', hosts[i].trim()));
     if(r.path && r.path.indexOf(':') != -1) {
       throw new Error('double colon in host identifier');
@@ -225,6 +223,7 @@ module.exports = function(url, options) {
         break;
       case 'appname':
         object.appname = decodeURIComponent(value);
+        break;
       case 'autoReconnect':
       case 'auto_reconnect':
         serverOptions.auto_reconnect = (value == 'true');
@@ -355,8 +354,8 @@ module.exports = function(url, options) {
         if(!ReadPreference.isValid(value)) throw new Error("readPreference must be either primary/primaryPreferred/secondary/secondaryPreferred/nearest");
         dbOptions.readPreference = value;
         break;
-      case 'maxStalenessMS':
-        dbOptions.maxStalenessMS = parseInt(value, 10);
+      case 'maxStalenessSeconds':
+        dbOptions.maxStalenessSeconds = parseInt(value, 10);
         break;
       case 'readPreferenceTags':
         // Decode the value
