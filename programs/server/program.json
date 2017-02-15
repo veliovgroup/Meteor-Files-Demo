@@ -76,6 +76,7 @@
       "path": "packages/geojson-utils.js"
     },
     {
+      "sourceMap": "packages/minimongo.js.map",
       "path": "packages/minimongo.js"
     },
     {
@@ -196,9 +197,6 @@
       "path": "packages/standard-minifier-js.js"
     },
     {
-      "path": "packages/coffeescript.js"
-    },
-    {
       "path": "packages/markdown.js"
     },
     {
@@ -245,8 +243,7 @@
       "path": "packages/meteorhacks_subs-manager.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/cfs_graphicsmagick/node_modules",
-      "path": "packages/cfs_graphicsmagick.js"
+      "path": "packages/coffeescript.js"
     },
     {
       "sourceMap": "packages/ostrio_cookies.js.map",
@@ -317,7 +314,7 @@
       "path": "packages/oauth2.js"
     },
     {
-      "path": "packages/github.js"
+      "path": "packages/github-oauth.js"
     },
     {
       "path": "packages/accounts-github.js"
@@ -326,19 +323,19 @@
       "path": "packages/oauth1.js"
     },
     {
-      "path": "packages/twitter.js"
+      "path": "packages/twitter-oauth.js"
     },
     {
       "path": "packages/accounts-twitter.js"
     },
     {
-      "path": "packages/facebook.js"
+      "path": "packages/facebook-oauth.js"
     },
     {
       "path": "packages/accounts-facebook.js"
     },
     {
-      "path": "packages/meteor-developer.js"
+      "path": "packages/meteor-developer-oauth.js"
     },
     {
       "path": "packages/accounts-meteor-developer.js"

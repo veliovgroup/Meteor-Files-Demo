@@ -29,7 +29,7 @@ module.exports = require("meteor-ecmascript-runtime");
 
 ///////////////////////////////////////////////////////////////////////
 //                                                                   //
-// ../../.0.3.15.24pzc6++os+web.browser+web.cordova/npm/node_modules //
+// ../../.0.3.15.1083ri5++os+web.browser+web.cordova/npm/node_module //
 //                                                                   //
 ///////////////////////////////////////////////////////////////////////
                                                                      //

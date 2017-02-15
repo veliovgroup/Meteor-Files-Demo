@@ -1,6 +1,6 @@
 {
   "name": "Meteor-Files",
-  "version": "1.7.7",
+  "version": "1.7.10",
   "description": "Upload files with speed on Meteor. Application build on top of ostrio:files package",
   "main": "main.js",
   "scripts": {
@@ -33,9 +33,10 @@
     "async": "2.1.4",
     "babel-runtime": "^6.22.0",
     "connect": "^3.4.1",
-    "dropbox": "0.10.3",
+    "dropbox": "^0.10.3",
     "fibers": "1.0.15",
     "fs-extra": "2.0.0",
+    "gm": "^1.23.0",
     "http-proxy": "^1.13.2",
     "keypress": "^0.2.1",
     "knox": "^0.9.2",
@@ -48,7 +49,7 @@
     "node-pre-gyp": "0.6.32",
     "progress": "^1.1.8",
     "promise": "7.1.1",
-    "request": "2.79.0",
+    "request": "^2.79.0",
     "semver": "5.3.0",
     "sockjs": "^0.3.16",
     "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
@@ -58,7 +59,7 @@
     "useragent": "^2.1.11"
   },
   "engines": {
-    "node": "4.6.2",
-    "npm": "3.10.6"
+    "node": "4.7.3",
+    "npm": "3.10.9"
   }
 }

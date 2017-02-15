@@ -25,282 +25,261 @@ var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 
 /* Package-scope variables */
-var Router, Group, Route, FlowRouter;
+var Router, Group, Route, FlowRouter, pathWithoutBase;
 
 var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra":{"server":{"router.js":["qs",function(require){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// packages/ostrio_flow-router-extra/server/router.js                                              //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
-var Qs = require('qs');                                                                            // 1
-                                                                                                   //
-Router = function Router() {                                                                       // 3
-  this._routes = [];                                                                               // 4
-  this._routesMap = {};                                                                            // 5
-  this.subscriptions = Function.prototype;                                                         // 6
-                                                                                                   //
-  // holds onRoute callbacks                                                                       // 8
-  this._onRouteCallbacks = [];                                                                     // 9
-};                                                                                                 // 10
-                                                                                                   //
-Router.prototype.route = function (pathDef, options) {                                             // 12
-  if (!/^\/.*/.test(pathDef)) {                                                                    // 13
-    var message = "route's path must start with '/'";                                              // 14
-    throw new Error(message);                                                                      // 15
-  }                                                                                                // 16
-                                                                                                   //
-  options = options || {};                                                                         // 18
-  var route = new Route(this, pathDef, options);                                                   // 19
-  this._routes.push(route);                                                                        // 20
-                                                                                                   //
-  if (options.name) {                                                                              // 22
-    this._routesMap[options.name] = route;                                                         // 23
-  }                                                                                                // 24
-                                                                                                   //
-  this._triggerRouteRegister(route);                                                               // 26
-  return route;                                                                                    // 27
-};                                                                                                 // 28
-                                                                                                   //
-Router.prototype.group = function (options) {                                                      // 30
-  return new Group(this, options);                                                                 // 31
-};                                                                                                 // 32
-                                                                                                   //
-Router.prototype.path = function (pathDef, fields, queryParams) {                                  // 34
-  if (this._routesMap[pathDef]) {                                                                  // 35
-    pathDef = this._routesMap[pathDef].path;                                                       // 36
-  }                                                                                                // 37
-                                                                                                   //
-  fields = fields || {};                                                                           // 39
-  var regExp = /(:[\w\(\)\\\+\*\.\?]+)+/g;                                                         // 40
-  var path = pathDef.replace(regExp, function (key) {                                              // 41
-    var firstRegexpChar = key.indexOf("(");                                                        // 42
-    // get the content behind : and (\\d+/)                                                        // 43
-    key = key.substring(1, firstRegexpChar > 0 ? firstRegexpChar : undefined);                     // 44
-    // remove +?*                                                                                  // 45
-    key = key.replace(/[\+\*\?]+/g, "");                                                           // 46
-                                                                                                   //
-    return fields[key] || "";                                                                      // 48
-  });                                                                                              // 49
-                                                                                                   //
-  path = path.replace(/\/\/+/g, "/"); // Replace multiple slashes with single slash                // 51
-                                                                                                   //
-  // remove trailing slash                                                                         // 53
-  // but keep the root slash if it's the only one                                                  // 54
-  path = path.match(/^\/{1}$/) ? path : path.replace(/\/$/, "");                                   // 55
-                                                                                                   //
-  var strQueryParams = Qs.stringify(queryParams || {});                                            // 57
-  if (strQueryParams) {                                                                            // 58
-    path += "?" + strQueryParams;                                                                  // 59
-  }                                                                                                // 60
-                                                                                                   //
-  return path;                                                                                     // 62
-};                                                                                                 // 63
-                                                                                                   //
-Router.prototype.onRouteRegister = function (cb) {                                                 // 65
-  this._onRouteCallbacks.push(cb);                                                                 // 66
-};                                                                                                 // 67
-                                                                                                   //
-Router.prototype._triggerRouteRegister = function (currentRoute) {                                 // 69
-  // We should only need to send a safe set of fields on the route                                 // 70
-  // object.                                                                                       // 71
-  // This is not to hide what's inside the route object, but to show                               // 72
-  // these are the public APIs                                                                     // 73
-  var routePublicApi = _.pick(currentRoute, 'name', 'pathDef', 'path');                            // 74
-  var omittingOptionFields = ['triggersEnter', 'triggersExit', 'action', 'subscriptions', 'name'];
-  routePublicApi.options = _.omit(currentRoute.options, omittingOptionFields);                     // 78
-                                                                                                   //
-  _.each(this._onRouteCallbacks, function (cb) {                                                   // 80
-    cb(routePublicApi);                                                                            // 81
-  });                                                                                              // 82
-};                                                                                                 // 83
-                                                                                                   //
-Router.prototype.go = function () {                                                                // 86
-  // client only                                                                                   // 87
-};                                                                                                 // 88
-                                                                                                   //
-Router.prototype.current = function () {                                                           // 91
-  // client only                                                                                   // 92
-};                                                                                                 // 93
-                                                                                                   //
-Router.prototype.triggers = {                                                                      // 96
-  enter: function () {                                                                             // 97
-    function enter() {                                                                             // 97
-      // client only                                                                               // 98
-    }                                                                                              // 99
-                                                                                                   //
-    return enter;                                                                                  // 97
-  }(),                                                                                             // 97
-  exit: function () {                                                                              // 100
-    function exit() {                                                                              // 100
-      // client only                                                                               // 101
-    }                                                                                              // 102
-                                                                                                   //
-    return exit;                                                                                   // 100
-  }()                                                                                              // 100
-};                                                                                                 // 96
-                                                                                                   //
-Router.prototype.middleware = function () {                                                        // 105
-  // client only                                                                                   // 106
-};                                                                                                 // 107
-                                                                                                   //
-Router.prototype.getState = function () {                                                          // 110
-  // client only                                                                                   // 111
-};                                                                                                 // 112
-                                                                                                   //
-Router.prototype.getAllStates = function () {                                                      // 115
-  // client only                                                                                   // 116
-};                                                                                                 // 117
-                                                                                                   //
-Router.prototype.setState = function () {                                                          // 120
-  // client only                                                                                   // 121
-};                                                                                                 // 122
-                                                                                                   //
-Router.prototype.removeState = function () {                                                       // 125
-  // client only                                                                                   // 126
-};                                                                                                 // 127
-                                                                                                   //
-Router.prototype.clearStates = function () {                                                       // 130
-  // client only                                                                                   // 131
-};                                                                                                 // 132
-                                                                                                   //
-Router.prototype.ready = function () {                                                             // 135
-  // client only                                                                                   // 136
-};                                                                                                 // 137
-                                                                                                   //
-Router.prototype.initialize = function () {                                                        // 140
-  // client only                                                                                   // 141
-};                                                                                                 // 142
-                                                                                                   //
-Router.prototype.wait = function () {                                                              // 144
-  // client only                                                                                   // 145
-};                                                                                                 // 146
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/ostrio_flow-router-extra/server/router.js                                        //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
+var Qs = require('qs');                                                                      // 1
+                                                                                             //
+var pathRegExp = /(:[\w\(\)\\\+\*\.\?]+)+/g;                                                 // 2
+                                                                                             //
+Router = function () {                                                                       // 4
+  this._routes = [];                                                                         // 5
+  this._routesMap = {};                                                                      // 6
+  this.subscriptions = Function.prototype; // holds onRoute callbacks                        // 7
+                                                                                             //
+  this._onRouteCallbacks = [];                                                               // 10
+};                                                                                           // 11
+                                                                                             //
+Router.prototype.route = function (pathDef) {                                                // 13
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};      // 13
+                                                                                             //
+  if (!/^\/.*/.test(pathDef)) {                                                              // 14
+    throw new Error('route\'s path must start with "/"');                                    // 15
+  }                                                                                          // 16
+                                                                                             //
+  var route = new Route(this, pathDef, options);                                             // 18
+                                                                                             //
+  this._routes.push(route);                                                                  // 19
+                                                                                             //
+  if (options.name) {                                                                        // 21
+    this._routesMap[options.name] = route;                                                   // 22
+  }                                                                                          // 23
+                                                                                             //
+  this._triggerRouteRegister(route);                                                         // 25
+                                                                                             //
+  return route;                                                                              // 26
+};                                                                                           // 27
+                                                                                             //
+Router.prototype.group = function (options) {                                                // 29
+  return new Group(this, options);                                                           // 30
+};                                                                                           // 31
+                                                                                             //
+Router.prototype.path = function (pathDef) {                                                 // 33
+  var fields = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};       // 33
+  var queryParams = arguments[2];                                                            // 33
+                                                                                             //
+  if (this._routesMap[pathDef]) {                                                            // 34
+    pathDef = this._routesMap[pathDef].path;                                                 // 35
+  }                                                                                          // 36
+                                                                                             //
+  var path = pathDef.replace(pathRegExp, function (key) {                                    // 38
+    var firstRegexpChar = key.indexOf('('); // get the content behind : and (\\d+/)          // 39
+                                                                                             //
+    key = key.substring(1, firstRegexpChar > 0 ? firstRegexpChar : undefined); // remove +?*
+                                                                                             //
+    key = key.replace(/[\+\*\?]+/g, '');                                                     // 43
+    return fields[key] || '';                                                                // 45
+  });                                                                                        // 46
+  path = path.replace(/\/\/+/g, '/'); // Replace multiple slashes with single slash          // 48
+  // remove trailing slash                                                                   // 50
+  // but keep the root slash if it's the only one                                            // 51
+                                                                                             //
+  path = path.match(/^\/{1}$/) ? path : path.replace(/\/$/, '');                             // 52
+  var strQueryParams = Qs.stringify(queryParams || {});                                      // 54
+                                                                                             //
+  if (strQueryParams) {                                                                      // 55
+    path += '?' + strQueryParams;                                                            // 56
+  }                                                                                          // 57
+                                                                                             //
+  return path;                                                                               // 59
+};                                                                                           // 60
+                                                                                             //
+Router.prototype.onRouteRegister = function (cb) {                                           // 62
+  this._onRouteCallbacks.push(cb);                                                           // 63
+};                                                                                           // 64
+                                                                                             //
+Router.prototype._triggerRouteRegister = function (currentRoute) {                           // 66
+  // We should only need to send a safe set of fields on the route                           // 67
+  // object.                                                                                 // 68
+  // This is not to hide what's inside the route object, but to show                         // 69
+  // these are the public APIs                                                               // 70
+  var routePublicApi = _.pick(currentRoute, 'name', 'pathDef', 'path');                      // 71
+                                                                                             //
+  routePublicApi.options = _.omit(currentRoute.options, ['triggersEnter', 'triggersExit', 'action', 'subscriptions', 'name']);
+                                                                                             //
+  _.each(this._onRouteCallbacks, function (cb) {                                             // 74
+    cb(routePublicApi);                                                                      // 75
+  });                                                                                        // 76
+};                                                                                           // 77
+                                                                                             //
+Router.prototype.go = function () {// client only                                            // 80
+};                                                                                           // 82
+                                                                                             //
+Router.prototype.current = function () {// client only                                       // 85
+};                                                                                           // 87
+                                                                                             //
+Router.prototype.triggers = {                                                                // 90
+  enter: function () {// client only                                                         // 91
+  },                                                                                         // 93
+  exit: function () {// client only                                                          // 94
+  }                                                                                          // 96
+};                                                                                           // 90
+                                                                                             //
+Router.prototype.middleware = function () {// client only                                    // 99
+};                                                                                           // 101
+                                                                                             //
+Router.prototype.getState = function () {// client only                                      // 104
+};                                                                                           // 106
+                                                                                             //
+Router.prototype.getAllStates = function () {// client only                                  // 109
+};                                                                                           // 111
+                                                                                             //
+Router.prototype.setState = function () {// client only                                      // 114
+};                                                                                           // 116
+                                                                                             //
+Router.prototype.removeState = function () {// client only                                   // 119
+};                                                                                           // 121
+                                                                                             //
+Router.prototype.clearStates = function () {// client only                                   // 124
+};                                                                                           // 126
+                                                                                             //
+Router.prototype.ready = function () {// client only                                         // 129
+};                                                                                           // 131
+                                                                                             //
+Router.prototype.initialize = function () {// client only                                    // 134
+};                                                                                           // 136
+                                                                                             //
+Router.prototype.wait = function () {// client only                                          // 138
+};                                                                                           // 140
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"group.js":function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// packages/ostrio_flow-router-extra/server/group.js                                               //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
-Group = function Group(router, options) {                                                          // 1
-  options = options || {};                                                                         // 2
-  this.prefix = options.prefix || '';                                                              // 3
-  this.options = options;                                                                          // 4
-  this._router = router;                                                                           // 5
-};                                                                                                 // 6
-                                                                                                   //
-Group.prototype.route = function (pathDef, options) {                                              // 8
-  pathDef = this.prefix + pathDef;                                                                 // 9
-  return this._router.route(pathDef, options);                                                     // 10
-};                                                                                                 // 11
-                                                                                                   //
-Group.prototype.group = function (options) {                                                       // 13
-  var group = new Group(this._router, options);                                                    // 14
-  group.parent = this;                                                                             // 15
-                                                                                                   //
-  return group;                                                                                    // 17
-};                                                                                                 // 18
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/ostrio_flow-router-extra/server/group.js                                         //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
+Group = function (router) {                                                                  // 1
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};      // 1
+  this.prefix = options.prefix || '';                                                        // 2
+  this.options = options;                                                                    // 3
+  this._router = router;                                                                     // 4
+};                                                                                           // 5
+                                                                                             //
+Group.prototype.route = function (pathDef, options) {                                        // 7
+  pathDef = this.prefix + pathDef;                                                           // 8
+  return this._router.route(pathDef, options);                                               // 9
+};                                                                                           // 10
+                                                                                             //
+Group.prototype.group = function (options) {                                                 // 12
+  var group = new Group(this._router, options);                                              // 13
+  group.parent = this;                                                                       // 14
+  return group;                                                                              // 16
+};                                                                                           // 17
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 },"route.js":function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// packages/ostrio_flow-router-extra/server/route.js                                               //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
-Route = function Route(router, pathDef, options) {                                                 // 1
-  options = options || {};                                                                         // 2
-  this.options = options;                                                                          // 3
-  this.name = options.name;                                                                        // 4
-  this.pathDef = pathDef;                                                                          // 5
-                                                                                                   //
-  // Route.path is deprecated and will be removed in 3.0                                           // 7
-  this.path = pathDef;                                                                             // 8
-                                                                                                   //
-  this.action = options.action || Function.prototype;                                              // 10
-  this.subscriptions = options.subscriptions || Function.prototype;                                // 11
-  this._subsMap = {};                                                                              // 12
-};                                                                                                 // 13
-                                                                                                   //
-Route.prototype.register = function (name, sub, options) {                                         // 16
-  this._subsMap[name] = sub;                                                                       // 17
-};                                                                                                 // 18
-                                                                                                   //
-Route.prototype.subscription = function (name) {                                                   // 21
-  return this._subsMap[name];                                                                      // 22
-};                                                                                                 // 23
-                                                                                                   //
-Route.prototype.middleware = function (middleware) {};                                             // 26
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/ostrio_flow-router-extra/server/route.js                                         //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
+Route = function (router, pathDef) {                                                         // 1
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};      // 1
+  this.options = options;                                                                    // 2
+  this.name = options.name;                                                                  // 3
+  this.pathDef = pathDef; // Route.path is deprecated and will be removed in 3.0             // 4
+                                                                                             //
+  this.path = pathDef;                                                                       // 7
+  this.action = options.action || Function.prototype;                                        // 9
+  this.subscriptions = options.subscriptions || Function.prototype;                          // 10
+  this._subsMap = {};                                                                        // 11
+};                                                                                           // 12
+                                                                                             //
+Route.prototype.register = function (name, sub) {                                            // 15
+  this._subsMap[name] = sub;                                                                 // 16
+};                                                                                           // 17
+                                                                                             //
+Route.prototype.subscription = function (name) {                                             // 20
+  return this._subsMap[name];                                                                // 21
+};                                                                                           // 22
+                                                                                             //
+Route.prototype.middleware = function () {// ?                                               // 25
+};                                                                                           // 27
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 },"_init.js":function(require,exports,module){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// packages/ostrio_flow-router-extra/server/_init.js                                               //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
-module.export({FlowRouter:function(){return FlowRouter}});// Export Router Instance                // 1
-module.runModuleSetters(FlowRouter = new Router());                                                // 2
-FlowRouter.Router = Router;                                                                        // 3
-FlowRouter.Route = Route;                                                                          // 4
-                                                                                                   //
-                                                                                                   // 6
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/ostrio_flow-router-extra/server/_init.js                                         //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
+module.export({                                                                              // 1
+  FlowRouter: function () {                                                                  // 1
+    return FlowRouter;                                                                       // 1
+  }                                                                                          // 1
+});                                                                                          // 1
+// Export Router Instance                                                                    // 1
+module.runModuleSetters(FlowRouter = new Router());                                          // 2
+FlowRouter.Router = Router;                                                                  // 3
+FlowRouter.Route = Route;                                                                    // 4
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"lib":{"router.js":function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// packages/ostrio_flow-router-extra/lib/router.js                                                 //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
-Router.prototype.url = function () {                                                               // 1
-  // We need to remove the leading base path, or "/", as it will be inserted                       // 2
-  // automatically by `Meteor.absoluteUrl` as documented in:                                       // 3
-  // http://docs.meteor.com/#/full/meteor_absoluteurl                                              // 4
-  var completePath = this.path.apply(this, arguments);                                             // 5
-  var basePath = this._basePath || '/';                                                            // 6
-  var pathWithoutBase = completePath.replace(new RegExp('^' + basePath), '');                      // 7
-  return Meteor.absoluteUrl(pathWithoutBase);                                                      // 8
-};                                                                                                 // 9
-                                                                                                   //
-Meteor.startup(function () {                                                                       // 11
-  Package['kadira:flow-router'] = Package['ostrio:flow-router-extra'];                             // 12
-});                                                                                                // 13
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/ostrio_flow-router-extra/lib/router.js                                           //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
+Router.prototype.url = function () {                                                         // 1
+  // We need to remove the leading base path, or "/", as it will be inserted                 // 2
+  // automatically by `Meteor.absoluteUrl` as documented in:                                 // 3
+  // http://docs.meteor.com/#/full/meteor_absoluteurl                                        // 4
+  return Meteor.absoluteUrl(pathWithoutBase = this.path.apply(this, arguments).replace(new RegExp('^' + (this._basePath || '/')), ''));
+};                                                                                           // 6
+                                                                                             //
+Meteor.startup(function () {                                                                 // 8
+  Package['kadira:flow-router'] = Package['ostrio:flow-router-extra'];                       // 9
+});                                                                                          // 10
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"node_modules":{"qs":{"package.json":function(require,exports){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// ../../.2.12.6.4i0xse++os+web.browser+web.cordova/npm/node_modules/qs/package.json               //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// ../../.2.12.7.l9gryp++os+web.browser+web.cordova/npm/node_modules/qs/package.json         //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
 exports.name = "qs";
 exports.version = "6.3.0";
 exports.main = "lib/index.js";
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 },"lib":{"index.js":function(require,exports,module){
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                 //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/index.js                       //
-//                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/index.js                 //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
 'use strict';
 
 var stringify = require('./stringify');
@@ -313,7 +292,7 @@ module.exports = {
     stringify: stringify
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}}}}},{"extensions":[".js",".json"]});
 require("./node_modules/meteor/ostrio:flow-router-extra/server/router.js");

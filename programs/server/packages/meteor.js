@@ -483,7 +483,7 @@ _.extend(Meteor, {
    * @memberOf Meteor
    * @summary Cancel a repeating function call scheduled by `Meteor.setInterval`.
    * @locus Anywhere
-   * @param {Number} id The handle returned by `Meteor.setInterval`
+   * @param {Object} id The handle returned by `Meteor.setInterval`
    */
   clearInterval: function(x) {
     return clearInterval(x);
@@ -493,7 +493,7 @@ _.extend(Meteor, {
    * @memberOf Meteor
    * @summary Cancel a function call scheduled by `Meteor.setTimeout`.
    * @locus Anywhere
-   * @param {Number} id The handle returned by `Meteor.setTimeout`
+   * @param {Object} id The handle returned by `Meteor.setTimeout`
    */
   clearTimeout: function(x) {
     return clearTimeout(x);

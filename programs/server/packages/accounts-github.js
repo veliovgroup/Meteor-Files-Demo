@@ -5,7 +5,35 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var Accounts = Package['accounts-base'].Accounts;
-var Github = Package.github.Github;
+var Github = Package['github-oauth'].Github;
+
+(function(){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                     //
+// packages/accounts-github/notice.js                                                                  //
+//                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                       //
+if (Package['accounts-ui'] && !Package.hasOwnProperty('github-config-ui')) {
+  console.warn(
+    "Note: You're using accounts-ui and accounts-github,\n" +
+    "but didn't install the configuration UI for the GitHub\n" +
+    "OAuth. You can install it with:\n" +
+    "\n" +
+    "    meteor add github-config-ui" +
+    "\n"
+  );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
 
 (function(){
 

@@ -3,7 +3,7 @@
 exports.__esModule = true;
 
 exports.default = function (whitelist) {
-  var outputType = arguments.length <= 1 || arguments[1] === undefined ? "global" : arguments[1];
+  var outputType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "global";
 
   var namespace = t.identifier("babelHelpers");
 
@@ -43,10 +43,6 @@ var messages = _interopRequireWildcard(_babelMessages);
 var _babelTemplate = require("babel-template");
 
 var _babelTemplate2 = _interopRequireDefault(_babelTemplate);
-
-var _each = require("lodash/each");
-
-var _each2 = _interopRequireDefault(_each);
 
 var _babelTypes = require("babel-types");
 
@@ -95,7 +91,7 @@ function buildVar(namespace, builder) {
 }
 
 function buildHelpers(body, namespace, whitelist) {
-  (0, _each2.default)(helpers.list, function (name) {
+  helpers.list.forEach(function (name) {
     if (whitelist && whitelist.indexOf(name) < 0) return;
 
     var key = t.identifier(name);

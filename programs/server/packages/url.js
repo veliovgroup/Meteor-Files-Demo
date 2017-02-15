@@ -11,29 +11,38 @@ var URL, buildUrl;
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////
-//                                                                                 //
-// packages/url/url_common.js                                                      //
-//                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////
-                                                                                   //
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// packages/url/url_common.js                                             //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+                                                                          //
 URL = {};
 
-var encodeString = function(str) {
-  return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
+var encodeString = function (str) {
+  return encodeURIComponent(str).replace(/\*/g, '%2A');
 };
 
-
-URL._encodeParams = function(params) {
-  var buf = [];
-  _.each(params, function(value, key) {
-    if (buf.length)
-      buf.push('&');
-    buf.push(encodeString(key), '=', encodeString(value));
-  });
-  return buf.join('').replace(/%20/g, '+');
+// Encode URL paramaters into a query string, handling nested objects and
+// arrays properly.
+URL._encodeParams = function (params, prefix) {
+  var str = [];
+  var isParamsArray = Array.isArray(params);
+  for (var p in params) {
+    if (Object.prototype.hasOwnProperty.call(params, p)) {
+      var k = prefix ? prefix + '[' + (isParamsArray ? '' : p) + ']' : p;
+      var v = params[p];
+      if (typeof v === 'object') {
+        str.push(this._encodeParams(v, k));
+      } else {
+        var encodedKey =
+          encodeString(k).replace('%5B', '[').replace('%5D', ']');
+        str.push(encodedKey + '=' + encodeString(v));
+      }
+    }
+  }
+  return str.join('&').replace(/%20/g, '+');
 };
-
 
 buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
   var url_without_query = before_qmark;
@@ -57,7 +66,7 @@ buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
   return url;
 };
 
-/////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 
@@ -68,12 +77,12 @@ buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////
-//                                                                                 //
-// packages/url/url_server.js                                                      //
-//                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////
-                                                                                   //
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// packages/url/url_server.js                                             //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+                                                                          //
 var url_util = Npm.require('url');
 
 URL._constructUrl = function (url, query, params) {
@@ -83,7 +92,7 @@ URL._constructUrl = function (url, query, params) {
     url_parts.search, query, params);
 };
 
-/////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 

@@ -6,9 +6,37 @@ var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var _ = Package.underscore._;
 var Accounts = Package['accounts-base'].Accounts;
-var Twitter = Package.twitter.Twitter;
+var Twitter = Package['twitter-oauth'].Twitter;
 var HTTP = Package.http.HTTP;
 var HTTPInternals = Package.http.HTTPInternals;
+
+(function(){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                     //
+// packages/accounts-twitter/notice.js                                                                 //
+//                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                       //
+if (Package['accounts-ui'] && !Package.hasOwnProperty('twitter-config-ui')) {
+  console.warn(
+    "Note: You're using accounts-ui and accounts-twitter,\n" +
+    "but didn't install the configuration UI for Twitter\n" +
+    "OAuth. You can install it with:\n" +
+    "\n" +
+    "    meteor add twitter-config-ui" +
+    "\n"
+  );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
 
 (function(){
 

@@ -23,6 +23,8 @@ var buildRest = (0, _babelTemplate2.default)("\n  for (var LEN = ARGUMENTS.lengt
 
 var restIndex = (0, _babelTemplate2.default)("\n  ARGUMENTS.length <= INDEX ? undefined : ARGUMENTS[INDEX]\n");
 
+var restIndexImpure = (0, _babelTemplate2.default)("\n  REF = INDEX, ARGUMENTS.length <= REF ? undefined : ARGUMENTS[REF]\n");
+
 var restLength = (0, _babelTemplate2.default)("\n  ARGUMENTS.length <= OFFSET ? 0 : ARGUMENTS.length - OFFSET\n");
 
 var memberExpressionOptimisationVisitor = {
@@ -60,6 +62,10 @@ var memberExpressionOptimisationVisitor = {
       state.deopted = true;
     } else {
       var parentPath = path.parentPath;
+
+      if (parentPath.listKey === "params" && parentPath.key < state.offset) {
+        return;
+      }
 
       if (parentPath.isMemberExpression({ object: node })) {
         var grandparentPath = parentPath.parentPath;
@@ -107,14 +113,28 @@ function optimiseIndexGetter(path, argsId, offset) {
 
   if (t.isNumericLiteral(path.parent.property)) {
     index = t.numericLiteral(path.parent.property.value + offset);
+  } else if (offset === 0) {
+    index = path.parent.property;
   } else {
     index = t.binaryExpression("+", path.parent.property, t.numericLiteral(offset));
   }
 
-  path.parentPath.replaceWith(restIndex({
-    ARGUMENTS: argsId,
-    INDEX: index
-  }));
+  var scope = path.scope;
+
+  if (!scope.isPure(index)) {
+    var temp = scope.generateUidIdentifierBasedOnNode(index);
+    scope.push({ id: temp, kind: "var" });
+    path.parentPath.replaceWith(restIndexImpure({
+      ARGUMENTS: argsId,
+      INDEX: index,
+      REF: temp
+    }));
+  } else {
+    path.parentPath.replaceWith(restIndex({
+      ARGUMENTS: argsId,
+      INDEX: index
+    }));
+  }
 }
 
 function optimiseLengthGetter(path, argsId, offset) {
@@ -130,8 +150,8 @@ function optimiseLengthGetter(path, argsId, offset) {
 
 var visitor = exports.visitor = {
   Function: function Function(path) {
-    var node = path.node;
-    var scope = path.scope;
+    var node = path.node,
+        scope = path.scope;
 
     if (!hasRest(node)) return;
 
@@ -159,20 +179,20 @@ var visitor = exports.visitor = {
 
     if (!state.deopted && !state.references.length) {
       for (var _iterator = state.candidates, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : (0, _getIterator3.default)(_iterator);;) {
-        var _ref2;
+        var _ref3;
 
         if (_isArray) {
           if (_i >= _iterator.length) break;
-          _ref2 = _iterator[_i++];
+          _ref3 = _iterator[_i++];
         } else {
           _i = _iterator.next();
           if (_i.done) break;
-          _ref2 = _i.value;
+          _ref3 = _i.value;
         }
 
-        var _ref3 = _ref2;
-        var _path = _ref3.path;
-        var cause = _ref3.cause;
+        var _ref4 = _ref3;
+        var _path = _ref4.path,
+            cause = _ref4.cause;
 
         switch (cause) {
           case "indexGetter":
@@ -188,8 +208,8 @@ var visitor = exports.visitor = {
       return;
     }
 
-    state.references = state.references.concat(state.candidates.map(function (_ref4) {
-      var path = _ref4.path;
+    state.references = state.references.concat(state.candidates.map(function (_ref5) {
+      var path = _ref5.path;
       return path;
     }));
 

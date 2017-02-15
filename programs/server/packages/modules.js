@@ -134,7 +134,6 @@ install("shell-server", "meteor/shell-server/main.js");
 install("session");
 install("seba:minifiers-autoprefixer");
 install("standard-minifier-js");
-install("coffeescript");
 install("markdown");
 install("url");
 install("http");
@@ -149,7 +148,7 @@ install("templating");
 install("perak:markdown");
 install("mrt:filesize");
 install("meteorhacks:subs-manager");
-install("cfs:graphicsmagick");
+install("coffeescript");
 install("ostrio:cookies", "meteor/ostrio:cookies/cookies.js");
 install("ostrio:files", "meteor/ostrio:files/files.coffee.js");
 install("reactive-dict");
@@ -168,14 +167,14 @@ install("localstorage");
 install("oauth");
 install("accounts-oauth");
 install("oauth2");
-install("github");
+install("github-oauth");
 install("accounts-github");
 install("oauth1");
-install("twitter");
+install("twitter-oauth");
 install("accounts-twitter");
-install("facebook");
+install("facebook-oauth");
 install("accounts-facebook");
-install("meteor-developer");
+install("meteor-developer-oauth");
 install("accounts-meteor-developer");
 install("livedata");
 install("hot-code-push");
@@ -287,7 +286,12 @@ exports.enable = function (Module) {
     }
   }
 
-  Mp.import = function (id, setters) {
+  // If key is provided, it will be used to identify the given setters so
+  // that they can be replaced if module.import is called again with the
+  // same key. This avoids potential memory leaks from import declarations
+  // inside loops. The compiler generates these keys automatically (and
+  // deterministically) when compiling nested import declarations.
+  Mp.import = function (id, setters, key) {
     var module = this;
     setESModule(module);
 
@@ -295,7 +299,7 @@ exports.enable = function (Module) {
 
     if (setters && typeof setters === "object") {
       var entry = Entry.getOrCreate(absoluteId);
-      entry.addSetters(module, setters);
+      entry.addSetters(module, setters, key);
     }
 
     var countBefore = entry && entry.runCount;

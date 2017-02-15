@@ -5,7 +5,35 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var Accounts = Package['accounts-base'].Accounts;
-var Facebook = Package.facebook.Facebook;
+var Facebook = Package['facebook-oauth'].Facebook;
+
+(function(){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                     //
+// packages/accounts-facebook/notice.js                                                                //
+//                                                                                                     //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                       //
+if (Package['accounts-ui'] && !Package.hasOwnProperty('facebook-config-ui')) {
+  console.warn(
+    "Note: You're using accounts-ui and accounts-facebook,\n" +
+    "but didn't install the configuration UI for the Facebook\n" +
+    "OAuth. You can install it with:\n" +
+    "\n" +
+    "    meteor add facebook-config-ui" +
+    "\n"
+  );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
 
 (function(){
 

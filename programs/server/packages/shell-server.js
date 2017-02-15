@@ -16,548 +16,540 @@ var Promise = Package.promise.Promise;
 
 var require = meteorInstall({"node_modules":{"meteor":{"shell-server":{"main.js":["./shell-server.js",function(require,exports,module){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// packages/shell-server/main.js                                                                                  //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-module.import("./shell-server.js",{'*':function(v,k){exports[k]=v;}});var listen;module.import("./shell-server.js",{"listen":function(v){listen=v}});
-                                                                                                                  // 2
-                                                                                                                  //
-var shellDir = process.env.METEOR_SHELL_DIR;                                                                      // 4
-if (shellDir) {                                                                                                   // 5
-  listen(shellDir);                                                                                               // 6
-}                                                                                                                 // 7
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                 //
+// packages/shell-server/main.js                                                                                   //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                   //
+module.import("./shell-server.js", {                                                                               // 1
+  '*': function (v, k) {                                                                                           // 1
+    exports[k] = v;                                                                                                // 1
+  }                                                                                                                // 1
+}, 0);                                                                                                             // 1
+var listen = void 0;                                                                                               // 1
+module.import("./shell-server.js", {                                                                               // 1
+  "listen": function (v) {                                                                                         // 1
+    listen = v;                                                                                                    // 1
+  }                                                                                                                // 1
+}, 1);                                                                                                             // 1
+var shellDir = process.env.METEOR_SHELL_DIR;                                                                       // 4
+                                                                                                                   //
+if (shellDir) {                                                                                                    // 5
+  listen(shellDir);                                                                                                // 6
+}                                                                                                                  // 7
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"shell-server.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/typeof","assert","path","stream","fs","net","tty","vm","underscore","repl",function(require,exports,module){
+}],"shell-server.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/typeof","assert","path","stream","fs","net","vm","underscore","repl",function(require,exports,module){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                //
-// packages/shell-server/shell-server.js                                                                          //
-//                                                                                                                //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                  //
-module.export({listen:function(){return listen},disable:function(){return disable}});var _classCallCheck;module.import("babel-runtime/helpers/classCallCheck",{"default":function(v){_classCallCheck=v}});var _typeof;module.import("babel-runtime/helpers/typeof",{"default":function(v){_typeof=v}});
-                                                                                                                  //
-var assert = require("assert");                                                                                   // 1
-var path = require("path");                                                                                       // 2
-var stream = require("stream");                                                                                   // 3
-var fs = require("fs");                                                                                           // 4
-var net = require("net");                                                                                         // 5
-var tty = require("tty");                                                                                         // 6
-var vm = require("vm");                                                                                           // 7
-var _ = require("underscore");                                                                                    // 8
-var INFO_FILE_MODE = parseInt("600", 8); // Only the owner can read or write.                                     // 9
-var EXITING_MESSAGE = "Shell exiting...";                                                                         // 10
-                                                                                                                  //
-// Invoked by the server process to listen for incoming connections from                                          // 12
-// shell clients. Each connection gets its own REPL instance.                                                     // 13
-function listen(shellDir) {                                                                                       // 14
-  function callback() {                                                                                           // 15
-    new Server(shellDir).listen();                                                                                // 16
-  }                                                                                                               // 17
-                                                                                                                  //
-  // If the server is still in the very early stages of starting up,                                              // 19
-  // Meteor.startup may not available yet.                                                                        // 20
-  if ((typeof Meteor === "undefined" ? "undefined" : _typeof(Meteor)) === "object") {                             // 21
-    Meteor.startup(callback);                                                                                     // 22
-  } else if ((typeof __meteor_bootstrap__ === "undefined" ? "undefined" : _typeof(__meteor_bootstrap__)) === "object") {
-    var hooks = __meteor_bootstrap__.startupHooks;                                                                // 24
-    if (hooks) {                                                                                                  // 25
-      hooks.push(callback);                                                                                       // 26
-    } else {                                                                                                      // 27
-      // As a fallback, just call the callback asynchronously.                                                    // 28
-      setImmediate(callback);                                                                                     // 29
-    }                                                                                                             // 30
-  }                                                                                                               // 31
-}                                                                                                                 // 32
-                                                                                                                  //
-// Disabling the shell causes all attached clients to disconnect and exit.                                        // 34
-function disable(shellDir) {                                                                                      // 35
-  try {                                                                                                           // 36
-    // Replace info.json with a file that says the shell server is                                                // 37
-    // disabled, so that any connected shell clients will fail to                                                 // 38
-    // reconnect after the server process closes their sockets.                                                   // 39
-    fs.writeFileSync(getInfoFile(shellDir), JSON.stringify({                                                      // 40
-      status: "disabled",                                                                                         // 43
-      reason: "Shell server has shut down."                                                                       // 44
-    }) + "\n", { mode: INFO_FILE_MODE });                                                                         // 42
-  } catch (ignored) {}                                                                                            // 48
-}                                                                                                                 // 49
-                                                                                                                  //
-var Server = function () {                                                                                        //
-  function Server(shellDir) {                                                                                     // 52
-    _classCallCheck(this, Server);                                                                                // 52
-                                                                                                                  //
-    var self = this;                                                                                              // 53
-    assert.ok(self instanceof Server);                                                                            // 54
-                                                                                                                  //
-    self.shellDir = shellDir;                                                                                     // 56
-    self.key = Math.random().toString(36).slice(2);                                                               // 57
-                                                                                                                  //
-    self.server = net.createServer(function (socket) {                                                            // 59
-      self.onConnection(socket);                                                                                  // 60
-    }).on("error", function (err) {                                                                               // 61
-      console.error(err.stack);                                                                                   // 62
-    });                                                                                                           // 63
-  }                                                                                                               // 64
-                                                                                                                  //
-  Server.prototype.listen = function () {                                                                         //
-    function listen() {                                                                                           //
-      var self = this;                                                                                            // 67
-      var infoFile = getInfoFile(self.shellDir);                                                                  // 68
-                                                                                                                  //
-      fs.unlink(infoFile, function () {                                                                           // 70
-        self.server.listen(0, "127.0.0.1", function () {                                                          // 71
-          fs.writeFileSync(infoFile, JSON.stringify({                                                             // 72
-            status: "enabled",                                                                                    // 73
-            port: self.server.address().port,                                                                     // 74
-            key: self.key                                                                                         // 75
-          }) + "\n", {                                                                                            // 72
-            mode: INFO_FILE_MODE                                                                                  // 77
-          });                                                                                                     // 76
-        });                                                                                                       // 79
-      });                                                                                                         // 80
-    }                                                                                                             // 81
-                                                                                                                  //
-    return listen;                                                                                                //
-  }();                                                                                                            //
-                                                                                                                  //
-  Server.prototype.onConnection = function () {                                                                   //
-    function onConnection(socket) {                                                                               //
-      var self = this;                                                                                            // 84
-                                                                                                                  //
-      // Make sure this function doesn't try to write anything to the socket                                      // 86
-      // after it has been closed.                                                                                // 87
-      socket.on("close", function () {                                                                            // 88
-        socket = null;                                                                                            // 89
-      });                                                                                                         // 90
-                                                                                                                  //
-      // If communication is not established within 1000ms of the first                                           // 92
-      // connection, forcibly close the socket.                                                                   // 93
-      var timeout = setTimeout(function () {                                                                      // 94
-        if (socket) {                                                                                             // 95
-          socket.removeAllListeners("data");                                                                      // 96
-          socket.end(EXITING_MESSAGE + "\n");                                                                     // 97
-        }                                                                                                         // 98
-      }, 1000);                                                                                                   // 99
-                                                                                                                  //
-      // Let connecting clients configure certain REPL options by sending a                                       // 101
-      // JSON object over the socket. For example, only the client knows                                          // 102
-      // whether it's running a TTY or an Emacs subshell or some other kind of                                    // 103
-      // terminal, so the client must decide the value of options.terminal.                                       // 104
-      readJSONFromStream(socket, function (error, options, replInputSocket) {                                     // 105
-        clearTimeout(timeout);                                                                                    // 106
-                                                                                                                  //
-        if (error) {                                                                                              // 108
-          socket = null;                                                                                          // 109
-          console.error(error.stack);                                                                             // 110
-          return;                                                                                                 // 111
-        }                                                                                                         // 112
-                                                                                                                  //
-        if (options.key !== self.key) {                                                                           // 114
-          if (socket) {                                                                                           // 115
-            socket.end(EXITING_MESSAGE + "\n");                                                                   // 116
-          }                                                                                                       // 117
-          return;                                                                                                 // 118
-        }                                                                                                         // 119
-        delete options.key;                                                                                       // 120
-                                                                                                                  //
-        if (options.evaluateAndExit) {                                                                            // 122
-          evalCommand.call(Object.create(null), // Dummy repl object without ._RecoverableError.                  // 123
-          "(" + options.evaluateAndExit.command + ")", null, // evalCommand ignores the context parameter, anyway
-          options.evaluateAndExit.filename || "<meteor shell>", function (error, result) {                        // 127
-            if (socket) {                                                                                         // 129
-              var message = error ? {                                                                             // 130
-                error: error + "",                                                                                // 131
-                code: 1                                                                                           // 132
-              } : {                                                                                               // 130
-                result: result                                                                                    // 134
-              };                                                                                                  // 133
-                                                                                                                  //
-              // Sending back a JSON payload allows the client to                                                 // 137
-              // distinguish between errors and successful results.                                               // 138
-              socket.end(JSON.stringify(message) + "\n");                                                         // 139
-            }                                                                                                     // 140
-          });                                                                                                     // 141
-          return;                                                                                                 // 143
-        }                                                                                                         // 144
-        delete options.evaluateAndExit;                                                                           // 145
-                                                                                                                  //
-        // Immutable options.                                                                                     // 147
-        _.extend(options, {                                                                                       // 148
-          input: replInputSocket,                                                                                 // 149
-          output: socket                                                                                          // 150
-        });                                                                                                       // 148
-                                                                                                                  //
-        // Overridable options.                                                                                   // 153
-        _.defaults(options, {                                                                                     // 154
-          prompt: "> ",                                                                                           // 155
-          terminal: true,                                                                                         // 156
-          useColors: true,                                                                                        // 157
-          useGlobal: true,                                                                                        // 158
-          ignoreUndefined: true                                                                                   // 159
-        });                                                                                                       // 154
-                                                                                                                  //
-        self.startREPL(options);                                                                                  // 162
-      });                                                                                                         // 163
-    }                                                                                                             // 164
-                                                                                                                  //
-    return onConnection;                                                                                          //
-  }();                                                                                                            //
-                                                                                                                  //
-  Server.prototype.startREPL = function () {                                                                      //
-    function startREPL(options) {                                                                                 //
-      var self = this;                                                                                            // 167
-                                                                                                                  //
-      if (!options.output.columns) {                                                                              // 169
-        // The REPL's tab completion logic assumes process.stdout is a TTY,                                       // 170
-        // and while that isn't technically true here, we can get tab                                             // 171
-        // completion to behave correctly if we fake the .columns property.                                       // 172
-        options.output.columns = getTerminalWidth();                                                              // 173
-      }                                                                                                           // 174
-                                                                                                                  //
-      // Make sure this function doesn't try to write anything to the output                                      // 176
-      // stream after it has been closed.                                                                         // 177
-      options.output.on("close", function () {                                                                    // 178
-        options.output = null;                                                                                    // 179
-      });                                                                                                         // 180
-                                                                                                                  //
-      var repl = self.repl = require("repl").start(options);                                                      // 182
-                                                                                                                  //
-      // History persists across shell sessions!                                                                  // 184
-      self.initializeHistory();                                                                                   // 185
-                                                                                                                  //
-      // Save the global `_` object in the server.  This is probably defined by the                               // 187
-      // underscore package.  It is unlikely to be the same object as the `var _ =                                // 188
-      // require('underscore')` in this file!                                                                     // 189
-      var originalUnderscore = repl.context._;                                                                    // 190
-                                                                                                                  //
-      Object.defineProperty(repl.context, "_", {                                                                  // 192
-        // Force the global _ variable to remain bound to underscore.                                             // 193
-        get: function () {                                                                                        // 194
-          function get() {                                                                                        // 194
-            return originalUnderscore;                                                                            // 194
-          }                                                                                                       // 194
-                                                                                                                  //
-          return get;                                                                                             // 194
-        }(),                                                                                                      // 194
-                                                                                                                  //
-        // Expose the last REPL result as __ instead of _.                                                        // 196
-        set: function () {                                                                                        // 197
-          function set(lastResult) {                                                                              // 197
-            repl.context.__ = lastResult;                                                                         // 198
-          }                                                                                                       // 199
-                                                                                                                  //
-          return set;                                                                                             // 197
-        }(),                                                                                                      // 197
-                                                                                                                  //
-        enumerable: true,                                                                                         // 201
-                                                                                                                  //
-        // Allow this property to be (re)defined more than once (e.g. each                                        // 203
-        // time the server restarts).                                                                             // 204
-        configurable: true                                                                                        // 205
-      });                                                                                                         // 192
-                                                                                                                  //
-      if (Package.modules) {                                                                                      // 208
-        // Use the same `require` function and `module` object visible to the                                     // 209
-        // application.                                                                                           // 210
-        var toBeInstalled = {};                                                                                   // 211
-        var shellModuleName = "meteor-shell-" + Math.random().toString(36).slice(2) + ".js";                      // 212
-                                                                                                                  //
-        toBeInstalled[shellModuleName] = function (require, exports, module) {                                    // 215
-          repl.context.module = module;                                                                           // 216
-          repl.context.require = require;                                                                         // 217
-                                                                                                                  //
-          // Tab completion sometimes uses require.extensions, but only for                                       // 219
-          // the keys.                                                                                            // 220
-          require.extensions = {                                                                                  // 221
-            ".js": true,                                                                                          // 222
-            ".json": true,                                                                                        // 223
-            ".node": true                                                                                         // 224
-          };                                                                                                      // 221
-        };                                                                                                        // 226
-                                                                                                                  //
-        // This populates repl.context.{module,require} by evaluating the                                         // 228
-        // module defined above.                                                                                  // 229
-        Package.modules.meteorInstall(toBeInstalled)("./" + shellModuleName);                                     // 230
-      }                                                                                                           // 231
-                                                                                                                  //
-      repl.context.repl = repl;                                                                                   // 233
-                                                                                                                  //
-      // Some improvements to the existing help messages.                                                         // 235
-      function addHelp(cmd, helpText) {                                                                           // 236
-        var info = repl.commands[cmd] || repl.commands["." + cmd];                                                // 237
-        if (info) {                                                                                               // 238
-          info.help = helpText;                                                                                   // 239
-        }                                                                                                         // 240
-      }                                                                                                           // 241
-      addHelp("break", "Terminate current command input and display new prompt");                                 // 242
-      addHelp("exit", "Disconnect from server and leave shell");                                                  // 243
-      addHelp("help", "Show this help information");                                                              // 244
-                                                                                                                  //
-      // When the REPL exits, signal the attached client to exit by sending it                                    // 246
-      // the special EXITING_MESSAGE.                                                                             // 247
-      repl.on("exit", function () {                                                                               // 248
-        if (options.output) {                                                                                     // 249
-          options.output.write(EXITING_MESSAGE + "\n");                                                           // 250
-          options.output.end();                                                                                   // 251
-        }                                                                                                         // 252
-      });                                                                                                         // 253
-                                                                                                                  //
-      // When the server process exits, end the output stream but do not                                          // 255
-      // signal the attached client to exit.                                                                      // 256
-      process.on("exit", function () {                                                                            // 257
-        if (options.output) {                                                                                     // 258
-          options.output.end();                                                                                   // 259
-        }                                                                                                         // 260
-      });                                                                                                         // 261
-                                                                                                                  //
-      // This Meteor-specific shell command rebuilds the application as if a                                      // 263
-      // change was made to server code.                                                                          // 264
-      repl.defineCommand("reload", {                                                                              // 265
-        help: "Restart the server and the shell",                                                                 // 266
-        action: function () {                                                                                     // 267
-          function action() {                                                                                     // 267
-            process.exit(0);                                                                                      // 268
-          }                                                                                                       // 269
-                                                                                                                  //
-          return action;                                                                                          // 267
-        }()                                                                                                       // 267
-      });                                                                                                         // 265
-                                                                                                                  //
-      // Trigger one recoverable error using the default eval function, just                                      // 272
-      // to capture the Recoverable error constructor, so that our custom                                         // 273
-      // evalCommand function can wrap recoverable errors properly.                                               // 274
-      repl.eval("{", null, "<meteor shell>", function (error) {                                                   // 275
-        // Capture the Recoverable error constructor.                                                             // 278
-        repl._RecoverableError = error && error.constructor;                                                      // 279
-                                                                                                                  //
-        // Now set repl.eval to the actual evalCommand function that we want                                      // 281
-        // to use, bound to repl._domain if necessary.                                                            // 282
-        repl.eval = repl._domain ? repl._domain.bind(evalCommand) : evalCommand;                                  // 283
-                                                                                                                  //
-        // Terminate the partial evaluation of the { command.                                                     // 287
-        repl.commands["break"].action.call(repl);                                                                 // 288
-      });                                                                                                         // 289
-    }                                                                                                             // 291
-                                                                                                                  //
-    return startREPL;                                                                                             //
-  }();                                                                                                            //
-                                                                                                                  //
-  // This function allows a persistent history of shell commands to be saved                                      // 293
-  // to and loaded from .meteor/local/shell-history.                                                              // 294
-                                                                                                                  //
-                                                                                                                  //
-  Server.prototype.initializeHistory = function () {                                                              //
-    function initializeHistory() {                                                                                //
-      var self = this;                                                                                            // 296
-      var rli = self.repl.rli;                                                                                    // 297
-      var historyFile = getHistoryFile(self.shellDir);                                                            // 298
-      var historyFd = fs.openSync(historyFile, "a+");                                                             // 299
-      var historyLines = fs.readFileSync(historyFile, "utf8").split("\n");                                        // 300
-      var seenLines = Object.create(null);                                                                        // 301
-                                                                                                                  //
-      if (!rli.history) {                                                                                         // 303
-        rli.history = [];                                                                                         // 304
-        rli.historyIndex = -1;                                                                                    // 305
-      }                                                                                                           // 306
-                                                                                                                  //
-      while (rli.history && historyLines.length > 0) {                                                            // 308
-        var line = historyLines.pop();                                                                            // 309
-        if (line && /\S/.test(line) && !seenLines[line]) {                                                        // 310
-          rli.history.push(line);                                                                                 // 311
-          seenLines[line] = true;                                                                                 // 312
-        }                                                                                                         // 313
-      }                                                                                                           // 314
-                                                                                                                  //
-      rli.addListener("line", function (line) {                                                                   // 316
-        if (historyFd >= 0 && /\S/.test(line)) {                                                                  // 317
-          fs.writeSync(historyFd, line + "\n");                                                                   // 318
-        }                                                                                                         // 319
-      });                                                                                                         // 320
-                                                                                                                  //
-      self.repl.on("exit", function () {                                                                          // 322
-        fs.closeSync(historyFd);                                                                                  // 323
-        historyFd = -1;                                                                                           // 324
-      });                                                                                                         // 325
-    }                                                                                                             // 326
-                                                                                                                  //
-    return initializeHistory;                                                                                     //
-  }();                                                                                                            //
-                                                                                                                  //
-  return Server;                                                                                                  //
-}();                                                                                                              //
-                                                                                                                  //
-function readJSONFromStream(inputStream, callback) {                                                              // 329
-  var outputStream = new stream.PassThrough();                                                                    // 330
-  var dataSoFar = "";                                                                                             // 331
-                                                                                                                  //
-  function onData(buffer) {                                                                                       // 333
-    var lines = buffer.toString("utf8").split("\n");                                                              // 334
-                                                                                                                  //
-    while (lines.length > 0) {                                                                                    // 336
-      dataSoFar += lines.shift();                                                                                 // 337
-                                                                                                                  //
-      try {                                                                                                       // 339
-        var json = JSON.parse(dataSoFar);                                                                         // 340
-      } catch (error) {                                                                                           // 341
-        if (error instanceof SyntaxError) {                                                                       // 342
-          continue;                                                                                               // 343
-        }                                                                                                         // 344
-                                                                                                                  //
-        return finish(error);                                                                                     // 346
-      }                                                                                                           // 347
-                                                                                                                  //
-      if (lines.length > 0) {                                                                                     // 349
-        outputStream.write(lines.join("\n"));                                                                     // 350
-      }                                                                                                           // 351
-                                                                                                                  //
-      inputStream.pipe(outputStream);                                                                             // 353
-                                                                                                                  //
-      return finish(null, json);                                                                                  // 355
-    }                                                                                                             // 356
-  }                                                                                                               // 357
-                                                                                                                  //
-  function onClose() {                                                                                            // 359
-    finish(new Error("stream unexpectedly closed"));                                                              // 360
-  }                                                                                                               // 361
-                                                                                                                  //
-  var finished = false;                                                                                           // 363
-  function finish(error, json) {                                                                                  // 364
-    if (!finished) {                                                                                              // 365
-      finished = true;                                                                                            // 366
-      inputStream.removeListener("data", onData);                                                                 // 367
-      inputStream.removeListener("error", finish);                                                                // 368
-      inputStream.removeListener("close", onClose);                                                               // 369
-      callback(error, json, outputStream);                                                                        // 370
-    }                                                                                                             // 371
-  }                                                                                                               // 372
-                                                                                                                  //
-  inputStream.on("data", onData);                                                                                 // 374
-  inputStream.on("error", finish);                                                                                // 375
-  inputStream.on("close", onClose);                                                                               // 376
-}                                                                                                                 // 377
-                                                                                                                  //
-function getInfoFile(shellDir) {                                                                                  // 379
-  return path.join(shellDir, "info.json");                                                                        // 380
-}                                                                                                                 // 381
-                                                                                                                  //
-function getHistoryFile(shellDir) {                                                                               // 383
-  return path.join(shellDir, "history");                                                                          // 384
-}                                                                                                                 // 385
-                                                                                                                  //
-function getTerminalWidth() {                                                                                     // 387
-  try {                                                                                                           // 388
-    // Inspired by https://github.com/TooTallNate/ttys/blob/master/index.js                                       // 389
-    var fd = fs.openSync("/dev/tty", "r");                                                                        // 390
-    assert.ok(tty.isatty(fd));                                                                                    // 391
-    var ws = new tty.WriteStream(fd);                                                                             // 392
-    ws.end();                                                                                                     // 393
-    return ws.columns;                                                                                            // 394
-  } catch (fancyApproachWasTooFancy) {                                                                            // 395
-    return 80;                                                                                                    // 396
-  }                                                                                                               // 397
-}                                                                                                                 // 398
-                                                                                                                  //
-// Shell commands need to be executed in a Fiber in case they call into                                           // 400
-// code that yields. Using a Promise is an even better idea, since it runs                                        // 401
-// its callbacks in Fibers drawn from a pool, so the Fibers are recycled.                                         // 402
-var evalCommandPromise = Promise.resolve();                                                                       // 403
-                                                                                                                  //
-function evalCommand(command, context, filename, callback) {                                                      // 405
-  var repl = this;                                                                                                // 406
-                                                                                                                  //
-  function finish(error, result) {                                                                                // 408
-    if (error) {                                                                                                  // 409
-      if (repl._RecoverableError && isRecoverableError(error, repl)) {                                            // 410
-        callback(new repl._RecoverableError(error));                                                              // 412
-      } else {                                                                                                    // 413
-        callback(error);                                                                                          // 414
-      }                                                                                                           // 415
-    } else {                                                                                                      // 416
-      callback(null, result);                                                                                     // 417
-    }                                                                                                             // 418
-  }                                                                                                               // 419
-                                                                                                                  //
-  if (Package.ecmascript) {                                                                                       // 421
-    var noParens = stripParens(command);                                                                          // 422
-    if (noParens !== command) {                                                                                   // 423
-      var classMatch = /^\s*class\s+(\w+)/.exec(noParens);                                                        // 424
-      if (classMatch && classMatch[1] !== "extends") {                                                            // 425
-        // If the command looks like a named ES2015 class, we remove the                                          // 426
-        // extra layer of parentheses added by the REPL so that the                                               // 427
-        // command will be evaluated as a class declaration rather than as                                        // 428
-        // a named class expression. Note that you can still type (class A                                        // 429
-        // {}) explicitly to evaluate a named class expression. The REPL                                          // 430
-        // code that calls evalCommand handles named function expressions                                         // 431
-        // similarly (first with and then without parentheses), but that                                          // 432
-        // code doesn't know about ES2015 classes, which is why we have to                                        // 433
-        // handle them here.                                                                                      // 434
-        command = noParens;                                                                                       // 435
-      }                                                                                                           // 436
-    }                                                                                                             // 437
-                                                                                                                  //
-    try {                                                                                                         // 439
-      command = Package.ecmascript.ECMAScript.compileForShell(command);                                           // 440
-    } catch (error) {                                                                                             // 441
-      finish(error);                                                                                              // 442
-      return;                                                                                                     // 443
-    }                                                                                                             // 444
-  }                                                                                                               // 445
-                                                                                                                  //
-  try {                                                                                                           // 447
-    var script = new vm.Script(command, {                                                                         // 448
-      filename: filename,                                                                                         // 449
-      displayErrors: false                                                                                        // 450
-    });                                                                                                           // 448
-  } catch (parseError) {                                                                                          // 452
-    finish(parseError);                                                                                           // 453
-    return;                                                                                                       // 454
-  }                                                                                                               // 455
-                                                                                                                  //
-  evalCommandPromise.then(function () {                                                                           // 457
-    finish(null, script.runInThisContext());                                                                      // 458
-  })["catch"](finish);                                                                                            // 459
-}                                                                                                                 // 460
-                                                                                                                  //
-function stripParens(command) {                                                                                   // 462
-  if (command.charAt(0) === "(" && command.charAt(command.length - 1) === ")") {                                  // 463
-    return command.slice(1, command.length - 1);                                                                  // 465
-  }                                                                                                               // 466
-  return command;                                                                                                 // 467
-}                                                                                                                 // 468
-                                                                                                                  //
-// The bailOnIllegalToken and isRecoverableError functions are taken from                                         // 470
-// https://github.com/nodejs/node/blob/c9e670ea2a/lib/repl.js#L1227-L1253                                         // 471
-function bailOnIllegalToken(parser) {                                                                             // 472
-  return parser._literal === null && !parser.blockComment && !parser.regExpLiteral;                               // 473
-}                                                                                                                 // 476
-                                                                                                                  //
-// If the error is that we've unexpectedly ended the input,                                                       // 478
-// then let the user try to recover by adding more input.                                                         // 479
-function isRecoverableError(e, repl) {                                                                            // 480
-  if (e && e.name === 'SyntaxError') {                                                                            // 481
-    var message = e.message;                                                                                      // 482
-    if (message === 'Unterminated template literal' || message === 'Missing } in template expression') {          // 483
-      repl._inTemplateLiteral = true;                                                                             // 485
-      return true;                                                                                                // 486
-    }                                                                                                             // 487
-                                                                                                                  //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                 //
+// packages/shell-server/shell-server.js                                                                           //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                   //
+var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");                                            //
+                                                                                                                   //
+var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);                                                   //
+                                                                                                                   //
+var _typeof2 = require("babel-runtime/helpers/typeof");                                                            //
+                                                                                                                   //
+var _typeof3 = _interopRequireDefault(_typeof2);                                                                   //
+                                                                                                                   //
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }                  //
+                                                                                                                   //
+module.export({                                                                                                    // 1
+  listen: function () {                                                                                            // 1
+    return listen;                                                                                                 // 1
+  },                                                                                                               // 1
+  disable: function () {                                                                                           // 1
+    return disable;                                                                                                // 1
+  }                                                                                                                // 1
+});                                                                                                                // 1
+                                                                                                                   //
+var assert = require("assert");                                                                                    // 1
+                                                                                                                   //
+var path = require("path");                                                                                        // 2
+                                                                                                                   //
+var stream = require("stream");                                                                                    // 3
+                                                                                                                   //
+var fs = require("fs");                                                                                            // 4
+                                                                                                                   //
+var net = require("net");                                                                                          // 5
+                                                                                                                   //
+var vm = require("vm");                                                                                            // 6
+                                                                                                                   //
+var _ = require("underscore");                                                                                     // 7
+                                                                                                                   //
+var INFO_FILE_MODE = parseInt("600", 8); // Only the owner can read or write.                                      // 8
+                                                                                                                   //
+var EXITING_MESSAGE = "Shell exiting..."; // Invoked by the server process to listen for incoming connections from
+// shell clients. Each connection gets its own REPL instance.                                                      // 12
+                                                                                                                   //
+function listen(shellDir) {                                                                                        // 13
+  function callback() {                                                                                            // 14
+    new Server(shellDir).listen();                                                                                 // 15
+  } // If the server is still in the very early stages of starting up,                                             // 16
+  // Meteor.startup may not available yet.                                                                         // 19
+                                                                                                                   //
+                                                                                                                   //
+  if ((typeof Meteor === "undefined" ? "undefined" : (0, _typeof3.default)(Meteor)) === "object") {                // 20
+    Meteor.startup(callback);                                                                                      // 21
+  } else if ((typeof __meteor_bootstrap__ === "undefined" ? "undefined" : (0, _typeof3.default)(__meteor_bootstrap__)) === "object") {
+    var hooks = __meteor_bootstrap__.startupHooks;                                                                 // 23
+                                                                                                                   //
+    if (hooks) {                                                                                                   // 24
+      hooks.push(callback);                                                                                        // 25
+    } else {                                                                                                       // 26
+      // As a fallback, just call the callback asynchronously.                                                     // 27
+      setImmediate(callback);                                                                                      // 28
+    }                                                                                                              // 29
+  }                                                                                                                // 30
+}                                                                                                                  // 31
+                                                                                                                   //
+function disable(shellDir) {                                                                                       // 34
+  try {                                                                                                            // 35
+    // Replace info.json with a file that says the shell server is                                                 // 36
+    // disabled, so that any connected shell clients will fail to                                                  // 37
+    // reconnect after the server process closes their sockets.                                                    // 38
+    fs.writeFileSync(getInfoFile(shellDir), JSON.stringify({                                                       // 39
+      status: "disabled",                                                                                          // 42
+      reason: "Shell server has shut down."                                                                        // 43
+    }) + "\n", {                                                                                                   // 41
+      mode: INFO_FILE_MODE                                                                                         // 45
+    });                                                                                                            // 45
+  } catch (ignored) {}                                                                                             // 47
+}                                                                                                                  // 48
+                                                                                                                   //
+var Server = function () {                                                                                         //
+  function Server(shellDir) {                                                                                      // 51
+    (0, _classCallCheck3.default)(this, Server);                                                                   // 51
+    var self = this;                                                                                               // 52
+    assert.ok(self instanceof Server);                                                                             // 53
+    self.shellDir = shellDir;                                                                                      // 55
+    self.key = Math.random().toString(36).slice(2);                                                                // 56
+    self.server = net.createServer(function (socket) {                                                             // 58
+      self.onConnection(socket);                                                                                   // 59
+    }).on("error", function (err) {                                                                                // 60
+      console.error(err.stack);                                                                                    // 61
+    });                                                                                                            // 62
+  }                                                                                                                // 63
+                                                                                                                   //
+  Server.prototype.listen = function () {                                                                          //
+    function listen() {                                                                                            //
+      var self = this;                                                                                             // 66
+      var infoFile = getInfoFile(self.shellDir);                                                                   // 67
+      fs.unlink(infoFile, function () {                                                                            // 69
+        self.server.listen(0, "127.0.0.1", function () {                                                           // 70
+          fs.writeFileSync(infoFile, JSON.stringify({                                                              // 71
+            status: "enabled",                                                                                     // 72
+            port: self.server.address().port,                                                                      // 73
+            key: self.key                                                                                          // 74
+          }) + "\n", {                                                                                             // 71
+            mode: INFO_FILE_MODE                                                                                   // 76
+          });                                                                                                      // 75
+        });                                                                                                        // 78
+      });                                                                                                          // 79
+    }                                                                                                              // 80
+                                                                                                                   //
+    return listen;                                                                                                 //
+  }();                                                                                                             //
+                                                                                                                   //
+  Server.prototype.onConnection = function () {                                                                    //
+    function onConnection(socket) {                                                                                //
+      var self = this; // Make sure this function doesn't try to write anything to the socket                      // 83
+      // after it has been closed.                                                                                 // 86
+                                                                                                                   //
+      socket.on("close", function () {                                                                             // 87
+        socket = null;                                                                                             // 88
+      }); // If communication is not established within 1000ms of the first                                        // 89
+      // connection, forcibly close the socket.                                                                    // 92
+                                                                                                                   //
+      var timeout = setTimeout(function () {                                                                       // 93
+        if (socket) {                                                                                              // 94
+          socket.removeAllListeners("data");                                                                       // 95
+          socket.end(EXITING_MESSAGE + "\n");                                                                      // 96
+        }                                                                                                          // 97
+      }, 1000); // Let connecting clients configure certain REPL options by sending a                              // 98
+      // JSON object over the socket. For example, only the client knows                                           // 101
+      // whether it's running a TTY or an Emacs subshell or some other kind of                                     // 102
+      // terminal, so the client must decide the value of options.terminal.                                        // 103
+                                                                                                                   //
+      readJSONFromStream(socket, function (error, options, replInputSocket) {                                      // 104
+        clearTimeout(timeout);                                                                                     // 105
+                                                                                                                   //
+        if (error) {                                                                                               // 107
+          socket = null;                                                                                           // 108
+          console.error(error.stack);                                                                              // 109
+          return;                                                                                                  // 110
+        }                                                                                                          // 111
+                                                                                                                   //
+        if (options.key !== self.key) {                                                                            // 113
+          if (socket) {                                                                                            // 114
+            socket.end(EXITING_MESSAGE + "\n");                                                                    // 115
+          }                                                                                                        // 116
+                                                                                                                   //
+          return;                                                                                                  // 117
+        }                                                                                                          // 118
+                                                                                                                   //
+        delete options.key; // Set the columns to what is being requested by the client.                           // 119
+                                                                                                                   //
+        if (options.columns && socket) {                                                                           // 122
+          socket.columns = options.columns;                                                                        // 123
+        }                                                                                                          // 124
+                                                                                                                   //
+        delete options.columns;                                                                                    // 125
+                                                                                                                   //
+        if (options.evaluateAndExit) {                                                                             // 127
+          evalCommand.call(Object.create(null), // Dummy repl object without ._RecoverableError.                   // 128
+          "(" + options.evaluateAndExit.command + ")", null, // evalCommand ignores the context parameter, anyway  // 130
+          options.evaluateAndExit.filename || "<meteor shell>", function (error, result) {                         // 132
+            if (socket) {                                                                                          // 134
+              var message = error ? {                                                                              // 135
+                error: error + "",                                                                                 // 136
+                code: 1                                                                                            // 137
+              } : {                                                                                                // 135
+                result: result                                                                                     // 139
+              }; // Sending back a JSON payload allows the client to                                               // 138
+              // distinguish between errors and successful results.                                                // 143
+                                                                                                                   //
+              socket.end(JSON.stringify(message) + "\n");                                                          // 144
+            }                                                                                                      // 145
+          });                                                                                                      // 146
+          return;                                                                                                  // 148
+        }                                                                                                          // 149
+                                                                                                                   //
+        delete options.evaluateAndExit; // Immutable options.                                                      // 150
+                                                                                                                   //
+        _.extend(options, {                                                                                        // 153
+          input: replInputSocket,                                                                                  // 154
+          output: socket                                                                                           // 155
+        }); // Overridable options.                                                                                // 153
+                                                                                                                   //
+                                                                                                                   //
+        _.defaults(options, {                                                                                      // 159
+          prompt: "> ",                                                                                            // 160
+          terminal: true,                                                                                          // 161
+          useColors: true,                                                                                         // 162
+          useGlobal: true,                                                                                         // 163
+          ignoreUndefined: true                                                                                    // 164
+        });                                                                                                        // 159
+                                                                                                                   //
+        self.startREPL(options);                                                                                   // 167
+      });                                                                                                          // 168
+    }                                                                                                              // 169
+                                                                                                                   //
+    return onConnection;                                                                                           //
+  }();                                                                                                             //
+                                                                                                                   //
+  Server.prototype.startREPL = function () {                                                                       //
+    function startREPL(options) {                                                                                  //
+      var self = this; // Make sure this function doesn't try to write anything to the output                      // 172
+      // stream after it has been closed.                                                                          // 175
+                                                                                                                   //
+      options.output.on("close", function () {                                                                     // 176
+        options.output = null;                                                                                     // 177
+      });                                                                                                          // 178
+                                                                                                                   //
+      var repl = self.repl = require("repl").start(options); // History persists across shell sessions!            // 180
+                                                                                                                   //
+                                                                                                                   //
+      self.initializeHistory(); // Save the global `_` object in the server.  This is probably defined by the      // 183
+      // underscore package.  It is unlikely to be the same object as the `var _ =                                 // 186
+      // require('underscore')` in this file!                                                                      // 187
+                                                                                                                   //
+      var originalUnderscore = repl.context._;                                                                     // 188
+      Object.defineProperty(repl.context, "_", {                                                                   // 190
+        // Force the global _ variable to remain bound to underscore.                                              // 191
+        get: function () {                                                                                         // 192
+          return originalUnderscore;                                                                               // 192
+        },                                                                                                         // 192
+        // Expose the last REPL result as __ instead of _.                                                         // 194
+        set: function (lastResult) {                                                                               // 195
+          repl.context.__ = lastResult;                                                                            // 196
+        },                                                                                                         // 197
+        enumerable: true,                                                                                          // 199
+        // Allow this property to be (re)defined more than once (e.g. each                                         // 201
+        // time the server restarts).                                                                              // 202
+        configurable: true                                                                                         // 203
+      });                                                                                                          // 190
+                                                                                                                   //
+      if (Package.modules) {                                                                                       // 206
+        // Use the same `require` function and `module` object visible to the                                      // 207
+        // application.                                                                                            // 208
+        var toBeInstalled = {};                                                                                    // 209
+        var shellModuleName = "meteor-shell-" + Math.random().toString(36).slice(2) + ".js";                       // 210
+                                                                                                                   //
+        toBeInstalled[shellModuleName] = function (require, exports, module) {                                     // 213
+          repl.context.module = module;                                                                            // 214
+          repl.context.require = require; // Tab completion sometimes uses require.extensions, but only for        // 215
+          // the keys.                                                                                             // 218
+                                                                                                                   //
+          require.extensions = {                                                                                   // 219
+            ".js": true,                                                                                           // 220
+            ".json": true,                                                                                         // 221
+            ".node": true                                                                                          // 222
+          };                                                                                                       // 219
+        }; // This populates repl.context.{module,require} by evaluating the                                       // 224
+        // module defined above.                                                                                   // 227
+                                                                                                                   //
+                                                                                                                   //
+        Package.modules.meteorInstall(toBeInstalled)("./" + shellModuleName);                                      // 228
+      }                                                                                                            // 229
+                                                                                                                   //
+      repl.context.repl = repl; // Some improvements to the existing help messages.                                // 231
+                                                                                                                   //
+      function addHelp(cmd, helpText) {                                                                            // 234
+        var info = repl.commands[cmd] || repl.commands["." + cmd];                                                 // 235
+                                                                                                                   //
+        if (info) {                                                                                                // 236
+          info.help = helpText;                                                                                    // 237
+        }                                                                                                          // 238
+      }                                                                                                            // 239
+                                                                                                                   //
+      addHelp("break", "Terminate current command input and display new prompt");                                  // 240
+      addHelp("exit", "Disconnect from server and leave shell");                                                   // 241
+      addHelp("help", "Show this help information"); // When the REPL exits, signal the attached client to exit by sending it
+      // the special EXITING_MESSAGE.                                                                              // 245
+                                                                                                                   //
+      repl.on("exit", function () {                                                                                // 246
+        if (options.output) {                                                                                      // 247
+          options.output.write(EXITING_MESSAGE + "\n");                                                            // 248
+          options.output.end();                                                                                    // 249
+        }                                                                                                          // 250
+      }); // When the server process exits, end the output stream but do not                                       // 251
+      // signal the attached client to exit.                                                                       // 254
+                                                                                                                   //
+      process.on("exit", function () {                                                                             // 255
+        if (options.output) {                                                                                      // 256
+          options.output.end();                                                                                    // 257
+        }                                                                                                          // 258
+      }); // This Meteor-specific shell command rebuilds the application as if a                                   // 259
+      // change was made to server code.                                                                           // 262
+                                                                                                                   //
+      repl.defineCommand("reload", {                                                                               // 263
+        help: "Restart the server and the shell",                                                                  // 264
+        action: function () {                                                                                      // 265
+          process.exit(0);                                                                                         // 266
+        }                                                                                                          // 267
+      }); // Trigger one recoverable error using the default eval function, just                                   // 263
+      // to capture the Recoverable error constructor, so that our custom                                          // 271
+      // evalCommand function can wrap recoverable errors properly.                                                // 272
+                                                                                                                   //
+      repl.eval("{", null, "<meteor shell>", function (error) {                                                    // 273
+        // Capture the Recoverable error constructor.                                                              // 276
+        repl._RecoverableError = error && error.constructor; // Now set repl.eval to the actual evalCommand function that we want
+        // to use, bound to repl._domain if necessary.                                                             // 280
+                                                                                                                   //
+        repl.eval = repl._domain ? repl._domain.bind(evalCommand) : evalCommand; // Terminate the partial evaluation of the { command.
+                                                                                                                   //
+        repl.commands["break"].action.call(repl);                                                                  // 286
+      });                                                                                                          // 287
+    }                                                                                                              // 289
+                                                                                                                   //
+    return startREPL;                                                                                              //
+  }(); // This function allows a persistent history of shell commands to be saved                                  //
+  // to and loaded from .meteor/local/shell-history.                                                               // 292
+                                                                                                                   //
+                                                                                                                   //
+  Server.prototype.initializeHistory = function () {                                                               //
+    function initializeHistory() {                                                                                 //
+      var self = this;                                                                                             // 294
+      var rli = self.repl.rli;                                                                                     // 295
+      var historyFile = getHistoryFile(self.shellDir);                                                             // 296
+      var historyFd = fs.openSync(historyFile, "a+");                                                              // 297
+      var historyLines = fs.readFileSync(historyFile, "utf8").split("\n");                                         // 298
+      var seenLines = Object.create(null);                                                                         // 299
+                                                                                                                   //
+      if (!rli.history) {                                                                                          // 301
+        rli.history = [];                                                                                          // 302
+        rli.historyIndex = -1;                                                                                     // 303
+      }                                                                                                            // 304
+                                                                                                                   //
+      while (rli.history && historyLines.length > 0) {                                                             // 306
+        var line = historyLines.pop();                                                                             // 307
+                                                                                                                   //
+        if (line && /\S/.test(line) && !seenLines[line]) {                                                         // 308
+          rli.history.push(line);                                                                                  // 309
+          seenLines[line] = true;                                                                                  // 310
+        }                                                                                                          // 311
+      }                                                                                                            // 312
+                                                                                                                   //
+      rli.addListener("line", function (line) {                                                                    // 314
+        if (historyFd >= 0 && /\S/.test(line)) {                                                                   // 315
+          fs.writeSync(historyFd, line + "\n");                                                                    // 316
+        }                                                                                                          // 317
+      });                                                                                                          // 318
+      self.repl.on("exit", function () {                                                                           // 320
+        fs.closeSync(historyFd);                                                                                   // 321
+        historyFd = -1;                                                                                            // 322
+      });                                                                                                          // 323
+    }                                                                                                              // 324
+                                                                                                                   //
+    return initializeHistory;                                                                                      //
+  }();                                                                                                             //
+                                                                                                                   //
+  return Server;                                                                                                   //
+}();                                                                                                               //
+                                                                                                                   //
+function readJSONFromStream(inputStream, callback) {                                                               // 327
+  var outputStream = new stream.PassThrough();                                                                     // 328
+  var dataSoFar = "";                                                                                              // 329
+                                                                                                                   //
+  function onData(buffer) {                                                                                        // 331
+    var lines = buffer.toString("utf8").split("\n");                                                               // 332
+                                                                                                                   //
+    while (lines.length > 0) {                                                                                     // 334
+      dataSoFar += lines.shift();                                                                                  // 335
+                                                                                                                   //
+      try {                                                                                                        // 337
+        var json = JSON.parse(dataSoFar);                                                                          // 338
+      } catch (error) {                                                                                            // 339
+        if (error instanceof SyntaxError) {                                                                        // 340
+          continue;                                                                                                // 341
+        }                                                                                                          // 342
+                                                                                                                   //
+        return finish(error);                                                                                      // 344
+      }                                                                                                            // 345
+                                                                                                                   //
+      if (lines.length > 0) {                                                                                      // 347
+        outputStream.write(lines.join("\n"));                                                                      // 348
+      }                                                                                                            // 349
+                                                                                                                   //
+      inputStream.pipe(outputStream);                                                                              // 351
+      return finish(null, json);                                                                                   // 353
+    }                                                                                                              // 354
+  }                                                                                                                // 355
+                                                                                                                   //
+  function onClose() {                                                                                             // 357
+    finish(new Error("stream unexpectedly closed"));                                                               // 358
+  }                                                                                                                // 359
+                                                                                                                   //
+  var finished = false;                                                                                            // 361
+                                                                                                                   //
+  function finish(error, json) {                                                                                   // 362
+    if (!finished) {                                                                                               // 363
+      finished = true;                                                                                             // 364
+      inputStream.removeListener("data", onData);                                                                  // 365
+      inputStream.removeListener("error", finish);                                                                 // 366
+      inputStream.removeListener("close", onClose);                                                                // 367
+      callback(error, json, outputStream);                                                                         // 368
+    }                                                                                                              // 369
+  }                                                                                                                // 370
+                                                                                                                   //
+  inputStream.on("data", onData);                                                                                  // 372
+  inputStream.on("error", finish);                                                                                 // 373
+  inputStream.on("close", onClose);                                                                                // 374
+}                                                                                                                  // 375
+                                                                                                                   //
+function getInfoFile(shellDir) {                                                                                   // 377
+  return path.join(shellDir, "info.json");                                                                         // 378
+}                                                                                                                  // 379
+                                                                                                                   //
+function getHistoryFile(shellDir) {                                                                                // 381
+  return path.join(shellDir, "history");                                                                           // 382
+} // Shell commands need to be executed in a Fiber in case they call into                                          // 383
+// code that yields. Using a Promise is an even better idea, since it runs                                         // 386
+// its callbacks in Fibers drawn from a pool, so the Fibers are recycled.                                          // 387
+                                                                                                                   //
+                                                                                                                   //
+var evalCommandPromise = Promise.resolve();                                                                        // 388
+                                                                                                                   //
+function evalCommand(command, context, filename, callback) {                                                       // 390
+  var repl = this;                                                                                                 // 391
+                                                                                                                   //
+  function finish(error, result) {                                                                                 // 393
+    if (error) {                                                                                                   // 394
+      if (repl._RecoverableError && isRecoverableError(error, repl)) {                                             // 395
+        callback(new repl._RecoverableError(error));                                                               // 397
+      } else {                                                                                                     // 398
+        callback(error);                                                                                           // 399
+      }                                                                                                            // 400
+    } else {                                                                                                       // 401
+      callback(null, result);                                                                                      // 402
+    }                                                                                                              // 403
+  }                                                                                                                // 404
+                                                                                                                   //
+  if (Package.ecmascript) {                                                                                        // 406
+    var noParens = stripParens(command);                                                                           // 407
+                                                                                                                   //
+    if (noParens !== command) {                                                                                    // 408
+      var classMatch = /^\s*class\s+(\w+)/.exec(noParens);                                                         // 409
+                                                                                                                   //
+      if (classMatch && classMatch[1] !== "extends") {                                                             // 410
+        // If the command looks like a named ES2015 class, we remove the                                           // 411
+        // extra layer of parentheses added by the REPL so that the                                                // 412
+        // command will be evaluated as a class declaration rather than as                                         // 413
+        // a named class expression. Note that you can still type (class A                                         // 414
+        // {}) explicitly to evaluate a named class expression. The REPL                                           // 415
+        // code that calls evalCommand handles named function expressions                                          // 416
+        // similarly (first with and then without parentheses), but that                                           // 417
+        // code doesn't know about ES2015 classes, which is why we have to                                         // 418
+        // handle them here.                                                                                       // 419
+        command = noParens;                                                                                        // 420
+      }                                                                                                            // 421
+    }                                                                                                              // 422
+                                                                                                                   //
+    try {                                                                                                          // 424
+      command = Package.ecmascript.ECMAScript.compileForShell(command);                                            // 425
+    } catch (error) {                                                                                              // 426
+      finish(error);                                                                                               // 427
+      return;                                                                                                      // 428
+    }                                                                                                              // 429
+  }                                                                                                                // 430
+                                                                                                                   //
+  try {                                                                                                            // 432
+    var script = new vm.Script(command, {                                                                          // 433
+      filename: filename,                                                                                          // 434
+      displayErrors: false                                                                                         // 435
+    });                                                                                                            // 433
+  } catch (parseError) {                                                                                           // 437
+    finish(parseError);                                                                                            // 438
+    return;                                                                                                        // 439
+  }                                                                                                                // 440
+                                                                                                                   //
+  evalCommandPromise.then(function () {                                                                            // 442
+    finish(null, script.runInThisContext());                                                                       // 443
+  }).catch(finish);                                                                                                // 444
+}                                                                                                                  // 445
+                                                                                                                   //
+function stripParens(command) {                                                                                    // 447
+  if (command.charAt(0) === "(" && command.charAt(command.length - 1) === ")") {                                   // 448
+    return command.slice(1, command.length - 1);                                                                   // 450
+  }                                                                                                                // 451
+                                                                                                                   //
+  return command;                                                                                                  // 452
+} // The bailOnIllegalToken and isRecoverableError functions are taken from                                        // 453
+// https://github.com/nodejs/node/blob/c9e670ea2a/lib/repl.js#L1227-L1253                                          // 456
+                                                                                                                   //
+                                                                                                                   //
+function bailOnIllegalToken(parser) {                                                                              // 457
+  return parser._literal === null && !parser.blockComment && !parser.regExpLiteral;                                // 458
+} // If the error is that we've unexpectedly ended the input,                                                      // 461
+// then let the user try to recover by adding more input.                                                          // 464
+                                                                                                                   //
+                                                                                                                   //
+function isRecoverableError(e, repl) {                                                                             // 465
+  if (e && e.name === 'SyntaxError') {                                                                             // 466
+    var message = e.message;                                                                                       // 467
+                                                                                                                   //
+    if (message === 'Unterminated template literal' || message === 'Missing } in template expression') {           // 468
+      repl._inTemplateLiteral = true;                                                                              // 470
+      return true;                                                                                                 // 471
+    }                                                                                                              // 472
+                                                                                                                   //
     if (message.startsWith('Unexpected end of input') || message.startsWith('missing ) after argument list') || message.startsWith('Unexpected token')) {
-      return true;                                                                                                // 492
-    }                                                                                                             // 493
-                                                                                                                  //
-    if (message === 'Invalid or unexpected token') {                                                              // 495
-      return !bailOnIllegalToken(repl.lineParser);                                                                // 496
-    }                                                                                                             // 497
-  }                                                                                                               // 498
-                                                                                                                  //
-  return false;                                                                                                   // 500
-}                                                                                                                 // 501
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      return true;                                                                                                 // 477
+    }                                                                                                              // 478
+                                                                                                                   //
+    if (message === 'Invalid or unexpected token') {                                                               // 480
+      return !bailOnIllegalToken(repl.lineParser);                                                                 // 481
+    }                                                                                                              // 482
+  }                                                                                                                // 483
+                                                                                                                   //
+  return false;                                                                                                    // 485
+}                                                                                                                  // 486
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }]}}}},{"extensions":[".js",".json"]});
 var exports = require("./node_modules/meteor/shell-server/main.js");

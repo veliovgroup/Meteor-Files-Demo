@@ -7,7 +7,36 @@ var meteorEnv = Package.meteor.meteorEnv;
 var _ = Package.underscore._;
 var Random = Package.random.Random;
 var Accounts = Package['accounts-base'].Accounts;
-var MeteorDeveloperAccounts = Package['meteor-developer'].MeteorDeveloperAccounts;
+var MeteorDeveloperAccounts = Package['meteor-developer-oauth'].MeteorDeveloperAccounts;
+
+(function(){
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                         //
+// packages/accounts-meteor-developer/notice.js                                            //
+//                                                                                         //
+/////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                           //
+if (Package['accounts-ui']
+    && !Package.hasOwnProperty('meteor-developer-config-ui')) {
+  console.warn(
+    "Note: You're using accounts-ui and accounts-meteor-developer,\n" +
+    "but didn't install the configuration UI for the Meteor Developer\n" +
+    "Accounts OAuth. You can install it with:\n" +
+    "\n" +
+    "    meteor add meteor-developer-config-ui" +
+    "\n"
+  );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
 
 (function(){
 

@@ -79,7 +79,16 @@ makeInstaller = function (options) {
   // caller of makeInstaller wishes to modify Module.prototype.
   function Module(id) {
     this.id = id;
+
+    // The Node implementation of module.children unfortunately includes
+    // only those child modules that were imported for the first time by
+    // this parent module (i.e., child.parent === this).
     this.children = [];
+
+    // This object is an install.js extension that includes all child
+    // modules imported by this module, even if this module is not the
+    // first to import them.
+    this.childrenById = {};
   }
 
   Module.prototype.resolve = function (id) {
@@ -314,7 +323,15 @@ makeInstaller = function (options) {
     return file;
   }
 
-  function fileResolve(file, id, seenDirFiles) {
+  function recordChild(parentModule, childFile) {
+    var childModule = childFile && childFile.m;
+    if (parentModule && childModule) {
+      parentModule.childrenById[childModule.id] = childModule;
+    }
+  }
+
+  function fileResolve(file, id, parentModule, seenDirFiles) {
+    var parentModule = parentModule || file.m;
     var extensions = fileGetExtensions(file);
 
     file =
@@ -344,18 +361,20 @@ makeInstaller = function (options) {
       if (seenDirFiles.indexOf(file) < 0) {
         seenDirFiles.push(file);
 
-        var pkgJsonFile = fileAppendIdPart(file, "package.json");
-        var pkg = pkgJsonFile && fileEvaluate(pkgJsonFile), main;
+        var pkgJsonFile = fileAppendIdPart(file, "package.json"), main;
+        var pkg = pkgJsonFile && fileEvaluate(pkgJsonFile, parentModule);
         if (pkg && (browser &&
                     isString(main = pkg.browser) ||
                     isString(main = pkg.main))) {
+          recordChild(parentModule, pkgJsonFile);
+
           // The "main" field of package.json does not have to begin with
           // ./ to be considered relative, so first we try simply
           // appending it to the directory path before falling back to a
           // full fileResolve, which might return a package from a
           // node_modules directory.
           file = fileAppendId(file, main, extensions) ||
-            fileResolve(file, main, seenDirFiles);
+            fileResolve(file, main, parentModule, seenDirFiles);
 
           if (file) {
             // The fileAppendId call above may have returned a directory,
@@ -378,8 +397,10 @@ makeInstaller = function (options) {
     }
 
     if (file && isString(file.c)) {
-      file = fileResolve(file, file.c, seenDirFiles);
+      file = fileResolve(file, file.c, parentModule, seenDirFiles);
     }
+
+    recordChild(parentModule, file);
 
     return file;
   };
