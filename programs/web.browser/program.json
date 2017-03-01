@@ -2,13 +2,13 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "0b24ffdbb682d4e4a3d971da33a05d04750def1c.js",
+      "path": "d00837278ae0c2309fb168be13314db653c4b8eb.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/0b24ffdbb682d4e4a3d971da33a05d04750def1c.js?meteor_js_resource=true",
-      "size": 830386,
-      "hash": "0b24ffdbb682d4e4a3d971da33a05d04750def1c"
+      "url": "/d00837278ae0c2309fb168be13314db653c4b8eb.js?meteor_js_resource=true",
+      "size": 830271,
+      "hash": "d00837278ae0c2309fb168be13314db653c4b8eb"
     },
     {
       "path": "0a8c59971802512176b761c7dbaf5de46a5112ab.css",
@@ -99,6 +99,15 @@
       "url": "/packages/oauth/end_of_redirect_response.js",
       "size": 273,
       "hash": "6a6f05754801932831eca4680f582c87a8da062a"
+    },
+    {
+      "path": "app/GCAA.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/GCAA.png",
+      "size": 22095,
+      "hash": "ec16fca68cf7ac3b33fa580c63318b23dc7a9abf"
     },
     {
       "path": "app/android-chrome-144x144.png",

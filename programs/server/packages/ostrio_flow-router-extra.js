@@ -25,7 +25,7 @@ var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 
 /* Package-scope variables */
-var Router, Group, Route, FlowRouter, pathWithoutBase;
+var Router, Group, Route, FlowRouter;
 
 var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra":{"server":{"router.js":["qs",function(require){
 
@@ -37,7 +37,7 @@ var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra
                                                                                              //
 var Qs = require('qs');                                                                      // 1
                                                                                              //
-var pathRegExp = /(:[\w\(\)\\\+\*\.\?]+)+/g;                                                 // 2
+var pathRegExp = /(:[\w\(\)\\\+\*\.\?\[\]\-]+)+/g;                                           // 2
                                                                                              //
 Router = function () {                                                                       // 4
   this._routes = [];                                                                         // 5
@@ -168,23 +168,61 @@ Router.prototype.wait = function () {// client only                             
 //                                                                                           //
 ///////////////////////////////////////////////////////////////////////////////////////////////
                                                                                              //
-Group = function (router) {                                                                  // 1
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};      // 1
-  this.prefix = options.prefix || '';                                                        // 2
-  this.options = options;                                                                    // 3
-  this._router = router;                                                                     // 4
-};                                                                                           // 5
+var makeTriggers = function (base, triggers) {                                               // 1
+  if (triggers) {                                                                            // 2
+    if (!_.isArray(triggers)) {                                                              // 3
+      triggers = [triggers];                                                                 // 4
+    }                                                                                        // 5
+  } else {                                                                                   // 6
+    triggers = [];                                                                           // 7
+  }                                                                                          // 8
                                                                                              //
-Group.prototype.route = function (pathDef, options) {                                        // 7
-  pathDef = this.prefix + pathDef;                                                           // 8
-  return this._router.route(pathDef, options);                                               // 9
-};                                                                                           // 10
+  return (base || []).concat(triggers);                                                      // 10
+};                                                                                           // 11
                                                                                              //
-Group.prototype.group = function (options) {                                                 // 12
-  var group = new Group(this._router, options);                                              // 13
-  group.parent = this;                                                                       // 14
-  return group;                                                                              // 16
-};                                                                                           // 17
+Group = function (router) {                                                                  // 13
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};      // 13
+  var parent = arguments[2];                                                                 // 13
+                                                                                             //
+  if (options.prefix && !/^\/.*/.test(options.prefix)) {                                     // 14
+    throw new Error('group\'s prefix must start with "/"');                                  // 15
+  }                                                                                          // 16
+                                                                                             //
+  this._router = router;                                                                     // 18
+  this.prefix = options.prefix || '';                                                        // 19
+  this.name = options.name;                                                                  // 20
+  this.options = options;                                                                    // 21
+  this._triggersEnter = makeTriggers(this._triggersEnter, options.triggersEnter);            // 23
+  this._triggersExit = makeTriggers(this._triggersExit, options.triggersExit);               // 24
+  this.parent = parent;                                                                      // 26
+                                                                                             //
+  if (this.parent) {                                                                         // 27
+    this.prefix = parent.prefix + this.prefix;                                               // 28
+    this._triggersEnter = makeTriggers(this._triggersEnter, parent.triggersEnter);           // 30
+    this._triggersExit = makeTriggers(this._triggersExit, parent.triggersExit);              // 31
+  }                                                                                          // 32
+};                                                                                           // 33
+                                                                                             //
+Group.prototype.route = function (pathDef) {                                                 // 35
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};      // 35
+  var group = arguments[2];                                                                  // 35
+                                                                                             //
+  if (!/^\/.*/.test(pathDef)) {                                                              // 36
+    throw new Error('route\'s path must start with "/"');                                    // 37
+  }                                                                                          // 38
+                                                                                             //
+  group = group || this;                                                                     // 40
+  pathDef = this.prefix + pathDef;                                                           // 41
+  options.triggersEnter = makeTriggers(this._triggersEnter, options.triggersEnter);          // 43
+  options.triggersExit = makeTriggers(this._triggersExit, options.triggersExit);             // 44
+  return this._router.route(pathDef, options, group);                                        // 46
+};                                                                                           // 47
+                                                                                             //
+Group.prototype.group = function (options) {                                                 // 49
+  var group = new Group(this._router, options, this);                                        // 50
+  group.parent = this;                                                                       // 51
+  return group;                                                                              // 53
+};                                                                                           // 54
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 },"route.js":function(){
@@ -250,7 +288,7 @@ Router.prototype.url = function () {                                            
   // We need to remove the leading base path, or "/", as it will be inserted                 // 2
   // automatically by `Meteor.absoluteUrl` as documented in:                                 // 3
   // http://docs.meteor.com/#/full/meteor_absoluteurl                                        // 4
-  return Meteor.absoluteUrl(pathWithoutBase = this.path.apply(this, arguments).replace(new RegExp('^' + (this._basePath || '/')), ''));
+  return Meteor.absoluteUrl(this.path.apply(this, arguments).replace(new RegExp('^' + ('/' + (this._basePath || '') + '/').replace(/\/\/+/g, "/")), ''));
 };                                                                                           // 6
                                                                                              //
 Meteor.startup(function () {                                                                 // 8
@@ -262,12 +300,12 @@ Meteor.startup(function () {                                                    
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                           //
-// ../../.2.12.7.l9gryp++os+web.browser+web.cordova/npm/node_modules/qs/package.json         //
+// ../../.2.12.9.1javthe++os+web.browser+web.cordova/npm/node_modules/qs/package.json        //
 //                                                                                           //
 ///////////////////////////////////////////////////////////////////////////////////////////////
                                                                                              //
 exports.name = "qs";
-exports.version = "6.3.0";
+exports.version = "6.3.1";
 exports.main = "lib/index.js";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +314,7 @@ exports.main = "lib/index.js";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                           //
-// node_modules/meteor/ostrio:flow-router-extra/node_modules/qs/lib/index.js                 //
+// node_modules/meteor/ostrio_flow-router-extra/node_modules/qs/lib/index.js                 //
 //                                                                                           //
 ///////////////////////////////////////////////////////////////////////////////////////////////
                                                                                              //
