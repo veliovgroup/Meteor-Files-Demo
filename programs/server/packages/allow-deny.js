@@ -143,96 +143,94 @@ CollectionPrototype._defineMutationMethods = function (options) {               
   // XXX see #MeteorServerNull                                                                                   // 107
                                                                                                                  //
   if (self._connection && (self._connection === Meteor.server || Meteor.isClient)) {                             // 108
-    (function () {                                                                                               // 108
-      var m = {};                                                                                                // 109
+    var m = {};                                                                                                  // 109
                                                                                                                  //
-      _.each(['insert', 'update', 'remove'], function (method) {                                                 // 111
-        var methodName = self._prefix + method;                                                                  // 112
+    _.each(['insert', 'update', 'remove'], function (method) {                                                   // 111
+      var methodName = self._prefix + method;                                                                    // 112
                                                                                                                  //
-        if (options.useExisting) {                                                                               // 114
-          var handlerPropName = Meteor.isClient ? '_methodHandlers' : 'method_handlers'; // Do not try to create additional methods if this has already been called.
-          // (Otherwise the .methods() call below will throw an error.)                                          // 117
+      if (options.useExisting) {                                                                                 // 114
+        var handlerPropName = Meteor.isClient ? '_methodHandlers' : 'method_handlers'; // Do not try to create additional methods if this has already been called.
+        // (Otherwise the .methods() call below will throw an error.)                                            // 117
                                                                                                                  //
-          if (self._connection[handlerPropName] && typeof self._connection[handlerPropName][methodName] === 'function') return;
-        }                                                                                                        // 120
+        if (self._connection[handlerPropName] && typeof self._connection[handlerPropName][methodName] === 'function') return;
+      }                                                                                                          // 120
                                                                                                                  //
-        m[methodName] = function () /* ... */{                                                                   // 122
-          // All the methods do their own validation, instead of using check().                                  // 123
-          check(arguments, [Match.Any]);                                                                         // 124
+      m[methodName] = function () /* ... */{                                                                     // 122
+        // All the methods do their own validation, instead of using check().                                    // 123
+        check(arguments, [Match.Any]);                                                                           // 124
                                                                                                                  //
-          var args = _.toArray(arguments);                                                                       // 125
+        var args = _.toArray(arguments);                                                                         // 125
                                                                                                                  //
-          try {                                                                                                  // 126
-            // For an insert, if the client didn't specify an _id, generate one                                  // 127
-            // now; because this uses DDP.randomStream, it will be consistent with                               // 128
-            // what the client generated. We generate it now rather than later so                                // 129
-            // that if (eg) an allow/deny rule does an insert to the same                                        // 130
-            // collection (not that it really should), the generated _id will                                    // 131
-            // still be the first use of the stream and will be consistent.                                      // 132
-            //                                                                                                   // 133
-            // However, we don't actually stick the _id onto the document yet,                                   // 134
-            // because we want allow/deny rules to be able to differentiate                                      // 135
-            // between arbitrary client-specified _id fields and merely                                          // 136
-            // client-controlled-via-randomSeed fields.                                                          // 137
-            var generatedId = null;                                                                              // 138
+        try {                                                                                                    // 126
+          // For an insert, if the client didn't specify an _id, generate one                                    // 127
+          // now; because this uses DDP.randomStream, it will be consistent with                                 // 128
+          // what the client generated. We generate it now rather than later so                                  // 129
+          // that if (eg) an allow/deny rule does an insert to the same                                          // 130
+          // collection (not that it really should), the generated _id will                                      // 131
+          // still be the first use of the stream and will be consistent.                                        // 132
+          //                                                                                                     // 133
+          // However, we don't actually stick the _id onto the document yet,                                     // 134
+          // because we want allow/deny rules to be able to differentiate                                        // 135
+          // between arbitrary client-specified _id fields and merely                                            // 136
+          // client-controlled-via-randomSeed fields.                                                            // 137
+          var generatedId = null;                                                                                // 138
                                                                                                                  //
-            if (method === "insert" && !_.has(args[0], '_id')) {                                                 // 139
-              generatedId = self._makeNewID();                                                                   // 140
-            }                                                                                                    // 141
+          if (method === "insert" && !_.has(args[0], '_id')) {                                                   // 139
+            generatedId = self._makeNewID();                                                                     // 140
+          }                                                                                                      // 141
                                                                                                                  //
-            if (this.isSimulation) {                                                                             // 143
-              // In a client simulation, you can do any mutation (even with a                                    // 144
-              // complex selector).                                                                              // 145
-              if (generatedId !== null) args[0]._id = generatedId;                                               // 146
-              return self._collection[method].apply(self._collection, args);                                     // 148
-            } // This is the server receiving a method call from the client.                                     // 150
-            // We don't allow arbitrary selectors in mutations from the client: only                             // 154
-            // single-ID selectors.                                                                              // 155
+          if (this.isSimulation) {                                                                               // 143
+            // In a client simulation, you can do any mutation (even with a                                      // 144
+            // complex selector).                                                                                // 145
+            if (generatedId !== null) args[0]._id = generatedId;                                                 // 146
+            return self._collection[method].apply(self._collection, args);                                       // 148
+          } // This is the server receiving a method call from the client.                                       // 150
+          // We don't allow arbitrary selectors in mutations from the client: only                               // 154
+          // single-ID selectors.                                                                                // 155
                                                                                                                  //
                                                                                                                  //
-            if (method !== 'insert') throwIfSelectorIsNotId(args[0], method);                                    // 156
+          if (method !== 'insert') throwIfSelectorIsNotId(args[0], method);                                      // 156
                                                                                                                  //
-            if (self._restricted) {                                                                              // 159
-              // short circuit if there is no way it will pass.                                                  // 160
-              if (self._validators[method].allow.length === 0) {                                                 // 161
-                throw new Meteor.Error(403, "Access denied. No allow validators set on restricted " + "collection for method '" + method + "'.");
-              }                                                                                                  // 165
+          if (self._restricted) {                                                                                // 159
+            // short circuit if there is no way it will pass.                                                    // 160
+            if (self._validators[method].allow.length === 0) {                                                   // 161
+              throw new Meteor.Error(403, "Access denied. No allow validators set on restricted " + "collection for method '" + method + "'.");
+            }                                                                                                    // 165
                                                                                                                  //
-              var validatedMethodName = '_validated' + method.charAt(0).toUpperCase() + method.slice(1);         // 167
-              args.unshift(this.userId);                                                                         // 169
-              method === 'insert' && args.push(generatedId);                                                     // 170
-              return self[validatedMethodName].apply(self, args);                                                // 171
-            } else if (self._isInsecure()) {                                                                     // 172
-              if (generatedId !== null) args[0]._id = generatedId; // In insecure mode, allow any mutation (with a simple selector).
-              // XXX This is kind of bogus.  Instead of blindly passing whatever                                 // 176
-              //     we get from the network to this function, we should actually                                // 177
-              //     know the correct arguments for the function and pass just                                   // 178
-              //     them.  For example, if you have an extraneous extra null                                    // 179
-              //     argument and this is Mongo on the server, the .wrapAsync'd                                  // 180
-              //     functions like update will get confused and pass the                                        // 181
-              //     "fut.resolver()" in the wrong slot, where _update will never                                // 182
-              //     invoke it. Bam, broken DDP connection.  Probably should just                                // 183
-              //     take this whole method and write it three times, invoking                                   // 184
-              //     helpers for the common code.                                                                // 185
+            var validatedMethodName = '_validated' + method.charAt(0).toUpperCase() + method.slice(1);           // 167
+            args.unshift(this.userId);                                                                           // 169
+            method === 'insert' && args.push(generatedId);                                                       // 170
+            return self[validatedMethodName].apply(self, args);                                                  // 171
+          } else if (self._isInsecure()) {                                                                       // 172
+            if (generatedId !== null) args[0]._id = generatedId; // In insecure mode, allow any mutation (with a simple selector).
+            // XXX This is kind of bogus.  Instead of blindly passing whatever                                   // 176
+            //     we get from the network to this function, we should actually                                  // 177
+            //     know the correct arguments for the function and pass just                                     // 178
+            //     them.  For example, if you have an extraneous extra null                                      // 179
+            //     argument and this is Mongo on the server, the .wrapAsync'd                                    // 180
+            //     functions like update will get confused and pass the                                          // 181
+            //     "fut.resolver()" in the wrong slot, where _update will never                                  // 182
+            //     invoke it. Bam, broken DDP connection.  Probably should just                                  // 183
+            //     take this whole method and write it three times, invoking                                     // 184
+            //     helpers for the common code.                                                                  // 185
                                                                                                                  //
-              return self._collection[method].apply(self._collection, args);                                     // 186
-            } else {                                                                                             // 187
-              // In secure mode, if we haven't called allow or deny, then nothing                                // 188
-              // is permitted.                                                                                   // 189
-              throw new Meteor.Error(403, "Access denied");                                                      // 190
-            }                                                                                                    // 191
-          } catch (e) {                                                                                          // 192
-            if (e.name === 'MongoError' || e.name === 'MinimongoError') {                                        // 193
-              throw new Meteor.Error(409, e.toString());                                                         // 194
-            } else {                                                                                             // 195
-              throw e;                                                                                           // 196
-            }                                                                                                    // 197
-          }                                                                                                      // 198
-        };                                                                                                       // 199
-      });                                                                                                        // 200
+            return self._collection[method].apply(self._collection, args);                                       // 186
+          } else {                                                                                               // 187
+            // In secure mode, if we haven't called allow or deny, then nothing                                  // 188
+            // is permitted.                                                                                     // 189
+            throw new Meteor.Error(403, "Access denied");                                                        // 190
+          }                                                                                                      // 191
+        } catch (e) {                                                                                            // 192
+          if (e.name === 'MongoError' || e.name === 'MinimongoError') {                                          // 193
+            throw new Meteor.Error(409, e.toString());                                                           // 194
+          } else {                                                                                               // 195
+            throw e;                                                                                             // 196
+          }                                                                                                      // 197
+        }                                                                                                        // 198
+      };                                                                                                         // 199
+    });                                                                                                          // 200
                                                                                                                  //
-      self._connection.methods(m);                                                                               // 202
-    })();                                                                                                        // 108
+    self._connection.methods(m);                                                                                 // 202
   }                                                                                                              // 203
 };                                                                                                               // 204
                                                                                                                  //

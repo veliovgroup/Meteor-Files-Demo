@@ -33,6 +33,15 @@ var warn = function () {
   }
 };
 
+// isArray returns true for arrays of these types:
+// standard arrays: instanceof Array === true, _.isArray(arr) === true
+// vm generated arrays: instanceOf Array === false, _.isArray(arr) === true
+// subclassed arrays: instanceof Array === true, _.isArray(arr) === false
+// see specific tests
+function isArray(arr) {
+  return arr instanceof Array || _.isArray(arr);
+}
+
 var idStringify = MongoID.idStringify;
 var idParse = MongoID.idParse;
 
@@ -118,7 +127,7 @@ ObserveSequence = {
 
         if (!seq) {
           seqArray = seqChangedToEmpty(lastSeqArray, callbacks);
-        } else if (_.isArray(seq)) {
+        } else if (isArray(seq)) {
           seqArray = seqChangedToArray(lastSeqArray, seq, callbacks);
         } else if (isStoreCursor(seq)) {
           var result /* [seqArray, activeObserveHandle] */ =
@@ -150,7 +159,7 @@ ObserveSequence = {
   fetch: function (seq) {
     if (!seq) {
       return [];
-    } else if (_.isArray(seq)) {
+    } else if (isArray(seq)) {
       return seq;
     } else if (isStoreCursor(seq)) {
       return seq.fetch();

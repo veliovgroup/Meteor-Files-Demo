@@ -18,6 +18,7 @@ var MeteorDeveloperAccounts = Package['meteor-developer-oauth'].MeteorDeveloperA
 /////////////////////////////////////////////////////////////////////////////////////////////
                                                                                            //
 if (Package['accounts-ui']
+    && !Package['service-configuration']
     && !Package.hasOwnProperty('meteor-developer-config-ui')) {
   console.warn(
     "Note: You're using accounts-ui and accounts-meteor-developer,\n" +

@@ -13,7 +13,10 @@ function __Cookies(_cookies) {
 
   if (_cookies && _cookies.length) {
     var self = this;
-    var i, key, val;
+    var i;
+    var key;
+    var val;
+
     _cookies.split(/;\ */).forEach(function (pair) {
       i = pair.indexOf('=');
       if (i < 0) {
@@ -320,7 +323,7 @@ ClientStorage.prototype.__escape = function(value) {
   } catch (e) {
     try {
       return value.toString();
-    } catch (e) {
+    } catch (err) {
       return value;
     }
   }

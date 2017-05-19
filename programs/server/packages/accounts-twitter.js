@@ -18,7 +18,9 @@ var HTTPInternals = Package.http.HTTPInternals;
 //                                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                        //
-if (Package['accounts-ui'] && !Package.hasOwnProperty('twitter-config-ui')) {
+if (Package['accounts-ui']
+    && !Package['service-configuration']
+    && !Package.hasOwnProperty('twitter-config-ui')) {
   console.warn(
     "Note: You're using accounts-ui and accounts-twitter,\n" +
     "but didn't install the configuration UI for Twitter\n" +

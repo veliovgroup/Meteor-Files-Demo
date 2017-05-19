@@ -20,18 +20,17 @@ Activate AWS:S3
 ======
  1. Read [this article](https://github.com/VeliovGroup/Meteor-Files/wiki/AWS-S3-Integration)
  2. After creating S3 bucket, create CloudFront Distribution and attach it to S3 bucket
- 3. Set S3 credentials into `METEOR_SETTINGS` env.var or pass as file, read [here for more info](http://docs.meteor.com/#/full/meteor_settings), alternatively (*if something not working*) set `S3` env.var
+ 3. Set S3 credentials into `METEOR_SETTINGS` env.var or pass as the file, read [here for more info](http://docs.meteor.com/#/full/meteor_settings), alternatively (*if something not working*) set `S3` env.var
  4. You can pass S3 credentials as JSON-string when using "*Heroku's one click install-button*"
 
-S3 credentials format (*region and cfdomain is required*):
+S3 credentials format (*region is required*):
 ```json
 {
   "s3": {
     "key": "xxx",
     "secret": "xxx",
     "bucket": "xxx",
-    "region": "xxx",
-    "cfdomain": "https://xxx.cloudfront.net"
+    "region": "xxx"
   }
 }
 ```
@@ -53,7 +52,7 @@ DropBox credentials format:
 }
 ```
 
-Activate Social Logins
+Activate login via Social Networks
 ======
 All credentials is set via env.var(s), if you're using "*Heroku's one click install-button*" - you will be able to pass all of them.
  - Facebook - [Create an App](https://developers.facebook.com/apps/):
@@ -71,15 +70,29 @@ All credentials is set via env.var(s), if you're using "*Heroku's one click inst
 
 Deploy to Heroku
 ======
- - Due to "*ephemeral filesystem*" on Heroku, we suggest to use DropBox/AWS:S3 as permanent storage, [read DropBox/S3/GridFS tutorial](https://github.com/VeliovGroup/Meteor-Files/wiki/Third-party-storage)
+ - Due to "*ephemeral filesystem*" on Heroku, we suggest to use 3rd-party permanent storage, [read DropBox/S3/GridFS tutorial](https://github.com/VeliovGroup/Meteor-Files/wiki/Third-party-storage)
  - Go to [Heroku](https://signup.heroku.com/dc) create and confirm your new account
- - Go though [Node.js Tutorial](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
+ - Go through [Node.js Tutorial](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
  - Install [Heroku Toolbet](https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up)
  - Then go to Terminal into Meteor's project directory and run:
 
 ```shell
-git clone https://github.com/VeliovGroup/Meteor-Files-Demo.git
-cd Meteor-Files-Demo
+# Build an app ypourself, or use pre-build version: https://github.com/VeliovGroup/Meteor-Files-Demo
+# Available architectures:
+# os.osx.x86_64
+# os.linux.x86_64
+# os.linux.x86_32
+# os.windows.x86_32
+meteor build ../build-<your-app-name> --architecture os.linux.x86_64
+cd ../build-<your-app-name>
+tar xzf <name-of-archive> -C ./
+cd bundle/
+cp -Rf * ../
+cd ../
+rm -Rf bundle/
+rm -Rf <name-of-archive>
+touch Procfile
+echo "web: node main.js" > Procfile
 
 heroku create <your-app-name> --buildpack https://github.com/heroku/heroku-buildpack-nodejs
 # This command will output something like: 
@@ -103,7 +116,7 @@ heroku config:set MONGO_URL=mongodb://<dbuser>:<dbpassword>@dt754268.mlab.com:19
 # heroku config:set DROPBOX='{"dropbox":{"key": "xxx", "secret": "xxx", "token": "xxx"}}'
 
 # For AWS:S3:
-# heroku config:set S3='{"s3":{"key": "xxx", "secret": "xxx", "bucket": "xxx", "region": "xxx", "cfdomain": "https://xxx.cloudfront.net"}}'
+# heroku config:set S3='{"s3":{"key": "xxx", "secret": "xxx", "bucket": "xxx", "region": "xxx"}}'
 
 # For Facebook:
 # heroku config:set ACCOUNTS_FACEBOOK_ID=xxx ACCOUNTS_FACEBOOK_SEC=yyy

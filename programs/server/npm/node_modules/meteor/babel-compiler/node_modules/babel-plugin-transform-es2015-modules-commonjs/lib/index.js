@@ -129,6 +129,7 @@ exports.default = function () {
           this.ranCommonJS = true;
 
           var strict = !!this.opts.strict;
+          var noInterop = !!this.opts.noInterop;
 
           var scope = path.scope;
 
@@ -331,7 +332,7 @@ exports.default = function () {
                   var _specifier3 = _ref6;
 
                   if (_specifier3.isExportNamespaceSpecifier()) {} else if (_specifier3.isExportDefaultSpecifier()) {} else if (_specifier3.isExportSpecifier()) {
-                    if (_specifier3.node.local.name === "default") {
+                    if (!noInterop && _specifier3.node.local.name === "default") {
                       topNodes.push(buildExportsFrom(t.stringLiteral(_specifier3.node.exported.name), t.memberExpression(t.callExpression(this.addHelper("interopRequireDefault"), [ref]), _specifier3.node.local)));
                     } else {
                       topNodes.push(buildExportsFrom(t.stringLiteral(_specifier3.node.exported.name), t.memberExpression(ref, _specifier3.node.local)));
@@ -385,7 +386,7 @@ exports.default = function () {
               for (var i = 0; i < specifiers.length; i++) {
                 var specifier = specifiers[i];
                 if (t.isImportNamespaceSpecifier(specifier)) {
-                  if (strict) {
+                  if (strict || noInterop) {
                     remaps[specifier.local.name] = uid;
                   } else {
                     var varDecl = t.variableDeclaration("var", [t.variableDeclarator(specifier.local, t.callExpression(this.addHelper("interopRequireWildcard"), [uid]))]);
@@ -421,7 +422,7 @@ exports.default = function () {
                   if (_specifier.imported.name === "default") {
                     if (wildcard) {
                       target = wildcard;
-                    } else {
+                    } else if (!noInterop) {
                       target = wildcard = path.scope.generateUidIdentifier(uid.name);
                       var _varDecl = t.variableDeclaration("var", [t.variableDeclarator(target, t.callExpression(this.addHelper("interopRequireDefault"), [uid]))]);
 
@@ -443,16 +444,27 @@ exports.default = function () {
           }
 
           if (hasImports && (0, _keys2.default)(nonHoistedExportNames).length) {
-            var hoistedExportsNode = t.identifier("undefined");
+            var maxHoistedExportsNodeAssignmentLength = 100;
+            var nonHoistedExportNamesArr = (0, _keys2.default)(nonHoistedExportNames);
 
-            for (var name in nonHoistedExportNames) {
-              hoistedExportsNode = buildExportsAssignment(t.identifier(name), hoistedExportsNode).expression;
+            var _loop = function _loop(currentExportsNodeAssignmentLength) {
+              var nonHoistedExportNamesChunk = nonHoistedExportNamesArr.slice(currentExportsNodeAssignmentLength, currentExportsNodeAssignmentLength + maxHoistedExportsNodeAssignmentLength);
+
+              var hoistedExportsNode = t.identifier("undefined");
+
+              nonHoistedExportNamesChunk.forEach(function (name) {
+                hoistedExportsNode = buildExportsAssignment(t.identifier(name), hoistedExportsNode).expression;
+              });
+
+              var node = t.expressionStatement(hoistedExportsNode);
+              node._blockHoist = 3;
+
+              topNodes.unshift(node);
+            };
+
+            for (var currentExportsNodeAssignmentLength = 0; currentExportsNodeAssignmentLength < nonHoistedExportNamesArr.length; currentExportsNodeAssignmentLength += maxHoistedExportsNodeAssignmentLength) {
+              _loop(currentExportsNodeAssignmentLength);
             }
-
-            var node = t.expressionStatement(hoistedExportsNode);
-            node._blockHoist = 3;
-
-            topNodes.unshift(node);
           }
 
           if (hasExports && !strict) {

@@ -42,13 +42,13 @@ module.export({                                                                 
   }                                                                                                                 // 1
 });                                                                                                                 // 1
 var AccountsServer = void 0;                                                                                        // 1
-module.import("./accounts_server.js", {                                                                             // 1
-  "AccountsServer": function (v) {                                                                                  // 1
+module.importSync("./accounts_server.js", {                                                                         // 1
+  AccountsServer: function (v) {                                                                                    // 1
     AccountsServer = v;                                                                                             // 1
   }                                                                                                                 // 1
 }, 0);                                                                                                              // 1
-module.import("./accounts_rate_limit.js");                                                                          // 1
-module.import("./url_server.js");                                                                                   // 1
+module.importSync("./accounts_rate_limit.js");                                                                      // 1
+module.importSync("./url_server.js");                                                                               // 1
 /**                                                                                                                 // 5
  * @namespace Accounts                                                                                              //
  * @summary The namespace for all server-side accounts-related methods.                                             //
@@ -165,7 +165,10 @@ var AccountsCommon = function () {                                              
   // - passwordResetTokenExpirationInDays {Number}                                                                  // 86
   //     Number of days since password reset token creation until the                                               // 87
   //     token cannt be used any longer (password reset token expires).                                             // 88
-  /**                                                                                                               // 90
+  // - ambiguousErrorMessages {Boolean}                                                                             // 89
+  //     Return ambiguous error messages from login failures to prevent                                             // 90
+  //     user enumeration.                                                                                          // 91
+  /**                                                                                                               // 93
    * @summary Set global accounts options.                                                                          //
    * @locus Anywhere                                                                                                //
    * @param {Object} options                                                                                        //
@@ -176,54 +179,55 @@ var AccountsCommon = function () {                                              
    * @param {String} options.oauthSecretKey When using the `oauth-encryption` package, the 16 byte key using to encrypt sensitive account credentials in the database, encoded in base64.  This option may only be specifed on the server.  See packages/oauth-encryption/README.md for details.
    * @param {Number} options.passwordResetTokenExpirationInDays The number of days from when a link to reset password is sent until token expires and user can't reset password with the link anymore. Defaults to 3.
    * @param {Number} options.passwordEnrollTokenExpirationInDays The number of days from when a link to set inital password is sent until token expires and user can't set password with the link anymore. Defaults to 30.
+   * @param {Boolean} options.ambiguousErrorMessages Return ambiguous error messages from login failures to prevent user enumeration. Defaults to false.
    */                                                                                                               //
                                                                                                                     //
   AccountsCommon.prototype.config = function () {                                                                   //
     function config(options) {                                                                                      //
-      var self = this; // We don't want users to accidentally only call Accounts.config on the                      // 103
-      // client, where some of the options will have partial effects (eg removing                                   // 106
-      // the "create account" button from accounts-ui if forbidClientAccountCreation                                // 107
-      // is set, or redirecting Google login to a specific-domain page) without                                     // 108
-      // having their full effects.                                                                                 // 109
+      var self = this; // We don't want users to accidentally only call Accounts.config on the                      // 107
+      // client, where some of the options will have partial effects (eg removing                                   // 110
+      // the "create account" button from accounts-ui if forbidClientAccountCreation                                // 111
+      // is set, or redirecting Google login to a specific-domain page) without                                     // 112
+      // having their full effects.                                                                                 // 113
                                                                                                                     //
-      if (Meteor.isServer) {                                                                                        // 110
-        __meteor_runtime_config__.accountsConfigCalled = true;                                                      // 111
-      } else if (!__meteor_runtime_config__.accountsConfigCalled) {                                                 // 112
-        // XXX would be nice to "crash" the client and replace the UI with an error                                 // 113
-        // message, but there's no trivial way to do this.                                                          // 114
+      if (Meteor.isServer) {                                                                                        // 114
+        __meteor_runtime_config__.accountsConfigCalled = true;                                                      // 115
+      } else if (!__meteor_runtime_config__.accountsConfigCalled) {                                                 // 116
+        // XXX would be nice to "crash" the client and replace the UI with an error                                 // 117
+        // message, but there's no trivial way to do this.                                                          // 118
         Meteor._debug("Accounts.config was called on the client but not on the " + "server; some configuration options may not take effect.");
-      } // We need to validate the oauthSecretKey option at the time                                                // 117
-      // Accounts.config is called. We also deliberately don't store the                                            // 120
-      // oauthSecretKey in Accounts._options.                                                                       // 121
+      } // We need to validate the oauthSecretKey option at the time                                                // 121
+      // Accounts.config is called. We also deliberately don't store the                                            // 124
+      // oauthSecretKey in Accounts._options.                                                                       // 125
                                                                                                                     //
                                                                                                                     //
-      if (_.has(options, "oauthSecretKey")) {                                                                       // 122
-        if (Meteor.isClient) throw new Error("The oauthSecretKey option may only be specified on the server");      // 123
+      if (_.has(options, "oauthSecretKey")) {                                                                       // 126
+        if (Meteor.isClient) throw new Error("The oauthSecretKey option may only be specified on the server");      // 127
         if (!Package["oauth-encryption"]) throw new Error("The oauth-encryption package must be loaded to set oauthSecretKey");
-        Package["oauth-encryption"].OAuthEncryption.loadKey(options.oauthSecretKey);                                // 127
-        options = _.omit(options, "oauthSecretKey");                                                                // 128
-      } // validate option keys                                                                                     // 129
+        Package["oauth-encryption"].OAuthEncryption.loadKey(options.oauthSecretKey);                                // 131
+        options = _.omit(options, "oauthSecretKey");                                                                // 132
+      } // validate option keys                                                                                     // 133
                                                                                                                     //
                                                                                                                     //
-      var VALID_KEYS = ["sendVerificationEmail", "forbidClientAccountCreation", "passwordEnrollTokenExpirationInDays", "restrictCreationByEmailDomain", "loginExpirationInDays", "passwordResetTokenExpirationInDays"];
+      var VALID_KEYS = ["sendVerificationEmail", "forbidClientAccountCreation", "passwordEnrollTokenExpirationInDays", "restrictCreationByEmailDomain", "loginExpirationInDays", "passwordResetTokenExpirationInDays", "ambiguousErrorMessages"];
                                                                                                                     //
-      _.each(_.keys(options), function (key) {                                                                      // 134
-        if (!_.contains(VALID_KEYS, key)) {                                                                         // 135
-          throw new Error("Accounts.config: Invalid key: " + key);                                                  // 136
-        }                                                                                                           // 137
-      }); // set values in Accounts._options                                                                        // 138
+      _.each(_.keys(options), function (key) {                                                                      // 139
+        if (!_.contains(VALID_KEYS, key)) {                                                                         // 140
+          throw new Error("Accounts.config: Invalid key: " + key);                                                  // 141
+        }                                                                                                           // 142
+      }); // set values in Accounts._options                                                                        // 143
                                                                                                                     //
                                                                                                                     //
-      _.each(VALID_KEYS, function (key) {                                                                           // 141
-        if (key in options) {                                                                                       // 142
-          if (key in self._options) {                                                                               // 143
-            throw new Error("Can't set `" + key + "` more than once");                                              // 144
-          }                                                                                                         // 145
+      _.each(VALID_KEYS, function (key) {                                                                           // 146
+        if (key in options) {                                                                                       // 147
+          if (key in self._options) {                                                                               // 148
+            throw new Error("Can't set `" + key + "` more than once");                                              // 149
+          }                                                                                                         // 150
                                                                                                                     //
-          self._options[key] = options[key];                                                                        // 146
-        }                                                                                                           // 147
-      });                                                                                                           // 148
-    }                                                                                                               // 149
+          self._options[key] = options[key];                                                                        // 151
+        }                                                                                                           // 152
+      });                                                                                                           // 153
+    }                                                                                                               // 154
                                                                                                                     //
     return config;                                                                                                  //
   }(); /**                                                                                                          //
@@ -234,8 +238,8 @@ var AccountsCommon = function () {                                              
                                                                                                                     //
   AccountsCommon.prototype.onLogin = function () {                                                                  //
     function onLogin(func) {                                                                                        //
-      return this._onLoginHook.register(func);                                                                      // 157
-    }                                                                                                               // 158
+      return this._onLoginHook.register(func);                                                                      // 162
+    }                                                                                                               // 163
                                                                                                                     //
     return onLogin;                                                                                                 //
   }(); /**                                                                                                          //
@@ -246,8 +250,8 @@ var AccountsCommon = function () {                                              
                                                                                                                     //
   AccountsCommon.prototype.onLoginFailure = function () {                                                           //
     function onLoginFailure(func) {                                                                                 //
-      return this._onLoginFailureHook.register(func);                                                               // 166
-    }                                                                                                               // 167
+      return this._onLoginFailureHook.register(func);                                                               // 171
+    }                                                                                                               // 172
                                                                                                                     //
     return onLoginFailure;                                                                                          //
   }(); /**                                                                                                          //
@@ -258,50 +262,50 @@ var AccountsCommon = function () {                                              
                                                                                                                     //
   AccountsCommon.prototype.onLogout = function () {                                                                 //
     function onLogout(func) {                                                                                       //
-      return this._onLogoutHook.register(func);                                                                     // 175
-    }                                                                                                               // 176
+      return this._onLogoutHook.register(func);                                                                     // 180
+    }                                                                                                               // 181
                                                                                                                     //
     return onLogout;                                                                                                //
   }();                                                                                                              //
                                                                                                                     //
   AccountsCommon.prototype._initConnection = function () {                                                          //
     function _initConnection(options) {                                                                             //
-      if (!Meteor.isClient) {                                                                                       // 179
-        return;                                                                                                     // 180
-      } // The connection used by the Accounts system. This is the connection                                       // 181
-      // that will get logged in by Meteor.login(), and this is the                                                 // 184
-      // connection whose login state will be reflected by Meteor.userId().                                         // 185
-      //                                                                                                            // 186
-      // It would be much preferable for this to be in accounts_client.js,                                          // 187
-      // but it has to be here because it's needed to create the                                                    // 188
-      // Meteor.users collection.                                                                                   // 189
+      if (!Meteor.isClient) {                                                                                       // 184
+        return;                                                                                                     // 185
+      } // The connection used by the Accounts system. This is the connection                                       // 186
+      // that will get logged in by Meteor.login(), and this is the                                                 // 189
+      // connection whose login state will be reflected by Meteor.userId().                                         // 190
+      //                                                                                                            // 191
+      // It would be much preferable for this to be in accounts_client.js,                                          // 192
+      // but it has to be here because it's needed to create the                                                    // 193
+      // Meteor.users collection.                                                                                   // 194
                                                                                                                     //
                                                                                                                     //
-      if (options.connection) {                                                                                     // 191
-        this.connection = options.connection;                                                                       // 192
-      } else if (options.ddpUrl) {                                                                                  // 193
-        this.connection = DDP.connect(options.ddpUrl);                                                              // 194
+      if (options.connection) {                                                                                     // 196
+        this.connection = options.connection;                                                                       // 197
+      } else if (options.ddpUrl) {                                                                                  // 198
+        this.connection = DDP.connect(options.ddpUrl);                                                              // 199
       } else if (typeof __meteor_runtime_config__ !== "undefined" && __meteor_runtime_config__.ACCOUNTS_CONNECTION_URL) {
-        // Temporary, internal hook to allow the server to point the client                                         // 197
-        // to a different authentication server. This is for a very                                                 // 198
-        // particular use case that comes up when implementing a oauth                                              // 199
-        // server. Unsupported and may go away at any point in time.                                                // 200
-        //                                                                                                          // 201
-        // We will eventually provide a general way to use account-base                                             // 202
-        // against any DDP connection, not just one special one.                                                    // 203
-        this.connection = DDP.connect(__meteor_runtime_config__.ACCOUNTS_CONNECTION_URL);                           // 204
-      } else {                                                                                                      // 206
-        this.connection = Meteor.connection;                                                                        // 207
-      }                                                                                                             // 208
-    }                                                                                                               // 209
+        // Temporary, internal hook to allow the server to point the client                                         // 202
+        // to a different authentication server. This is for a very                                                 // 203
+        // particular use case that comes up when implementing a oauth                                              // 204
+        // server. Unsupported and may go away at any point in time.                                                // 205
+        //                                                                                                          // 206
+        // We will eventually provide a general way to use account-base                                             // 207
+        // against any DDP connection, not just one special one.                                                    // 208
+        this.connection = DDP.connect(__meteor_runtime_config__.ACCOUNTS_CONNECTION_URL);                           // 209
+      } else {                                                                                                      // 211
+        this.connection = Meteor.connection;                                                                        // 212
+      }                                                                                                             // 213
+    }                                                                                                               // 214
                                                                                                                     //
     return _initConnection;                                                                                         //
   }();                                                                                                              //
                                                                                                                     //
   AccountsCommon.prototype._getTokenLifetimeMs = function () {                                                      //
     function _getTokenLifetimeMs() {                                                                                //
-      return (this._options.loginExpirationInDays || DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;          // 212
-    }                                                                                                               // 214
+      return (this._options.loginExpirationInDays || DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;          // 217
+    }                                                                                                               // 219
                                                                                                                     //
     return _getTokenLifetimeMs;                                                                                     //
   }();                                                                                                              //
@@ -309,7 +313,7 @@ var AccountsCommon = function () {                                              
   AccountsCommon.prototype._getPasswordResetTokenLifetimeMs = function () {                                         //
     function _getPasswordResetTokenLifetimeMs() {                                                                   //
       return (this._options.passwordResetTokenExpirationInDays || DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;
-    }                                                                                                               // 219
+    }                                                                                                               // 224
                                                                                                                     //
     return _getPasswordResetTokenLifetimeMs;                                                                        //
   }();                                                                                                              //
@@ -317,29 +321,29 @@ var AccountsCommon = function () {                                              
   AccountsCommon.prototype._getPasswordEnrollTokenLifetimeMs = function () {                                        //
     function _getPasswordEnrollTokenLifetimeMs() {                                                                  //
       return (this._options.passwordEnrollTokenExpirationInDays || DEFAULT_PASSWORD_ENROLL_TOKEN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;
-    }                                                                                                               // 224
+    }                                                                                                               // 229
                                                                                                                     //
     return _getPasswordEnrollTokenLifetimeMs;                                                                       //
   }();                                                                                                              //
                                                                                                                     //
   AccountsCommon.prototype._tokenExpiration = function () {                                                         //
     function _tokenExpiration(when) {                                                                               //
-      // We pass when through the Date constructor for backwards compatibility;                                     // 227
-      // `when` used to be a number.                                                                                // 228
-      return new Date(new Date(when).getTime() + this._getTokenLifetimeMs());                                       // 229
-    }                                                                                                               // 230
+      // We pass when through the Date constructor for backwards compatibility;                                     // 232
+      // `when` used to be a number.                                                                                // 233
+      return new Date(new Date(when).getTime() + this._getTokenLifetimeMs());                                       // 234
+    }                                                                                                               // 235
                                                                                                                     //
     return _tokenExpiration;                                                                                        //
   }();                                                                                                              //
                                                                                                                     //
   AccountsCommon.prototype._tokenExpiresSoon = function () {                                                        //
     function _tokenExpiresSoon(when) {                                                                              //
-      var minLifetimeMs = .1 * this._getTokenLifetimeMs();                                                          // 233
+      var minLifetimeMs = .1 * this._getTokenLifetimeMs();                                                          // 238
                                                                                                                     //
-      var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                    // 234
-      if (minLifetimeMs > minLifetimeCapMs) minLifetimeMs = minLifetimeCapMs;                                       // 235
-      return new Date() > new Date(when) - minLifetimeMs;                                                           // 237
-    }                                                                                                               // 238
+      var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                    // 239
+      if (minLifetimeMs > minLifetimeCapMs) minLifetimeMs = minLifetimeCapMs;                                       // 240
+      return new Date() > new Date(when) - minLifetimeMs;                                                           // 242
+    }                                                                                                               // 243
                                                                                                                     //
     return _tokenExpiresSoon;                                                                                       //
   }();                                                                                                              //
@@ -347,60 +351,60 @@ var AccountsCommon = function () {                                              
   return AccountsCommon;                                                                                            //
 }();                                                                                                                //
                                                                                                                     //
-var Ap = AccountsCommon.prototype; // Note that Accounts is defined separately in accounts_client.js and            // 241
-// accounts_server.js.                                                                                              // 244
-/**                                                                                                                 // 246
+var Ap = AccountsCommon.prototype; // Note that Accounts is defined separately in accounts_client.js and            // 246
+// accounts_server.js.                                                                                              // 249
+/**                                                                                                                 // 251
  * @summary Get the current user id, or `null` if no user is logged in. A reactive data source.                     //
  * @locus Anywhere but publish functions                                                                            //
  * @importFromPackage meteor                                                                                        //
  */                                                                                                                 //
                                                                                                                     //
-Meteor.userId = function () {                                                                                       // 251
-  return Accounts.userId();                                                                                         // 252
-}; /**                                                                                                              // 253
+Meteor.userId = function () {                                                                                       // 256
+  return Accounts.userId();                                                                                         // 257
+}; /**                                                                                                              // 258
     * @summary Get the current user record, or `null` if no user is logged in. A reactive data source.              //
     * @locus Anywhere but publish functions                                                                         //
     * @importFromPackage meteor                                                                                     //
     */                                                                                                              //
                                                                                                                     //
-Meteor.user = function () {                                                                                         // 260
-  return Accounts.user();                                                                                           // 261
-}; // how long (in days) until a login token expires                                                                // 262
+Meteor.user = function () {                                                                                         // 265
+  return Accounts.user();                                                                                           // 266
+}; // how long (in days) until a login token expires                                                                // 267
                                                                                                                     //
                                                                                                                     //
-var DEFAULT_LOGIN_EXPIRATION_DAYS = 90; // how long (in days) until reset password token expires                    // 265
+var DEFAULT_LOGIN_EXPIRATION_DAYS = 90; // how long (in days) until reset password token expires                    // 270
                                                                                                                     //
-var DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS = 3; // how long (in days) until enrol password token expires      // 267
+var DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS = 3; // how long (in days) until enrol password token expires      // 272
                                                                                                                     //
 var DEFAULT_PASSWORD_ENROLL_TOKEN_EXPIRATION_DAYS = 30; // Clients don't try to auto-login with a token that is going to expire within
-// .1 * DEFAULT_LOGIN_EXPIRATION_DAYS, capped at MIN_TOKEN_LIFETIME_CAP_SECS.                                       // 271
-// Tries to avoid abrupt disconnects from expiring tokens.                                                          // 272
+// .1 * DEFAULT_LOGIN_EXPIRATION_DAYS, capped at MIN_TOKEN_LIFETIME_CAP_SECS.                                       // 276
+// Tries to avoid abrupt disconnects from expiring tokens.                                                          // 277
                                                                                                                     //
-var MIN_TOKEN_LIFETIME_CAP_SECS = 3600; // one hour                                                                 // 273
-// how often (in milliseconds) we check for expired tokens                                                          // 274
+var MIN_TOKEN_LIFETIME_CAP_SECS = 3600; // one hour                                                                 // 278
+// how often (in milliseconds) we check for expired tokens                                                          // 279
                                                                                                                     //
-EXPIRE_TOKENS_INTERVAL_MS = 600 * 1000; // 10 minutes                                                               // 275
-// how long we wait before logging out clients when Meteor.logoutOtherClients is                                    // 276
-// called                                                                                                           // 277
+EXPIRE_TOKENS_INTERVAL_MS = 600 * 1000; // 10 minutes                                                               // 280
+// how long we wait before logging out clients when Meteor.logoutOtherClients is                                    // 281
+// called                                                                                                           // 282
                                                                                                                     //
 CONNECTION_CLOSE_DELAY_MS = 10 * 1000; // loginServiceConfiguration and ConfigError are maintained for backwards compatibility
                                                                                                                     //
-Meteor.startup(function () {                                                                                        // 281
-  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                 // 282
-  Ap.loginServiceConfiguration = ServiceConfiguration.configurations;                                               // 284
-  Ap.ConfigError = ServiceConfiguration.ConfigError;                                                                // 285
-}); // Thrown when the user cancels the login process (eg, closes an oauth                                          // 286
-// popup, declines retina scan, etc)                                                                                // 289
+Meteor.startup(function () {                                                                                        // 286
+  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                 // 287
+  Ap.loginServiceConfiguration = ServiceConfiguration.configurations;                                               // 289
+  Ap.ConfigError = ServiceConfiguration.ConfigError;                                                                // 290
+}); // Thrown when the user cancels the login process (eg, closes an oauth                                          // 291
+// popup, declines retina scan, etc)                                                                                // 294
                                                                                                                     //
-var lceName = 'Accounts.LoginCancelledError';                                                                       // 290
-Ap.LoginCancelledError = Meteor.makeErrorType(lceName, function (description) {                                     // 291
-  this.message = description;                                                                                       // 294
-});                                                                                                                 // 295
+var lceName = 'Accounts.LoginCancelledError';                                                                       // 295
+Ap.LoginCancelledError = Meteor.makeErrorType(lceName, function (description) {                                     // 296
+  this.message = description;                                                                                       // 299
+});                                                                                                                 // 300
 Ap.LoginCancelledError.prototype.name = lceName; // This is used to transmit specific subclass errors over the wire. We should
-// come up with a more generic way to do this (eg, with some sort of symbolic                                       // 300
-// error code rather than a number).                                                                                // 301
+// come up with a more generic way to do this (eg, with some sort of symbolic                                       // 305
+// error code rather than a number).                                                                                // 306
                                                                                                                     //
-Ap.LoginCancelledError.numericError = 0x8acdc2f;                                                                    // 302
+Ap.LoginCancelledError.numericError = 0x8acdc2f;                                                                    // 307
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"accounts_rate_limit.js":["./accounts_common.js",function(require,exports,module){
@@ -412,8 +416,8 @@ Ap.LoginCancelledError.numericError = 0x8acdc2f;                                
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 var AccountsCommon = void 0;                                                                                        // 1
-module.import("./accounts_common.js", {                                                                             // 1
-  "AccountsCommon": function (v) {                                                                                  // 1
+module.importSync("./accounts_common.js", {                                                                         // 1
+  AccountsCommon: function (v) {                                                                                    // 1
     AccountsCommon = v;                                                                                             // 1
   }                                                                                                                 // 1
 }, 0);                                                                                                              // 1
@@ -447,13 +451,17 @@ Ap.addDefaultRateLimit = function () {                                          
 Ap.addDefaultRateLimit();                                                                                           // 31
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"accounts_server.js":["babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits","./accounts_common.js",function(require,exports,module){
+}],"accounts_server.js":["babel-runtime/helpers/extends","babel-runtime/helpers/classCallCheck","babel-runtime/helpers/possibleConstructorReturn","babel-runtime/helpers/inherits","./accounts_common.js",function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
 // packages/accounts-base/accounts_server.js                                                                        //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                    //
+var _extends2 = require("babel-runtime/helpers/extends");                                                           //
+                                                                                                                    //
+var _extends3 = _interopRequireDefault(_extends2);                                                                  //
                                                                                                                     //
 var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");                                             //
                                                                                                                     //
@@ -475,8 +483,8 @@ module.export({                                                                 
   }                                                                                                                 // 1
 });                                                                                                                 // 1
 var AccountsCommon = void 0;                                                                                        // 1
-module.import("./accounts_common.js", {                                                                             // 1
-  "AccountsCommon": function (v) {                                                                                  // 1
+module.importSync("./accounts_common.js", {                                                                         // 1
+  AccountsCommon: function (v) {                                                                                    // 1
     AccountsCommon = v;                                                                                             // 1
   }                                                                                                                 // 1
 }, 0);                                                                                                              // 1
@@ -1531,460 +1539,469 @@ function expirePasswordToken(accounts, oldestValidDate, tokenFilter, userId) {  
   var userFilter = userId ? {                                                                                       // 1079
     _id: userId                                                                                                     // 1079
   } : {};                                                                                                           // 1079
-  accounts.users.update(_.extend(userFilter, tokenFilter, {                                                         // 1081
-    $or: [{                                                                                                         // 1082
+  var resetRangeOr = {                                                                                              // 1080
+    $or: [{                                                                                                         // 1081
+      "services.password.reset.when": {                                                                             // 1082
+        $lt: oldestValidDate                                                                                        // 1082
+      }                                                                                                             // 1082
+    }, {                                                                                                            // 1082
       "services.password.reset.when": {                                                                             // 1083
-        $lt: oldestValidDate                                                                                        // 1083
+        $lt: +oldestValidDate                                                                                       // 1083
       }                                                                                                             // 1083
-    }, {                                                                                                            // 1083
-      "services.password.reset.when": {                                                                             // 1084
-        $lt: +oldestValidDate                                                                                       // 1084
-      }                                                                                                             // 1084
-    }]                                                                                                              // 1084
-  }), {                                                                                                             // 1081
-    $unset: {                                                                                                       // 1087
-      "services.password.reset": ""                                                                                 // 1088
-    }                                                                                                               // 1087
-  }, {                                                                                                              // 1086
-    multi: true                                                                                                     // 1090
-  });                                                                                                               // 1090
-} // Deletes expired tokens from the database and closes all open connections                                       // 1091
-// associated with these tokens.                                                                                    // 1094
-//                                                                                                                  // 1095
-// Exported for tests. Also, the arguments are only used by                                                         // 1096
-// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1097
-// for them to actually expire. userId is used by tests to only expire                                              // 1098
-// tokens for the test user.                                                                                        // 1099
+    }]                                                                                                              // 1083
+  };                                                                                                                // 1080
+  var expireFilter = {                                                                                              // 1086
+    $and: [tokenFilter, resetRangeOr]                                                                               // 1086
+  };                                                                                                                // 1086
+  accounts.users.update((0, _extends3.default)({}, userFilter, expireFilter), {                                     // 1088
+    $unset: {                                                                                                       // 1089
+      "services.password.reset": ""                                                                                 // 1090
+    }                                                                                                               // 1089
+  }, {                                                                                                              // 1088
+    multi: true                                                                                                     // 1092
+  });                                                                                                               // 1092
+} // Deletes expired tokens from the database and closes all open connections                                       // 1093
+// associated with these tokens.                                                                                    // 1096
+//                                                                                                                  // 1097
+// Exported for tests. Also, the arguments are only used by                                                         // 1098
+// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1099
+// for them to actually expire. userId is used by tests to only expire                                              // 1100
+// tokens for the test user.                                                                                        // 1101
                                                                                                                     //
                                                                                                                     //
-Ap._expireTokens = function (oldestValidDate, userId) {                                                             // 1100
+Ap._expireTokens = function (oldestValidDate, userId) {                                                             // 1102
   var tokenLifetimeMs = this._getTokenLifetimeMs(); // when calling from a test with extra arguments, you must specify both!
                                                                                                                     //
                                                                                                                     //
-  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1104
-    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1105
-  }                                                                                                                 // 1106
+  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1106
+    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1107
+  }                                                                                                                 // 1108
                                                                                                                     //
-  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1108
-  var userFilter = userId ? {                                                                                       // 1110
-    _id: userId                                                                                                     // 1110
-  } : {}; // Backwards compatible with older versions of meteor that stored login token                             // 1110
-  // timestamps as numbers.                                                                                         // 1114
+  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1110
+  var userFilter = userId ? {                                                                                       // 1112
+    _id: userId                                                                                                     // 1112
+  } : {}; // Backwards compatible with older versions of meteor that stored login token                             // 1112
+  // timestamps as numbers.                                                                                         // 1116
                                                                                                                     //
-  this.users.update(_.extend(userFilter, {                                                                          // 1115
-    $or: [{                                                                                                         // 1116
-      "services.resume.loginTokens.when": {                                                                         // 1117
-        $lt: oldestValidDate                                                                                        // 1117
-      }                                                                                                             // 1117
-    }, {                                                                                                            // 1117
-      "services.resume.loginTokens.when": {                                                                         // 1118
-        $lt: +oldestValidDate                                                                                       // 1118
-      }                                                                                                             // 1118
-    }]                                                                                                              // 1118
-  }), {                                                                                                             // 1115
-    $pull: {                                                                                                        // 1121
-      "services.resume.loginTokens": {                                                                              // 1122
-        $or: [{                                                                                                     // 1123
-          when: {                                                                                                   // 1124
-            $lt: oldestValidDate                                                                                    // 1124
-          }                                                                                                         // 1124
-        }, {                                                                                                        // 1124
-          when: {                                                                                                   // 1125
-            $lt: +oldestValidDate                                                                                   // 1125
-          }                                                                                                         // 1125
-        }]                                                                                                          // 1125
-      }                                                                                                             // 1122
-    }                                                                                                               // 1121
-  }, {                                                                                                              // 1120
-    multi: true                                                                                                     // 1129
-  }); // The observe on Meteor.users will take care of closing connections for                                      // 1129
-  // expired tokens.                                                                                                // 1131
-}; // Deletes expired password reset tokens from the database.                                                      // 1132
-//                                                                                                                  // 1135
-// Exported for tests. Also, the arguments are only used by                                                         // 1136
-// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1137
-// for them to actually expire. userId is used by tests to only expire                                              // 1138
-// tokens for the test user.                                                                                        // 1139
+  this.users.update(_.extend(userFilter, {                                                                          // 1117
+    $or: [{                                                                                                         // 1118
+      "services.resume.loginTokens.when": {                                                                         // 1119
+        $lt: oldestValidDate                                                                                        // 1119
+      }                                                                                                             // 1119
+    }, {                                                                                                            // 1119
+      "services.resume.loginTokens.when": {                                                                         // 1120
+        $lt: +oldestValidDate                                                                                       // 1120
+      }                                                                                                             // 1120
+    }]                                                                                                              // 1120
+  }), {                                                                                                             // 1117
+    $pull: {                                                                                                        // 1123
+      "services.resume.loginTokens": {                                                                              // 1124
+        $or: [{                                                                                                     // 1125
+          when: {                                                                                                   // 1126
+            $lt: oldestValidDate                                                                                    // 1126
+          }                                                                                                         // 1126
+        }, {                                                                                                        // 1126
+          when: {                                                                                                   // 1127
+            $lt: +oldestValidDate                                                                                   // 1127
+          }                                                                                                         // 1127
+        }]                                                                                                          // 1127
+      }                                                                                                             // 1124
+    }                                                                                                               // 1123
+  }, {                                                                                                              // 1122
+    multi: true                                                                                                     // 1131
+  }); // The observe on Meteor.users will take care of closing connections for                                      // 1131
+  // expired tokens.                                                                                                // 1133
+}; // Deletes expired password reset tokens from the database.                                                      // 1134
+//                                                                                                                  // 1137
+// Exported for tests. Also, the arguments are only used by                                                         // 1138
+// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1139
+// for them to actually expire. userId is used by tests to only expire                                              // 1140
+// tokens for the test user.                                                                                        // 1141
                                                                                                                     //
                                                                                                                     //
-Ap._expirePasswordResetTokens = function (oldestValidDate, userId) {                                                // 1140
+Ap._expirePasswordResetTokens = function (oldestValidDate, userId) {                                                // 1142
   var tokenLifetimeMs = this._getPasswordResetTokenLifetimeMs(); // when calling from a test with extra arguments, you must specify both!
                                                                                                                     //
                                                                                                                     //
-  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1144
-    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1145
-  }                                                                                                                 // 1146
+  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1146
+    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1147
+  }                                                                                                                 // 1148
                                                                                                                     //
-  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1148
-  var tokenFilter = {                                                                                               // 1151
-    $or: [{                                                                                                         // 1152
-      "services.password.reset.reason": "reset"                                                                     // 1153
-    }, {                                                                                                            // 1153
-      "services.password.reset.reason": {                                                                           // 1154
-        $exists: false                                                                                              // 1154
-      }                                                                                                             // 1154
-    }]                                                                                                              // 1154
-  };                                                                                                                // 1151
-  expirePasswordToken(this, oldestValidDate, tokenFilter, userId);                                                  // 1158
-}; // Deletes expired password enroll tokens from the database.                                                     // 1159
-//                                                                                                                  // 1162
-// Exported for tests. Also, the arguments are only used by                                                         // 1163
-// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1164
-// for them to actually expire. userId is used by tests to only expire                                              // 1165
-// tokens for the test user.                                                                                        // 1166
+  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1150
+  var tokenFilter = {                                                                                               // 1153
+    $or: [{                                                                                                         // 1154
+      "services.password.reset.reason": "reset"                                                                     // 1155
+    }, {                                                                                                            // 1155
+      "services.password.reset.reason": {                                                                           // 1156
+        $exists: false                                                                                              // 1156
+      }                                                                                                             // 1156
+    }]                                                                                                              // 1156
+  };                                                                                                                // 1153
+  expirePasswordToken(this, oldestValidDate, tokenFilter, userId);                                                  // 1160
+}; // Deletes expired password enroll tokens from the database.                                                     // 1161
+//                                                                                                                  // 1164
+// Exported for tests. Also, the arguments are only used by                                                         // 1165
+// tests. oldestValidDate is simulate expiring tokens without waiting                                               // 1166
+// for them to actually expire. userId is used by tests to only expire                                              // 1167
+// tokens for the test user.                                                                                        // 1168
                                                                                                                     //
                                                                                                                     //
-Ap._expirePasswordEnrollTokens = function (oldestValidDate, userId) {                                               // 1167
+Ap._expirePasswordEnrollTokens = function (oldestValidDate, userId) {                                               // 1169
   var tokenLifetimeMs = this._getPasswordEnrollTokenLifetimeMs(); // when calling from a test with extra arguments, you must specify both!
                                                                                                                     //
                                                                                                                     //
-  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1171
-    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1172
-  }                                                                                                                 // 1173
+  if (oldestValidDate && !userId || !oldestValidDate && userId) {                                                   // 1173
+    throw new Error("Bad test. Must specify both oldestValidDate and userId.");                                     // 1174
+  }                                                                                                                 // 1175
                                                                                                                     //
-  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1175
-  var tokenFilter = {                                                                                               // 1178
-    "services.password.reset.reason": "enroll"                                                                      // 1179
-  };                                                                                                                // 1178
-  expirePasswordToken(this, oldestValidDate, tokenFilter, userId);                                                  // 1182
-}; // @override from accounts_common.js                                                                             // 1183
+  oldestValidDate = oldestValidDate || new Date(new Date() - tokenLifetimeMs);                                      // 1177
+  var tokenFilter = {                                                                                               // 1180
+    "services.password.reset.reason": "enroll"                                                                      // 1181
+  };                                                                                                                // 1180
+  expirePasswordToken(this, oldestValidDate, tokenFilter, userId);                                                  // 1184
+}; // @override from accounts_common.js                                                                             // 1185
                                                                                                                     //
                                                                                                                     //
-Ap.config = function (options) {                                                                                    // 1186
-  // Call the overridden implementation of the method.                                                              // 1187
+Ap.config = function (options) {                                                                                    // 1188
+  // Call the overridden implementation of the method.                                                              // 1189
   var superResult = AccountsCommon.prototype.config.apply(this, arguments); // If the user set loginExpirationInDays to null, then we need to clear the
-  // timer that periodically expires tokens.                                                                        // 1191
+  // timer that periodically expires tokens.                                                                        // 1193
                                                                                                                     //
   if (_.has(this._options, "loginExpirationInDays") && this._options.loginExpirationInDays === null && this.expireTokenInterval) {
-    Meteor.clearInterval(this.expireTokenInterval);                                                                 // 1195
-    this.expireTokenInterval = null;                                                                                // 1196
-  }                                                                                                                 // 1197
+    Meteor.clearInterval(this.expireTokenInterval);                                                                 // 1197
+    this.expireTokenInterval = null;                                                                                // 1198
+  }                                                                                                                 // 1199
                                                                                                                     //
-  return superResult;                                                                                               // 1199
-};                                                                                                                  // 1200
+  return superResult;                                                                                               // 1201
+};                                                                                                                  // 1202
                                                                                                                     //
-function setExpireTokensInterval(accounts) {                                                                        // 1202
-  accounts.expireTokenInterval = Meteor.setInterval(function () {                                                   // 1203
-    accounts._expireTokens();                                                                                       // 1204
+function setExpireTokensInterval(accounts) {                                                                        // 1204
+  accounts.expireTokenInterval = Meteor.setInterval(function () {                                                   // 1205
+    accounts._expireTokens();                                                                                       // 1206
                                                                                                                     //
-    accounts._expirePasswordResetTokens();                                                                          // 1205
+    accounts._expirePasswordResetTokens();                                                                          // 1207
                                                                                                                     //
-    accounts._expirePasswordEnrollTokens();                                                                         // 1206
-  }, EXPIRE_TOKENS_INTERVAL_MS);                                                                                    // 1207
-} ///                                                                                                               // 1208
-/// OAuth Encryption Support                                                                                        // 1212
-///                                                                                                                 // 1213
-                                                                                                                    //
-                                                                                                                    //
-var OAuthEncryption = Package["oauth-encryption"] && Package["oauth-encryption"].OAuthEncryption;                   // 1215
-                                                                                                                    //
-function usingOAuthEncryption() {                                                                                   // 1219
-  return OAuthEncryption && OAuthEncryption.keyIsLoaded();                                                          // 1220
-} // OAuth service data is temporarily stored in the pending credentials                                            // 1221
-// collection during the oauth authentication process.  Sensitive data                                              // 1225
-// such as access tokens are encrypted without the user id because                                                  // 1226
-// we don't know the user id yet.  We re-encrypt these fields with the                                              // 1227
-// user id included when storing the service data permanently in                                                    // 1228
-// the users collection.                                                                                            // 1229
-//                                                                                                                  // 1230
+    accounts._expirePasswordEnrollTokens();                                                                         // 1208
+  }, EXPIRE_TOKENS_INTERVAL_MS);                                                                                    // 1209
+} ///                                                                                                               // 1210
+/// OAuth Encryption Support                                                                                        // 1214
+///                                                                                                                 // 1215
                                                                                                                     //
                                                                                                                     //
-function pinEncryptedFieldsToUser(serviceData, userId) {                                                            // 1231
-  _.each(_.keys(serviceData), function (key) {                                                                      // 1232
-    var value = serviceData[key];                                                                                   // 1233
+var OAuthEncryption = Package["oauth-encryption"] && Package["oauth-encryption"].OAuthEncryption;                   // 1217
+                                                                                                                    //
+function usingOAuthEncryption() {                                                                                   // 1221
+  return OAuthEncryption && OAuthEncryption.keyIsLoaded();                                                          // 1222
+} // OAuth service data is temporarily stored in the pending credentials                                            // 1223
+// collection during the oauth authentication process.  Sensitive data                                              // 1227
+// such as access tokens are encrypted without the user id because                                                  // 1228
+// we don't know the user id yet.  We re-encrypt these fields with the                                              // 1229
+// user id included when storing the service data permanently in                                                    // 1230
+// the users collection.                                                                                            // 1231
+//                                                                                                                  // 1232
+                                                                                                                    //
+                                                                                                                    //
+function pinEncryptedFieldsToUser(serviceData, userId) {                                                            // 1233
+  _.each(_.keys(serviceData), function (key) {                                                                      // 1234
+    var value = serviceData[key];                                                                                   // 1235
     if (OAuthEncryption && OAuthEncryption.isSealed(value)) value = OAuthEncryption.seal(OAuthEncryption.open(value), userId);
-    serviceData[key] = value;                                                                                       // 1236
-  });                                                                                                               // 1237
-} // Encrypt unencrypted login service secrets when oauth-encryption is                                             // 1238
-// added.                                                                                                           // 1242
-//                                                                                                                  // 1243
-// XXX For the oauthSecretKey to be available here at startup, the                                                  // 1244
-// developer must call Accounts.config({oauthSecretKey: ...}) at load                                               // 1245
-// time, instead of in a Meteor.startup block, because the startup                                                  // 1246
-// block in the app code will run after this accounts-base startup                                                  // 1247
-// block.  Perhaps we need a post-startup callback?                                                                 // 1248
+    serviceData[key] = value;                                                                                       // 1238
+  });                                                                                                               // 1239
+} // Encrypt unencrypted login service secrets when oauth-encryption is                                             // 1240
+// added.                                                                                                           // 1244
+//                                                                                                                  // 1245
+// XXX For the oauthSecretKey to be available here at startup, the                                                  // 1246
+// developer must call Accounts.config({oauthSecretKey: ...}) at load                                               // 1247
+// time, instead of in a Meteor.startup block, because the startup                                                  // 1248
+// block in the app code will run after this accounts-base startup                                                  // 1249
+// block.  Perhaps we need a post-startup callback?                                                                 // 1250
                                                                                                                     //
                                                                                                                     //
-Meteor.startup(function () {                                                                                        // 1250
-  if (!usingOAuthEncryption()) {                                                                                    // 1251
-    return;                                                                                                         // 1252
-  }                                                                                                                 // 1253
+Meteor.startup(function () {                                                                                        // 1252
+  if (!usingOAuthEncryption()) {                                                                                    // 1253
+    return;                                                                                                         // 1254
+  }                                                                                                                 // 1255
                                                                                                                     //
-  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                 // 1255
-  ServiceConfiguration.configurations.find({                                                                        // 1258
-    $and: [{                                                                                                        // 1259
-      secret: {                                                                                                     // 1260
-        $exists: true                                                                                               // 1260
-      }                                                                                                             // 1260
-    }, {                                                                                                            // 1259
-      "secret.algorithm": {                                                                                         // 1262
-        $exists: false                                                                                              // 1262
+  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                 // 1257
+  ServiceConfiguration.configurations.find({                                                                        // 1260
+    $and: [{                                                                                                        // 1261
+      secret: {                                                                                                     // 1262
+        $exists: true                                                                                               // 1262
       }                                                                                                             // 1262
-    }]                                                                                                              // 1261
-  }).forEach(function (config) {                                                                                    // 1258
-    ServiceConfiguration.configurations.update(config._id, {                                                        // 1265
-      $set: {                                                                                                       // 1266
-        secret: OAuthEncryption.seal(config.secret)                                                                 // 1267
-      }                                                                                                             // 1266
-    });                                                                                                             // 1265
-  });                                                                                                               // 1270
-}); // XXX see comment on Accounts.createUser in passwords_server about adding a                                    // 1271
-// second "server options" argument.                                                                                // 1274
+    }, {                                                                                                            // 1261
+      "secret.algorithm": {                                                                                         // 1264
+        $exists: false                                                                                              // 1264
+      }                                                                                                             // 1264
+    }]                                                                                                              // 1263
+  }).forEach(function (config) {                                                                                    // 1260
+    ServiceConfiguration.configurations.update(config._id, {                                                        // 1267
+      $set: {                                                                                                       // 1268
+        secret: OAuthEncryption.seal(config.secret)                                                                 // 1269
+      }                                                                                                             // 1268
+    });                                                                                                             // 1267
+  });                                                                                                               // 1272
+}); // XXX see comment on Accounts.createUser in passwords_server about adding a                                    // 1273
+// second "server options" argument.                                                                                // 1276
                                                                                                                     //
-function defaultCreateUserHook(options, user) {                                                                     // 1275
-  if (options.profile) user.profile = options.profile;                                                              // 1276
-  return user;                                                                                                      // 1278
-} // Called by accounts-password                                                                                    // 1279
+function defaultCreateUserHook(options, user) {                                                                     // 1277
+  if (options.profile) user.profile = options.profile;                                                              // 1278
+  return user;                                                                                                      // 1280
+} // Called by accounts-password                                                                                    // 1281
                                                                                                                     //
                                                                                                                     //
-Ap.insertUserDoc = function (options, user) {                                                                       // 1282
-  // - clone user document, to protect from modification                                                            // 1283
-  // - add createdAt timestamp                                                                                      // 1284
-  // - prepare an _id, so that you can modify other collections (eg                                                 // 1285
-  // create a first task for every new user)                                                                        // 1286
-  //                                                                                                                // 1287
-  // XXX If the onCreateUser or validateNewUser hooks fail, we might                                                // 1288
-  // end up having modified some other collection                                                                   // 1289
-  // inappropriately. The solution is probably to have onCreateUser                                                 // 1290
-  // accept two callbacks - one that gets called before inserting                                                   // 1291
-  // the user document (in which you can modify its contents), and                                                  // 1292
-  // one that gets called after (in which you should change other                                                   // 1293
-  // collections)                                                                                                   // 1294
-  user = _.extend({                                                                                                 // 1295
-    createdAt: new Date(),                                                                                          // 1296
-    _id: Random.id()                                                                                                // 1297
-  }, user);                                                                                                         // 1295
+Ap.insertUserDoc = function (options, user) {                                                                       // 1284
+  // - clone user document, to protect from modification                                                            // 1285
+  // - add createdAt timestamp                                                                                      // 1286
+  // - prepare an _id, so that you can modify other collections (eg                                                 // 1287
+  // create a first task for every new user)                                                                        // 1288
+  //                                                                                                                // 1289
+  // XXX If the onCreateUser or validateNewUser hooks fail, we might                                                // 1290
+  // end up having modified some other collection                                                                   // 1291
+  // inappropriately. The solution is probably to have onCreateUser                                                 // 1292
+  // accept two callbacks - one that gets called before inserting                                                   // 1293
+  // the user document (in which you can modify its contents), and                                                  // 1294
+  // one that gets called after (in which you should change other                                                   // 1295
+  // collections)                                                                                                   // 1296
+  user = _.extend({                                                                                                 // 1297
+    createdAt: new Date(),                                                                                          // 1298
+    _id: Random.id()                                                                                                // 1299
+  }, user);                                                                                                         // 1297
                                                                                                                     //
-  if (user.services) {                                                                                              // 1300
-    _.each(user.services, function (serviceData) {                                                                  // 1301
-      pinEncryptedFieldsToUser(serviceData, user._id);                                                              // 1302
-    });                                                                                                             // 1303
-  }                                                                                                                 // 1304
+  if (user.services) {                                                                                              // 1302
+    _.each(user.services, function (serviceData) {                                                                  // 1303
+      pinEncryptedFieldsToUser(serviceData, user._id);                                                              // 1304
+    });                                                                                                             // 1305
+  }                                                                                                                 // 1306
                                                                                                                     //
-  var fullUser;                                                                                                     // 1306
+  var fullUser;                                                                                                     // 1308
                                                                                                                     //
-  if (this._onCreateUserHook) {                                                                                     // 1307
+  if (this._onCreateUserHook) {                                                                                     // 1309
     fullUser = this._onCreateUserHook(options, user); // This is *not* part of the API. We need this because we can't isolate
-    // the global server environment between tests, meaning we can't test                                           // 1311
-    // both having a create user hook set and not having one set.                                                   // 1312
+    // the global server environment between tests, meaning we can't test                                           // 1313
+    // both having a create user hook set and not having one set.                                                   // 1314
                                                                                                                     //
-    if (fullUser === 'TEST DEFAULT HOOK') fullUser = defaultCreateUserHook(options, user);                          // 1313
-  } else {                                                                                                          // 1315
-    fullUser = defaultCreateUserHook(options, user);                                                                // 1316
-  }                                                                                                                 // 1317
+    if (fullUser === 'TEST DEFAULT HOOK') fullUser = defaultCreateUserHook(options, user);                          // 1315
+  } else {                                                                                                          // 1317
+    fullUser = defaultCreateUserHook(options, user);                                                                // 1318
+  }                                                                                                                 // 1319
                                                                                                                     //
-  _.each(this._validateNewUserHooks, function (hook) {                                                              // 1319
-    if (!hook(fullUser)) throw new Meteor.Error(403, "User validation failed");                                     // 1320
-  });                                                                                                               // 1322
+  _.each(this._validateNewUserHooks, function (hook) {                                                              // 1321
+    if (!hook(fullUser)) throw new Meteor.Error(403, "User validation failed");                                     // 1322
+  });                                                                                                               // 1324
                                                                                                                     //
-  var userId;                                                                                                       // 1324
+  var userId;                                                                                                       // 1326
                                                                                                                     //
-  try {                                                                                                             // 1325
-    userId = this.users.insert(fullUser);                                                                           // 1326
-  } catch (e) {                                                                                                     // 1327
-    // XXX string parsing sucks, maybe                                                                              // 1328
-    // https://jira.mongodb.org/browse/SERVER-3069 will get fixed one day                                           // 1329
-    if (e.name !== 'MongoError') throw e;                                                                           // 1330
-    if (e.code !== 11000) throw e;                                                                                  // 1331
-    if (e.errmsg.indexOf('emails.address') !== -1) throw new Meteor.Error(403, "Email already exists.");            // 1332
+  try {                                                                                                             // 1327
+    userId = this.users.insert(fullUser);                                                                           // 1328
+  } catch (e) {                                                                                                     // 1329
+    // XXX string parsing sucks, maybe                                                                              // 1330
+    // https://jira.mongodb.org/browse/SERVER-3069 will get fixed one day                                           // 1331
+    if (e.name !== 'MongoError') throw e;                                                                           // 1332
+    if (e.code !== 11000) throw e;                                                                                  // 1333
+    if (e.errmsg.indexOf('emails.address') !== -1) throw new Meteor.Error(403, "Email already exists.");            // 1334
     if (e.errmsg.indexOf('username') !== -1) throw new Meteor.Error(403, "Username already exists."); // XXX better error reporting for services.facebook.id duplicate, etc
                                                                                                                     //
-    throw e;                                                                                                        // 1337
-  }                                                                                                                 // 1338
+    throw e;                                                                                                        // 1339
+  }                                                                                                                 // 1340
                                                                                                                     //
-  return userId;                                                                                                    // 1339
-}; // Helper function: returns false if email does not match company domain from                                    // 1340
-// the configuration.                                                                                               // 1343
+  return userId;                                                                                                    // 1341
+}; // Helper function: returns false if email does not match company domain from                                    // 1342
+// the configuration.                                                                                               // 1345
                                                                                                                     //
                                                                                                                     //
-Ap._testEmailDomain = function (email) {                                                                            // 1344
-  var domain = this._options.restrictCreationByEmailDomain;                                                         // 1345
+Ap._testEmailDomain = function (email) {                                                                            // 1346
+  var domain = this._options.restrictCreationByEmailDomain;                                                         // 1347
   return !domain || _.isFunction(domain) && domain(email) || _.isString(domain) && new RegExp('@' + Meteor._escapeRegExp(domain) + '$', 'i').test(email);
-}; // Validate new user's email or Google/Facebook/GitHub account's email                                           // 1350
+}; // Validate new user's email or Google/Facebook/GitHub account's email                                           // 1352
                                                                                                                     //
                                                                                                                     //
-function defaultValidateNewUserHook(user) {                                                                         // 1353
-  var self = this;                                                                                                  // 1354
-  var domain = self._options.restrictCreationByEmailDomain;                                                         // 1355
-  if (!domain) return true;                                                                                         // 1356
-  var emailIsGood = false;                                                                                          // 1359
+function defaultValidateNewUserHook(user) {                                                                         // 1355
+  var self = this;                                                                                                  // 1356
+  var domain = self._options.restrictCreationByEmailDomain;                                                         // 1357
+  if (!domain) return true;                                                                                         // 1358
+  var emailIsGood = false;                                                                                          // 1361
                                                                                                                     //
-  if (!_.isEmpty(user.emails)) {                                                                                    // 1360
-    emailIsGood = _.any(user.emails, function (email) {                                                             // 1361
-      return self._testEmailDomain(email.address);                                                                  // 1362
-    });                                                                                                             // 1363
-  } else if (!_.isEmpty(user.services)) {                                                                           // 1364
-    // Find any email of any service and check it                                                                   // 1365
-    emailIsGood = _.any(user.services, function (service) {                                                         // 1366
-      return service.email && self._testEmailDomain(service.email);                                                 // 1367
-    });                                                                                                             // 1368
-  }                                                                                                                 // 1369
+  if (!_.isEmpty(user.emails)) {                                                                                    // 1362
+    emailIsGood = _.any(user.emails, function (email) {                                                             // 1363
+      return self._testEmailDomain(email.address);                                                                  // 1364
+    });                                                                                                             // 1365
+  } else if (!_.isEmpty(user.services)) {                                                                           // 1366
+    // Find any email of any service and check it                                                                   // 1367
+    emailIsGood = _.any(user.services, function (service) {                                                         // 1368
+      return service.email && self._testEmailDomain(service.email);                                                 // 1369
+    });                                                                                                             // 1370
+  }                                                                                                                 // 1371
                                                                                                                     //
-  if (emailIsGood) return true;                                                                                     // 1371
+  if (emailIsGood) return true;                                                                                     // 1373
   if (_.isString(domain)) throw new Meteor.Error(403, "@" + domain + " email required");else throw new Meteor.Error(403, "Email doesn't match the criteria.");
-} ///                                                                                                               // 1378
-/// MANAGING USER OBJECTS                                                                                           // 1381
-///                                                                                                                 // 1382
-// Updates or creates a user after we authenticate with a 3rd party.                                                // 1384
-//                                                                                                                  // 1385
-// @param serviceName {String} Service name (eg, twitter).                                                          // 1386
-// @param serviceData {Object} Data to store in the user's record                                                   // 1387
-//        under services[serviceName]. Must include an "id" field                                                   // 1388
-//        which is a unique identifier for the user in the service.                                                 // 1389
-// @param options {Object, optional} Other options to pass to insertUserDoc                                         // 1390
-//        (eg, profile)                                                                                             // 1391
-// @returns {Object} Object with token and id keys, like the result                                                 // 1392
-//        of the "login" method.                                                                                    // 1393
-//                                                                                                                  // 1394
+} ///                                                                                                               // 1380
+/// MANAGING USER OBJECTS                                                                                           // 1383
+///                                                                                                                 // 1384
+// Updates or creates a user after we authenticate with a 3rd party.                                                // 1386
+//                                                                                                                  // 1387
+// @param serviceName {String} Service name (eg, twitter).                                                          // 1388
+// @param serviceData {Object} Data to store in the user's record                                                   // 1389
+//        under services[serviceName]. Must include an "id" field                                                   // 1390
+//        which is a unique identifier for the user in the service.                                                 // 1391
+// @param options {Object, optional} Other options to pass to insertUserDoc                                         // 1392
+//        (eg, profile)                                                                                             // 1393
+// @returns {Object} Object with token and id keys, like the result                                                 // 1394
+//        of the "login" method.                                                                                    // 1395
+//                                                                                                                  // 1396
                                                                                                                     //
                                                                                                                     //
-Ap.updateOrCreateUserFromExternalService = function (serviceName, serviceData, options) {                           // 1395
-  options = _.clone(options || {});                                                                                 // 1400
+Ap.updateOrCreateUserFromExternalService = function (serviceName, serviceData, options) {                           // 1397
+  options = _.clone(options || {});                                                                                 // 1402
   if (serviceName === "password" || serviceName === "resume") throw new Error("Can't use updateOrCreateUserFromExternalService with internal service " + serviceName);
   if (!_.has(serviceData, 'id')) throw new Error("Service data for service " + serviceName + " must include id"); // Look for a user with the appropriate service user id.
                                                                                                                     //
-  var selector = {};                                                                                                // 1411
-  var serviceIdKey = "services." + serviceName + ".id"; // XXX Temporary special case for Twitter. (Issue #629)     // 1412
-  //   The serviceData.id will be a string representation of an integer.                                            // 1415
-  //   We want it to match either a stored string or int representation.                                            // 1416
-  //   This is to cater to earlier versions of Meteor storing twitter                                               // 1417
-  //   user IDs in number form, and recent versions storing them as strings.                                        // 1418
-  //   This can be removed once migration technology is in place, and twitter                                       // 1419
-  //   users stored with integer IDs have been migrated to string IDs.                                              // 1420
+  var selector = {};                                                                                                // 1413
+  var serviceIdKey = "services." + serviceName + ".id"; // XXX Temporary special case for Twitter. (Issue #629)     // 1414
+  //   The serviceData.id will be a string representation of an integer.                                            // 1417
+  //   We want it to match either a stored string or int representation.                                            // 1418
+  //   This is to cater to earlier versions of Meteor storing twitter                                               // 1419
+  //   user IDs in number form, and recent versions storing them as strings.                                        // 1420
+  //   This can be removed once migration technology is in place, and twitter                                       // 1421
+  //   users stored with integer IDs have been migrated to string IDs.                                              // 1422
                                                                                                                     //
-  if (serviceName === "twitter" && !isNaN(serviceData.id)) {                                                        // 1421
-    selector["$or"] = [{}, {}];                                                                                     // 1422
-    selector["$or"][0][serviceIdKey] = serviceData.id;                                                              // 1423
-    selector["$or"][1][serviceIdKey] = parseInt(serviceData.id, 10);                                                // 1424
-  } else {                                                                                                          // 1425
-    selector[serviceIdKey] = serviceData.id;                                                                        // 1426
-  }                                                                                                                 // 1427
+  if (serviceName === "twitter" && !isNaN(serviceData.id)) {                                                        // 1423
+    selector["$or"] = [{}, {}];                                                                                     // 1424
+    selector["$or"][0][serviceIdKey] = serviceData.id;                                                              // 1425
+    selector["$or"][1][serviceIdKey] = parseInt(serviceData.id, 10);                                                // 1426
+  } else {                                                                                                          // 1427
+    selector[serviceIdKey] = serviceData.id;                                                                        // 1428
+  }                                                                                                                 // 1429
                                                                                                                     //
-  var user = this.users.findOne(selector);                                                                          // 1429
+  var user = this.users.findOne(selector);                                                                          // 1431
                                                                                                                     //
-  if (user) {                                                                                                       // 1431
+  if (user) {                                                                                                       // 1433
     pinEncryptedFieldsToUser(serviceData, user._id); // We *don't* process options (eg, profile) for update, but we do replace
-    // the serviceData (eg, so that we keep an unexpired access token and                                           // 1435
-    // don't cache old email addresses in serviceData.email).                                                       // 1436
-    // XXX provide an onUpdateUser hook which would let apps update                                                 // 1437
-    //     the profile too                                                                                          // 1438
+    // the serviceData (eg, so that we keep an unexpired access token and                                           // 1437
+    // don't cache old email addresses in serviceData.email).                                                       // 1438
+    // XXX provide an onUpdateUser hook which would let apps update                                                 // 1439
+    //     the profile too                                                                                          // 1440
                                                                                                                     //
-    var setAttrs = {};                                                                                              // 1439
+    var setAttrs = {};                                                                                              // 1441
                                                                                                                     //
-    _.each(serviceData, function (value, key) {                                                                     // 1440
-      setAttrs["services." + serviceName + "." + key] = value;                                                      // 1441
-    }); // XXX Maybe we should re-use the selector above and notice if the update                                   // 1442
-    //     touches nothing?                                                                                         // 1445
+    _.each(serviceData, function (value, key) {                                                                     // 1442
+      setAttrs["services." + serviceName + "." + key] = value;                                                      // 1443
+    }); // XXX Maybe we should re-use the selector above and notice if the update                                   // 1444
+    //     touches nothing?                                                                                         // 1447
                                                                                                                     //
                                                                                                                     //
-    this.users.update(user._id, {                                                                                   // 1446
-      $set: setAttrs                                                                                                // 1447
-    });                                                                                                             // 1446
-    return {                                                                                                        // 1450
-      type: serviceName,                                                                                            // 1451
-      userId: user._id                                                                                              // 1452
-    };                                                                                                              // 1450
-  } else {                                                                                                          // 1455
-    // Create a new user with the service data. Pass other options through to                                       // 1456
-    // insertUserDoc.                                                                                               // 1457
-    user = {                                                                                                        // 1458
-      services: {}                                                                                                  // 1458
-    };                                                                                                              // 1458
-    user.services[serviceName] = serviceData;                                                                       // 1459
-    return {                                                                                                        // 1460
-      type: serviceName,                                                                                            // 1461
-      userId: this.insertUserDoc(options, user)                                                                     // 1462
+    this.users.update(user._id, {                                                                                   // 1448
+      $set: setAttrs                                                                                                // 1449
+    });                                                                                                             // 1448
+    return {                                                                                                        // 1452
+      type: serviceName,                                                                                            // 1453
+      userId: user._id                                                                                              // 1454
+    };                                                                                                              // 1452
+  } else {                                                                                                          // 1457
+    // Create a new user with the service data. Pass other options through to                                       // 1458
+    // insertUserDoc.                                                                                               // 1459
+    user = {                                                                                                        // 1460
+      services: {}                                                                                                  // 1460
     };                                                                                                              // 1460
-  }                                                                                                                 // 1464
-};                                                                                                                  // 1465
+    user.services[serviceName] = serviceData;                                                                       // 1461
+    return {                                                                                                        // 1462
+      type: serviceName,                                                                                            // 1463
+      userId: this.insertUserDoc(options, user)                                                                     // 1464
+    };                                                                                                              // 1462
+  }                                                                                                                 // 1466
+};                                                                                                                  // 1467
                                                                                                                     //
-function setupUsersCollection(users) {                                                                              // 1467
-  ///                                                                                                               // 1468
-  /// RESTRICTING WRITES TO USER OBJECTS                                                                            // 1469
+function setupUsersCollection(users) {                                                                              // 1469
   ///                                                                                                               // 1470
-  users.allow({                                                                                                     // 1471
-    // clients can modify the profile field of their own document, and                                              // 1472
-    // nothing else.                                                                                                // 1473
-    update: function (userId, user, fields, modifier) {                                                             // 1474
-      // make sure it is our record                                                                                 // 1475
-      if (user._id !== userId) return false; // user can only modify the 'profile' field. sets to multiple          // 1476
-      // sub-keys (eg profile.foo and profile.bar) are merged into entry                                            // 1480
-      // in the fields list.                                                                                        // 1481
+  /// RESTRICTING WRITES TO USER OBJECTS                                                                            // 1471
+  ///                                                                                                               // 1472
+  users.allow({                                                                                                     // 1473
+    // clients can modify the profile field of their own document, and                                              // 1474
+    // nothing else.                                                                                                // 1475
+    update: function (userId, user, fields, modifier) {                                                             // 1476
+      // make sure it is our record                                                                                 // 1477
+      if (user._id !== userId) return false; // user can only modify the 'profile' field. sets to multiple          // 1478
+      // sub-keys (eg profile.foo and profile.bar) are merged into entry                                            // 1482
+      // in the fields list.                                                                                        // 1483
                                                                                                                     //
-      if (fields.length !== 1 || fields[0] !== 'profile') return false;                                             // 1482
-      return true;                                                                                                  // 1485
-    },                                                                                                              // 1486
-    fetch: ['_id'] // we only look at _id.                                                                          // 1487
+      if (fields.length !== 1 || fields[0] !== 'profile') return false;                                             // 1484
+      return true;                                                                                                  // 1487
+    },                                                                                                              // 1488
+    fetch: ['_id'] // we only look at _id.                                                                          // 1489
                                                                                                                     //
-  }); /// DEFAULT INDEXES ON USERS                                                                                  // 1471
+  }); /// DEFAULT INDEXES ON USERS                                                                                  // 1473
                                                                                                                     //
-  users._ensureIndex('username', {                                                                                  // 1491
-    unique: 1,                                                                                                      // 1491
-    sparse: 1                                                                                                       // 1491
-  });                                                                                                               // 1491
+  users._ensureIndex('username', {                                                                                  // 1493
+    unique: 1,                                                                                                      // 1493
+    sparse: 1                                                                                                       // 1493
+  });                                                                                                               // 1493
                                                                                                                     //
-  users._ensureIndex('emails.address', {                                                                            // 1492
-    unique: 1,                                                                                                      // 1492
-    sparse: 1                                                                                                       // 1492
-  });                                                                                                               // 1492
-                                                                                                                    //
-  users._ensureIndex('services.resume.loginTokens.hashedToken', {                                                   // 1493
+  users._ensureIndex('emails.address', {                                                                            // 1494
     unique: 1,                                                                                                      // 1494
     sparse: 1                                                                                                       // 1494
   });                                                                                                               // 1494
                                                                                                                     //
-  users._ensureIndex('services.resume.loginTokens.token', {                                                         // 1495
+  users._ensureIndex('services.resume.loginTokens.hashedToken', {                                                   // 1495
     unique: 1,                                                                                                      // 1496
     sparse: 1                                                                                                       // 1496
-  }); // For taking care of logoutOtherClients calls that crashed before the                                        // 1496
-  // tokens were deleted.                                                                                           // 1498
+  });                                                                                                               // 1496
+                                                                                                                    //
+  users._ensureIndex('services.resume.loginTokens.token', {                                                         // 1497
+    unique: 1,                                                                                                      // 1498
+    sparse: 1                                                                                                       // 1498
+  }); // For taking care of logoutOtherClients calls that crashed before the                                        // 1498
+  // tokens were deleted.                                                                                           // 1500
                                                                                                                     //
                                                                                                                     //
-  users._ensureIndex('services.resume.haveLoginTokensToDelete', {                                                   // 1499
-    sparse: 1                                                                                                       // 1500
-  }); // For expiring login tokens                                                                                  // 1500
-                                                                                                                    //
-                                                                                                                    //
-  users._ensureIndex("services.resume.loginTokens.when", {                                                          // 1502
+  users._ensureIndex('services.resume.haveLoginTokensToDelete', {                                                   // 1501
     sparse: 1                                                                                                       // 1502
-  });                                                                                                               // 1502
-} ///                                                                                                               // 1503
-/// CLEAN UP FOR `logoutOtherClients`                                                                               // 1506
-///                                                                                                                 // 1507
+  }); // For expiring login tokens                                                                                  // 1502
                                                                                                                     //
                                                                                                                     //
-Ap._deleteSavedTokensForUser = function (userId, tokensToDelete) {                                                  // 1509
-  if (tokensToDelete) {                                                                                             // 1510
-    this.users.update(userId, {                                                                                     // 1511
-      $unset: {                                                                                                     // 1512
-        "services.resume.haveLoginTokensToDelete": 1,                                                               // 1513
-        "services.resume.loginTokensToDelete": 1                                                                    // 1514
-      },                                                                                                            // 1512
-      $pullAll: {                                                                                                   // 1516
-        "services.resume.loginTokens": tokensToDelete                                                               // 1517
-      }                                                                                                             // 1516
-    });                                                                                                             // 1511
-  }                                                                                                                 // 1520
-};                                                                                                                  // 1521
+  users._ensureIndex("services.resume.loginTokens.when", {                                                          // 1504
+    sparse: 1                                                                                                       // 1504
+  }); // For expiring password tokens                                                                               // 1504
                                                                                                                     //
-Ap._deleteSavedTokensForAllUsersOnStartup = function () {                                                           // 1523
-  var self = this; // If we find users who have saved tokens to delete on startup, delete                           // 1524
-  // them now. It's possible that the server could have crashed and come                                            // 1527
-  // back up before new tokens are found in localStorage, but this                                                  // 1528
-  // shouldn't happen very often. We shouldn't put a delay here because                                             // 1529
-  // that would give a lot of power to an attacker with a stolen login                                              // 1530
-  // token and the ability to crash the server.                                                                     // 1531
                                                                                                                     //
-  Meteor.startup(function () {                                                                                      // 1532
-    self.users.find({                                                                                               // 1533
-      "services.resume.haveLoginTokensToDelete": true                                                               // 1534
-    }, {                                                                                                            // 1533
-      "services.resume.loginTokensToDelete": 1                                                                      // 1536
-    }).forEach(function (user) {                                                                                    // 1535
-      self._deleteSavedTokensForUser(user._id, user.services.resume.loginTokensToDelete);                           // 1538
-    });                                                                                                             // 1542
-  });                                                                                                               // 1543
-};                                                                                                                  // 1544
+  users._ensureIndex('services.password.reset.when', {                                                              // 1506
+    sparse: 1                                                                                                       // 1506
+  });                                                                                                               // 1506
+} ///                                                                                                               // 1507
+/// CLEAN UP FOR `logoutOtherClients`                                                                               // 1510
+///                                                                                                                 // 1511
+                                                                                                                    //
+                                                                                                                    //
+Ap._deleteSavedTokensForUser = function (userId, tokensToDelete) {                                                  // 1513
+  if (tokensToDelete) {                                                                                             // 1514
+    this.users.update(userId, {                                                                                     // 1515
+      $unset: {                                                                                                     // 1516
+        "services.resume.haveLoginTokensToDelete": 1,                                                               // 1517
+        "services.resume.loginTokensToDelete": 1                                                                    // 1518
+      },                                                                                                            // 1516
+      $pullAll: {                                                                                                   // 1520
+        "services.resume.loginTokens": tokensToDelete                                                               // 1521
+      }                                                                                                             // 1520
+    });                                                                                                             // 1515
+  }                                                                                                                 // 1524
+};                                                                                                                  // 1525
+                                                                                                                    //
+Ap._deleteSavedTokensForAllUsersOnStartup = function () {                                                           // 1527
+  var self = this; // If we find users who have saved tokens to delete on startup, delete                           // 1528
+  // them now. It's possible that the server could have crashed and come                                            // 1531
+  // back up before new tokens are found in localStorage, but this                                                  // 1532
+  // shouldn't happen very often. We shouldn't put a delay here because                                             // 1533
+  // that would give a lot of power to an attacker with a stolen login                                              // 1534
+  // token and the ability to crash the server.                                                                     // 1535
+                                                                                                                    //
+  Meteor.startup(function () {                                                                                      // 1536
+    self.users.find({                                                                                               // 1537
+      "services.resume.haveLoginTokensToDelete": true                                                               // 1538
+    }, {                                                                                                            // 1537
+      "services.resume.loginTokensToDelete": 1                                                                      // 1540
+    }).forEach(function (user) {                                                                                    // 1539
+      self._deleteSavedTokensForUser(user._id, user.services.resume.loginTokensToDelete);                           // 1542
+    });                                                                                                             // 1546
+  });                                                                                                               // 1547
+};                                                                                                                  // 1548
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }],"url_server.js":["./accounts_server.js",function(require,exports,module){
@@ -1996,8 +2013,8 @@ Ap._deleteSavedTokensForAllUsersOnStartup = function () {                       
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 var AccountsServer = void 0;                                                                                        // 1
-module.import("./accounts_server.js", {                                                                             // 1
-  "AccountsServer": function (v) {                                                                                  // 1
+module.importSync("./accounts_server.js", {                                                                         // 1
+  AccountsServer: function (v) {                                                                                    // 1
     AccountsServer = v;                                                                                             // 1
   }                                                                                                                 // 1
 }, 0);                                                                                                              // 1

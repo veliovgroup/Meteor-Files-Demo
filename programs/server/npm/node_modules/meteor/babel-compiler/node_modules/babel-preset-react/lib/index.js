@@ -2,17 +2,13 @@
 
 exports.__esModule = true;
 
+var _babelPresetFlow = require("babel-preset-flow");
+
+var _babelPresetFlow2 = _interopRequireDefault(_babelPresetFlow);
+
 var _babelPluginTransformReactJsx = require("babel-plugin-transform-react-jsx");
 
 var _babelPluginTransformReactJsx2 = _interopRequireDefault(_babelPluginTransformReactJsx);
-
-var _babelPluginTransformFlowStripTypes = require("babel-plugin-transform-flow-strip-types");
-
-var _babelPluginTransformFlowStripTypes2 = _interopRequireDefault(_babelPluginTransformFlowStripTypes);
-
-var _babelPluginSyntaxFlow = require("babel-plugin-syntax-flow");
-
-var _babelPluginSyntaxFlow2 = _interopRequireDefault(_babelPluginSyntaxFlow);
 
 var _babelPluginSyntaxJsx = require("babel-plugin-syntax-jsx");
 
@@ -25,7 +21,8 @@ var _babelPluginTransformReactDisplayName2 = _interopRequireDefault(_babelPlugin
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  plugins: [_babelPluginTransformReactJsx2.default, _babelPluginTransformFlowStripTypes2.default, _babelPluginSyntaxFlow2.default, _babelPluginSyntaxJsx2.default, _babelPluginTransformReactDisplayName2.default],
+  presets: [_babelPresetFlow2.default],
+  plugins: [_babelPluginTransformReactJsx2.default, _babelPluginSyntaxJsx2.default, _babelPluginTransformReactDisplayName2.default],
   env: {
     development: {
       plugins: []

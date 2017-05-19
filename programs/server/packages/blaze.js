@@ -40,6 +40,7 @@ Blaze._escape = (function() {
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#x27;",
+    "/": "&#x2F;",
     "`": "&#x60;", /* IE allows backtick-delimited attributes?? */
     "&": "&amp;"
   };

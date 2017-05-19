@@ -1670,91 +1670,97 @@ _.extend(Server.prototype, {                                                    
       self.method_handlers[name] = func;                                                                              // 1582
     });                                                                                                               // 1583
   },                                                                                                                  // 1584
-  call: function (name /*, arguments */) {                                                                            // 1586
-    // if it's a function, the last argument is the result callback,                                                  // 1587
-    // not a parameter to the remote method.                                                                          // 1588
-    var args = Array.prototype.slice.call(arguments, 1);                                                              // 1589
-    if (args.length && typeof args[args.length - 1] === "function") var callback = args.pop();                        // 1590
-    return this.apply(name, args, callback);                                                                          // 1592
-  },                                                                                                                  // 1593
-  // @param options {Optional Object}                                                                                 // 1595
-  // @param callback {Optional Function}                                                                              // 1596
-  apply: function (name, args, options, callback) {                                                                   // 1597
-    var self = this; // We were passed 3 arguments. They may be either (name, args, options)                          // 1598
-    // or (name, args, callback)                                                                                      // 1601
+  call: function (name) {                                                                                             // 1586
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {         // 1586
+      args[_key - 1] = arguments[_key];                                                                               // 1586
+    }                                                                                                                 // 1586
                                                                                                                       //
-    if (!callback && typeof options === 'function') {                                                                 // 1602
-      callback = options;                                                                                             // 1603
-      options = {};                                                                                                   // 1604
-    }                                                                                                                 // 1605
+    if (args.length && typeof args[args.length - 1] === "function") {                                                 // 1587
+      // If it's a function, the last argument is the result callback, not                                            // 1588
+      // a parameter to the remote method.                                                                            // 1589
+      var callback = args.pop();                                                                                      // 1590
+    }                                                                                                                 // 1591
                                                                                                                       //
-    options = options || {};                                                                                          // 1606
-    if (callback) // It's not really necessary to do this, since we immediately                                       // 1608
-      // run the callback in this fiber before returning, but we do it                                                // 1610
-      // anyway for regularity.                                                                                       // 1611
-      // XXX improve error message (and how we report it)                                                             // 1612
-      callback = Meteor.bindEnvironment(callback, "delivering result of invoking '" + name + "'"); // Run the handler
+    return this.apply(name, args, callback);                                                                          // 1593
+  },                                                                                                                  // 1594
+  // A version of the call method that always returns a Promise.                                                      // 1596
+  callAsync: function (name) {                                                                                        // 1597
+    for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {  // 1597
+      args[_key2 - 1] = arguments[_key2];                                                                             // 1597
+    }                                                                                                                 // 1597
                                                                                                                       //
-    var handler = self.method_handlers[name];                                                                         // 1619
-    var exception;                                                                                                    // 1620
+    return this.applyAsync(name, args);                                                                               // 1598
+  },                                                                                                                  // 1599
+  apply: function (name, args, options, callback) {                                                                   // 1601
+    // We were passed 3 arguments. They may be either (name, args, options)                                           // 1602
+    // or (name, args, callback)                                                                                      // 1603
+    if (!callback && typeof options === 'function') {                                                                 // 1604
+      callback = options;                                                                                             // 1605
+      options = {};                                                                                                   // 1606
+    } else {                                                                                                          // 1607
+      options = options || {};                                                                                        // 1608
+    }                                                                                                                 // 1609
                                                                                                                       //
-    if (!handler) {                                                                                                   // 1621
-      exception = new Meteor.Error(404, "Method '" + name + "' not found");                                           // 1622
+    var promise = this.applyAsync(name, args, options); // Return the result in whichever way the caller asked for it. Note that we
+    // do NOT block on the write fence in an analogous way to how the client                                          // 1614
+    // blocks on the relevant data being visible, so you are NOT guaranteed that                                      // 1615
+    // cursor observe callbacks have fired when your callback is invoked. (We                                         // 1616
+    // can change this if there's a real use case.)                                                                   // 1617
+                                                                                                                      //
+    if (callback) {                                                                                                   // 1618
+      promise.then(function (result) {                                                                                // 1619
+        return callback(undefined, result);                                                                           // 1620
+      }, function (exception) {                                                                                       // 1620
+        return callback(exception);                                                                                   // 1621
+      });                                                                                                             // 1621
     } else {                                                                                                          // 1623
-      // If this is a method call from within another method, get the                                                 // 1624
-      // user state from the outer method, otherwise don't allow                                                      // 1625
-      // setUserId to be called                                                                                       // 1626
-      var userId = null;                                                                                              // 1627
+      return promise.await();                                                                                         // 1624
+    }                                                                                                                 // 1625
+  },                                                                                                                  // 1626
+  // @param options {Optional Object}                                                                                 // 1628
+  applyAsync: function (name, args, options) {                                                                        // 1629
+    // Run the handler                                                                                                // 1630
+    var handler = this.method_handlers[name];                                                                         // 1631
                                                                                                                       //
-      var setUserId = function () {                                                                                   // 1628
-        throw new Error("Can't call setUserId on a server initiated method call");                                    // 1629
-      };                                                                                                              // 1630
-                                                                                                                      //
-      var connection = null;                                                                                          // 1631
-                                                                                                                      //
-      var currentInvocation = DDP._CurrentInvocation.get();                                                           // 1632
-                                                                                                                      //
-      if (currentInvocation) {                                                                                        // 1633
-        userId = currentInvocation.userId;                                                                            // 1634
-                                                                                                                      //
-        setUserId = function (userId) {                                                                               // 1635
-          currentInvocation.setUserId(userId);                                                                        // 1636
-        };                                                                                                            // 1637
-                                                                                                                      //
-        connection = currentInvocation.connection;                                                                    // 1638
-      }                                                                                                               // 1639
-                                                                                                                      //
-      var invocation = new DDPCommon.MethodInvocation({                                                               // 1641
-        isSimulation: false,                                                                                          // 1642
-        userId: userId,                                                                                               // 1643
-        setUserId: setUserId,                                                                                         // 1644
-        connection: connection,                                                                                       // 1645
-        randomSeed: DDPCommon.makeRpcSeed(currentInvocation, name)                                                    // 1646
-      });                                                                                                             // 1641
-                                                                                                                      //
-      try {                                                                                                           // 1648
-        var result = DDP._CurrentInvocation.withValue(invocation, function () {                                       // 1649
-          return maybeAuditArgumentChecks(handler, invocation, EJSON.clone(args), "internal call to '" + name + "'");
-        });                                                                                                           // 1653
-                                                                                                                      //
-        result = EJSON.clone(result);                                                                                 // 1654
-      } catch (e) {                                                                                                   // 1655
-        exception = e;                                                                                                // 1656
-      }                                                                                                               // 1657
-    } // Return the result in whichever way the caller asked for it. Note that we                                     // 1658
-    // do NOT block on the write fence in an analogous way to how the client                                          // 1661
-    // blocks on the relevant data being visible, so you are NOT guaranteed that                                      // 1662
-    // cursor observe callbacks have fired when your callback is invoked. (We                                         // 1663
-    // can change this if there's a real use case.)                                                                   // 1664
+    if (!handler) {                                                                                                   // 1632
+      return Promise.reject(new Meteor.Error(404, "Method '" + name + "' not found"));                                // 1633
+    } // If this is a method call from within another method, get the                                                 // 1636
+    // user state from the outer method, otherwise don't allow                                                        // 1639
+    // setUserId to be called                                                                                         // 1640
                                                                                                                       //
                                                                                                                       //
-    if (callback) {                                                                                                   // 1665
-      callback(exception, result);                                                                                    // 1666
-      return undefined;                                                                                               // 1667
-    }                                                                                                                 // 1668
+    var userId = null;                                                                                                // 1641
                                                                                                                       //
-    if (exception) throw exception;                                                                                   // 1669
-    return result;                                                                                                    // 1671
+    var setUserId = function () {                                                                                     // 1642
+      throw new Error("Can't call setUserId on a server initiated method call");                                      // 1643
+    };                                                                                                                // 1644
+                                                                                                                      //
+    var connection = null;                                                                                            // 1645
+                                                                                                                      //
+    var currentInvocation = DDP._CurrentInvocation.get();                                                             // 1646
+                                                                                                                      //
+    if (currentInvocation) {                                                                                          // 1647
+      userId = currentInvocation.userId;                                                                              // 1648
+                                                                                                                      //
+      setUserId = function (userId) {                                                                                 // 1649
+        currentInvocation.setUserId(userId);                                                                          // 1650
+      };                                                                                                              // 1651
+                                                                                                                      //
+      connection = currentInvocation.connection;                                                                      // 1652
+    }                                                                                                                 // 1653
+                                                                                                                      //
+    var invocation = new DDPCommon.MethodInvocation({                                                                 // 1655
+      isSimulation: false,                                                                                            // 1656
+      userId: userId,                                                                                                 // 1657
+      setUserId: setUserId,                                                                                           // 1658
+      connection: connection,                                                                                         // 1659
+      randomSeed: DDPCommon.makeRpcSeed(currentInvocation, name)                                                      // 1660
+    });                                                                                                               // 1655
+    return new Promise(function (resolve) {                                                                           // 1663
+      return resolve(DDP._CurrentInvocation.withValue(invocation, function () {                                       // 1663
+        return maybeAuditArgumentChecks(handler, invocation, EJSON.clone(args), "internal call to '" + name + "'");   // 1666
+      }));                                                                                                            // 1666
+    }).then(EJSON.clone);                                                                                             // 1663
   },                                                                                                                  // 1672
   _urlForSession: function (sessionId) {                                                                              // 1674
     var self = this;                                                                                                  // 1675

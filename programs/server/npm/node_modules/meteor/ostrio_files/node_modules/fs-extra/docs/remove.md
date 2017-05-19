@@ -1,20 +1,34 @@
-# remove(dir, callback)
+# remove(path, [callback])
 
 Removes a file or directory. The directory can have contents. Like `rm -rf`.
 
-**Sync:** `removeSync()`
-
+- `path` `<String>`
+- `callback` `<Function>`
 
 ## Example:
 
 ```js
-var fs = require('fs-extra')
+const fs = require('fs-extra')
 
-fs.remove('/tmp/myfile', function (err) {
+// remove file
+fs.remove('/tmp/myfile', err => {
   if (err) return console.error(err)
 
   console.log('success!')
 })
 
-fs.removeSync('/home/jprichardson') //I just deleted my entire HOME directory.
+fs.remove('/home/jprichardson', err => {
+  if (err) return console.error(err)
+
+  console.log('success!') // I just deleted my entire HOME directory.
+})
+
+// Promise Usage
+fs.remove('/tmp/myfile')
+.then(() => {
+  console.log('success!')
+})
+.catch(err => {
+  console.error(err)
+})
 ```

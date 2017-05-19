@@ -1,19 +1,30 @@
-# ensureSymlink(srcpath, dstpath, [type], callback)
+# ensureSymlink(srcpath, dstpath, [type, callback])
 
 Ensures that the symlink exists. If the directory structure does not exist, it is created.
 
-**Sync:** `ensureSymlinkSync()`
-
+- `srcpath` `<String>`
+- `dstpath` `<String>`
+- `type` `<String>`
+- `callback` `<Function>`
 
 ## Example:
 
 ```js
-var fs = require('fs-extra')
+const fs = require('fs-extra')
 
-var srcpath = '/tmp/file.txt'
-var dstpath = '/tmp/this/path/does/not/exist/file.txt'
-fs.ensureSymlink(srcpath, dstpath, function (err) {
+const srcpath = '/tmp/file.txt'
+const dstpath = '/tmp/this/path/does/not/exist/file.txt'
+fs.ensureSymlink(srcpath, dstpath, err => {
   console.log(err) // => null
   // symlink has now been created, including the directory it is to be placed in
+})
+
+// With Promises:
+fs.ensureSymlink(srcpath, dstpath)
+.then(() => {
+  console.log('success!')
+})
+.catch(err => {
+  console.error(err)
 })
 ```

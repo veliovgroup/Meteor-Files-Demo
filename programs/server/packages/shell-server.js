@@ -22,14 +22,14 @@ var require = meteorInstall({"node_modules":{"meteor":{"shell-server":{"main.js"
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-module.import("./shell-server.js", {                                                                               // 1
-  '*': function (v, k) {                                                                                           // 1
+module.importSync("./shell-server.js", {                                                                           // 1
+  "*": function (v, k) {                                                                                           // 1
     exports[k] = v;                                                                                                // 1
   }                                                                                                                // 1
 }, 0);                                                                                                             // 1
 var listen = void 0;                                                                                               // 1
-module.import("./shell-server.js", {                                                                               // 1
-  "listen": function (v) {                                                                                         // 1
+module.importSync("./shell-server.js", {                                                                           // 1
+  listen: function (v) {                                                                                           // 1
     listen = v;                                                                                                    // 1
   }                                                                                                                // 1
 }, 1);                                                                                                             // 1
@@ -332,59 +332,64 @@ var Server = function () {                                                      
         action: function () {                                                                                      // 265
           process.exit(0);                                                                                         // 266
         }                                                                                                          // 267
-      }); // Trigger one recoverable error using the default eval function, just                                   // 263
-      // to capture the Recoverable error constructor, so that our custom                                          // 271
-      // evalCommand function can wrap recoverable errors properly.                                                // 272
+      }); // TODO: Node 6: Revisit this as repl._RecoverableError is now exported.                                 // 263
+      //       as `Recoverable` from `repl`.  Maybe revisit this entirely                                          // 271
+      //       as the docs have been updated too:                                                                  // 272
+      //       https://nodejs.org/api/repl.html#repl_custom_evaluation_functions                                   // 273
+      //       https://github.com/nodejs/node/blob/v6.x/lib/repl.js#L1398                                          // 274
+      // Trigger one recoverable error using the default eval function, just                                       // 275
+      // to capture the Recoverable error constructor, so that our custom                                          // 276
+      // evalCommand function can wrap recoverable errors properly.                                                // 277
                                                                                                                    //
-      repl.eval("{", null, "<meteor shell>", function (error) {                                                    // 273
-        // Capture the Recoverable error constructor.                                                              // 276
+      repl.eval("{", null, "<meteor shell>", function (error) {                                                    // 278
+        // Capture the Recoverable error constructor.                                                              // 281
         repl._RecoverableError = error && error.constructor; // Now set repl.eval to the actual evalCommand function that we want
-        // to use, bound to repl._domain if necessary.                                                             // 280
+        // to use, bound to repl._domain if necessary.                                                             // 285
                                                                                                                    //
         repl.eval = repl._domain ? repl._domain.bind(evalCommand) : evalCommand; // Terminate the partial evaluation of the { command.
                                                                                                                    //
-        repl.commands["break"].action.call(repl);                                                                  // 286
-      });                                                                                                          // 287
-    }                                                                                                              // 289
+        repl.commands["break"].action.call(repl);                                                                  // 291
+      });                                                                                                          // 292
+    }                                                                                                              // 294
                                                                                                                    //
     return startREPL;                                                                                              //
   }(); // This function allows a persistent history of shell commands to be saved                                  //
-  // to and loaded from .meteor/local/shell-history.                                                               // 292
+  // to and loaded from .meteor/local/shell-history.                                                               // 297
                                                                                                                    //
                                                                                                                    //
   Server.prototype.initializeHistory = function () {                                                               //
     function initializeHistory() {                                                                                 //
-      var self = this;                                                                                             // 294
-      var rli = self.repl.rli;                                                                                     // 295
-      var historyFile = getHistoryFile(self.shellDir);                                                             // 296
-      var historyFd = fs.openSync(historyFile, "a+");                                                              // 297
-      var historyLines = fs.readFileSync(historyFile, "utf8").split("\n");                                         // 298
-      var seenLines = Object.create(null);                                                                         // 299
+      var self = this;                                                                                             // 299
+      var rli = self.repl.rli;                                                                                     // 300
+      var historyFile = getHistoryFile(self.shellDir);                                                             // 301
+      var historyFd = fs.openSync(historyFile, "a+");                                                              // 302
+      var historyLines = fs.readFileSync(historyFile, "utf8").split("\n");                                         // 303
+      var seenLines = Object.create(null);                                                                         // 304
                                                                                                                    //
-      if (!rli.history) {                                                                                          // 301
-        rli.history = [];                                                                                          // 302
-        rli.historyIndex = -1;                                                                                     // 303
-      }                                                                                                            // 304
+      if (!rli.history) {                                                                                          // 306
+        rli.history = [];                                                                                          // 307
+        rli.historyIndex = -1;                                                                                     // 308
+      }                                                                                                            // 309
                                                                                                                    //
-      while (rli.history && historyLines.length > 0) {                                                             // 306
-        var line = historyLines.pop();                                                                             // 307
+      while (rli.history && historyLines.length > 0) {                                                             // 311
+        var line = historyLines.pop();                                                                             // 312
                                                                                                                    //
-        if (line && /\S/.test(line) && !seenLines[line]) {                                                         // 308
-          rli.history.push(line);                                                                                  // 309
-          seenLines[line] = true;                                                                                  // 310
-        }                                                                                                          // 311
-      }                                                                                                            // 312
+        if (line && /\S/.test(line) && !seenLines[line]) {                                                         // 313
+          rli.history.push(line);                                                                                  // 314
+          seenLines[line] = true;                                                                                  // 315
+        }                                                                                                          // 316
+      }                                                                                                            // 317
                                                                                                                    //
-      rli.addListener("line", function (line) {                                                                    // 314
-        if (historyFd >= 0 && /\S/.test(line)) {                                                                   // 315
-          fs.writeSync(historyFd, line + "\n");                                                                    // 316
-        }                                                                                                          // 317
-      });                                                                                                          // 318
-      self.repl.on("exit", function () {                                                                           // 320
-        fs.closeSync(historyFd);                                                                                   // 321
-        historyFd = -1;                                                                                            // 322
+      rli.addListener("line", function (line) {                                                                    // 319
+        if (historyFd >= 0 && /\S/.test(line)) {                                                                   // 320
+          fs.writeSync(historyFd, line + "\n");                                                                    // 321
+        }                                                                                                          // 322
       });                                                                                                          // 323
-    }                                                                                                              // 324
+      self.repl.on("exit", function () {                                                                           // 325
+        fs.closeSync(historyFd);                                                                                   // 326
+        historyFd = -1;                                                                                            // 327
+      });                                                                                                          // 328
+    }                                                                                                              // 329
                                                                                                                    //
     return initializeHistory;                                                                                      //
   }();                                                                                                             //
@@ -392,163 +397,159 @@ var Server = function () {                                                      
   return Server;                                                                                                   //
 }();                                                                                                               //
                                                                                                                    //
-function readJSONFromStream(inputStream, callback) {                                                               // 327
-  var outputStream = new stream.PassThrough();                                                                     // 328
-  var dataSoFar = "";                                                                                              // 329
+function readJSONFromStream(inputStream, callback) {                                                               // 332
+  var outputStream = new stream.PassThrough();                                                                     // 333
+  var dataSoFar = "";                                                                                              // 334
                                                                                                                    //
-  function onData(buffer) {                                                                                        // 331
-    var lines = buffer.toString("utf8").split("\n");                                                               // 332
+  function onData(buffer) {                                                                                        // 336
+    var lines = buffer.toString("utf8").split("\n");                                                               // 337
                                                                                                                    //
-    while (lines.length > 0) {                                                                                     // 334
-      dataSoFar += lines.shift();                                                                                  // 335
+    while (lines.length > 0) {                                                                                     // 339
+      dataSoFar += lines.shift();                                                                                  // 340
                                                                                                                    //
-      try {                                                                                                        // 337
-        var json = JSON.parse(dataSoFar);                                                                          // 338
-      } catch (error) {                                                                                            // 339
-        if (error instanceof SyntaxError) {                                                                        // 340
-          continue;                                                                                                // 341
-        }                                                                                                          // 342
+      try {                                                                                                        // 342
+        var json = JSON.parse(dataSoFar);                                                                          // 343
+      } catch (error) {                                                                                            // 344
+        if (error instanceof SyntaxError) {                                                                        // 345
+          continue;                                                                                                // 346
+        }                                                                                                          // 347
                                                                                                                    //
-        return finish(error);                                                                                      // 344
-      }                                                                                                            // 345
+        return finish(error);                                                                                      // 349
+      }                                                                                                            // 350
                                                                                                                    //
-      if (lines.length > 0) {                                                                                      // 347
-        outputStream.write(lines.join("\n"));                                                                      // 348
-      }                                                                                                            // 349
+      if (lines.length > 0) {                                                                                      // 352
+        outputStream.write(lines.join("\n"));                                                                      // 353
+      }                                                                                                            // 354
                                                                                                                    //
-      inputStream.pipe(outputStream);                                                                              // 351
-      return finish(null, json);                                                                                   // 353
-    }                                                                                                              // 354
-  }                                                                                                                // 355
+      inputStream.pipe(outputStream);                                                                              // 356
+      return finish(null, json);                                                                                   // 358
+    }                                                                                                              // 359
+  }                                                                                                                // 360
                                                                                                                    //
-  function onClose() {                                                                                             // 357
-    finish(new Error("stream unexpectedly closed"));                                                               // 358
-  }                                                                                                                // 359
+  function onClose() {                                                                                             // 362
+    finish(new Error("stream unexpectedly closed"));                                                               // 363
+  }                                                                                                                // 364
                                                                                                                    //
-  var finished = false;                                                                                            // 361
+  var finished = false;                                                                                            // 366
                                                                                                                    //
-  function finish(error, json) {                                                                                   // 362
-    if (!finished) {                                                                                               // 363
-      finished = true;                                                                                             // 364
-      inputStream.removeListener("data", onData);                                                                  // 365
-      inputStream.removeListener("error", finish);                                                                 // 366
-      inputStream.removeListener("close", onClose);                                                                // 367
-      callback(error, json, outputStream);                                                                         // 368
-    }                                                                                                              // 369
-  }                                                                                                                // 370
+  function finish(error, json) {                                                                                   // 367
+    if (!finished) {                                                                                               // 368
+      finished = true;                                                                                             // 369
+      inputStream.removeListener("data", onData);                                                                  // 370
+      inputStream.removeListener("error", finish);                                                                 // 371
+      inputStream.removeListener("close", onClose);                                                                // 372
+      callback(error, json, outputStream);                                                                         // 373
+    }                                                                                                              // 374
+  }                                                                                                                // 375
                                                                                                                    //
-  inputStream.on("data", onData);                                                                                  // 372
-  inputStream.on("error", finish);                                                                                 // 373
-  inputStream.on("close", onClose);                                                                                // 374
-}                                                                                                                  // 375
+  inputStream.on("data", onData);                                                                                  // 377
+  inputStream.on("error", finish);                                                                                 // 378
+  inputStream.on("close", onClose);                                                                                // 379
+}                                                                                                                  // 380
                                                                                                                    //
-function getInfoFile(shellDir) {                                                                                   // 377
-  return path.join(shellDir, "info.json");                                                                         // 378
-}                                                                                                                  // 379
+function getInfoFile(shellDir) {                                                                                   // 382
+  return path.join(shellDir, "info.json");                                                                         // 383
+}                                                                                                                  // 384
                                                                                                                    //
-function getHistoryFile(shellDir) {                                                                                // 381
-  return path.join(shellDir, "history");                                                                           // 382
-} // Shell commands need to be executed in a Fiber in case they call into                                          // 383
-// code that yields. Using a Promise is an even better idea, since it runs                                         // 386
-// its callbacks in Fibers drawn from a pool, so the Fibers are recycled.                                          // 387
-                                                                                                                   //
-                                                                                                                   //
-var evalCommandPromise = Promise.resolve();                                                                        // 388
-                                                                                                                   //
-function evalCommand(command, context, filename, callback) {                                                       // 390
-  var repl = this;                                                                                                 // 391
-                                                                                                                   //
-  function finish(error, result) {                                                                                 // 393
-    if (error) {                                                                                                   // 394
-      if (repl._RecoverableError && isRecoverableError(error, repl)) {                                             // 395
-        callback(new repl._RecoverableError(error));                                                               // 397
-      } else {                                                                                                     // 398
-        callback(error);                                                                                           // 399
-      }                                                                                                            // 400
-    } else {                                                                                                       // 401
-      callback(null, result);                                                                                      // 402
-    }                                                                                                              // 403
-  }                                                                                                                // 404
-                                                                                                                   //
-  if (Package.ecmascript) {                                                                                        // 406
-    var noParens = stripParens(command);                                                                           // 407
-                                                                                                                   //
-    if (noParens !== command) {                                                                                    // 408
-      var classMatch = /^\s*class\s+(\w+)/.exec(noParens);                                                         // 409
-                                                                                                                   //
-      if (classMatch && classMatch[1] !== "extends") {                                                             // 410
-        // If the command looks like a named ES2015 class, we remove the                                           // 411
-        // extra layer of parentheses added by the REPL so that the                                                // 412
-        // command will be evaluated as a class declaration rather than as                                         // 413
-        // a named class expression. Note that you can still type (class A                                         // 414
-        // {}) explicitly to evaluate a named class expression. The REPL                                           // 415
-        // code that calls evalCommand handles named function expressions                                          // 416
-        // similarly (first with and then without parentheses), but that                                           // 417
-        // code doesn't know about ES2015 classes, which is why we have to                                         // 418
-        // handle them here.                                                                                       // 419
-        command = noParens;                                                                                        // 420
-      }                                                                                                            // 421
-    }                                                                                                              // 422
-                                                                                                                   //
-    try {                                                                                                          // 424
-      command = Package.ecmascript.ECMAScript.compileForShell(command);                                            // 425
-    } catch (error) {                                                                                              // 426
-      finish(error);                                                                                               // 427
-      return;                                                                                                      // 428
-    }                                                                                                              // 429
-  }                                                                                                                // 430
-                                                                                                                   //
-  try {                                                                                                            // 432
-    var script = new vm.Script(command, {                                                                          // 433
-      filename: filename,                                                                                          // 434
-      displayErrors: false                                                                                         // 435
-    });                                                                                                            // 433
-  } catch (parseError) {                                                                                           // 437
-    finish(parseError);                                                                                            // 438
-    return;                                                                                                        // 439
-  }                                                                                                                // 440
-                                                                                                                   //
-  evalCommandPromise.then(function () {                                                                            // 442
-    finish(null, script.runInThisContext());                                                                       // 443
-  }).catch(finish);                                                                                                // 444
-}                                                                                                                  // 445
-                                                                                                                   //
-function stripParens(command) {                                                                                    // 447
-  if (command.charAt(0) === "(" && command.charAt(command.length - 1) === ")") {                                   // 448
-    return command.slice(1, command.length - 1);                                                                   // 450
-  }                                                                                                                // 451
-                                                                                                                   //
-  return command;                                                                                                  // 452
-} // The bailOnIllegalToken and isRecoverableError functions are taken from                                        // 453
-// https://github.com/nodejs/node/blob/c9e670ea2a/lib/repl.js#L1227-L1253                                          // 456
+function getHistoryFile(shellDir) {                                                                                // 386
+  return path.join(shellDir, "history");                                                                           // 387
+} // Shell commands need to be executed in a Fiber in case they call into                                          // 388
+// code that yields. Using a Promise is an even better idea, since it runs                                         // 391
+// its callbacks in Fibers drawn from a pool, so the Fibers are recycled.                                          // 392
                                                                                                                    //
                                                                                                                    //
-function bailOnIllegalToken(parser) {                                                                              // 457
-  return parser._literal === null && !parser.blockComment && !parser.regExpLiteral;                                // 458
-} // If the error is that we've unexpectedly ended the input,                                                      // 461
-// then let the user try to recover by adding more input.                                                          // 464
+var evalCommandPromise = Promise.resolve();                                                                        // 393
+                                                                                                                   //
+function evalCommand(command, context, filename, callback) {                                                       // 395
+  var repl = this;                                                                                                 // 396
+                                                                                                                   //
+  function wrapErrorIfRecoverable(error) {                                                                         // 398
+    if (repl._RecoverableError && isRecoverableError(error, repl)) {                                               // 399
+      return new repl._RecoverableError(error);                                                                    // 401
+    } else {                                                                                                       // 402
+      return error;                                                                                                // 403
+    }                                                                                                              // 404
+  }                                                                                                                // 405
+                                                                                                                   //
+  if (Package.ecmascript) {                                                                                        // 407
+    var noParens = stripParens(command);                                                                           // 408
+                                                                                                                   //
+    if (noParens !== command) {                                                                                    // 409
+      var classMatch = /^\s*class\s+(\w+)/.exec(noParens);                                                         // 410
+                                                                                                                   //
+      if (classMatch && classMatch[1] !== "extends") {                                                             // 411
+        // If the command looks like a named ES2015 class, we remove the                                           // 412
+        // extra layer of parentheses added by the REPL so that the                                                // 413
+        // command will be evaluated as a class declaration rather than as                                         // 414
+        // a named class expression. Note that you can still type (class A                                         // 415
+        // {}) explicitly to evaluate a named class expression. The REPL                                           // 416
+        // code that calls evalCommand handles named function expressions                                          // 417
+        // similarly (first with and then without parentheses), but that                                           // 418
+        // code doesn't know about ES2015 classes, which is why we have to                                         // 419
+        // handle them here.                                                                                       // 420
+        command = noParens;                                                                                        // 421
+      }                                                                                                            // 422
+    }                                                                                                              // 423
+                                                                                                                   //
+    try {                                                                                                          // 425
+      command = Package.ecmascript.ECMAScript.compileForShell(command);                                            // 426
+    } catch (error) {                                                                                              // 427
+      callback(wrapErrorIfRecoverable(error));                                                                     // 428
+      return;                                                                                                      // 429
+    }                                                                                                              // 430
+  }                                                                                                                // 431
+                                                                                                                   //
+  try {                                                                                                            // 433
+    var script = new vm.Script(command, {                                                                          // 434
+      filename: filename,                                                                                          // 435
+      displayErrors: false                                                                                         // 436
+    });                                                                                                            // 434
+  } catch (parseError) {                                                                                           // 438
+    callback(wrapErrorIfRecoverable(parseError));                                                                  // 439
+    return;                                                                                                        // 440
+  }                                                                                                                // 441
+                                                                                                                   //
+  evalCommandPromise.then(function () {                                                                            // 443
+    callback(null, script.runInThisContext());                                                                     // 444
+  }).catch(callback);                                                                                              // 445
+}                                                                                                                  // 446
+                                                                                                                   //
+function stripParens(command) {                                                                                    // 448
+  if (command.charAt(0) === "(" && command.charAt(command.length - 1) === ")") {                                   // 449
+    return command.slice(1, command.length - 1);                                                                   // 451
+  }                                                                                                                // 452
+                                                                                                                   //
+  return command;                                                                                                  // 453
+} // The bailOnIllegalToken and isRecoverableError functions are taken from                                        // 454
+// https://github.com/nodejs/node/blob/c9e670ea2a/lib/repl.js#L1227-L1253                                          // 457
                                                                                                                    //
                                                                                                                    //
-function isRecoverableError(e, repl) {                                                                             // 465
-  if (e && e.name === 'SyntaxError') {                                                                             // 466
-    var message = e.message;                                                                                       // 467
+function bailOnIllegalToken(parser) {                                                                              // 458
+  return parser._literal === null && !parser.blockComment && !parser.regExpLiteral;                                // 459
+} // If the error is that we've unexpectedly ended the input,                                                      // 462
+// then let the user try to recover by adding more input.                                                          // 465
                                                                                                                    //
-    if (message === 'Unterminated template literal' || message === 'Missing } in template expression') {           // 468
-      repl._inTemplateLiteral = true;                                                                              // 470
-      return true;                                                                                                 // 471
-    }                                                                                                              // 472
+                                                                                                                   //
+function isRecoverableError(e, repl) {                                                                             // 466
+  if (e && e.name === 'SyntaxError') {                                                                             // 467
+    var message = e.message;                                                                                       // 468
+                                                                                                                   //
+    if (message === 'Unterminated template literal' || message === 'Missing } in template expression') {           // 469
+      repl._inTemplateLiteral = true;                                                                              // 471
+      return true;                                                                                                 // 472
+    }                                                                                                              // 473
                                                                                                                    //
     if (message.startsWith('Unexpected end of input') || message.startsWith('missing ) after argument list') || message.startsWith('Unexpected token')) {
-      return true;                                                                                                 // 477
-    }                                                                                                              // 478
+      return true;                                                                                                 // 478
+    }                                                                                                              // 479
                                                                                                                    //
-    if (message === 'Invalid or unexpected token') {                                                               // 480
-      return !bailOnIllegalToken(repl.lineParser);                                                                 // 481
-    }                                                                                                              // 482
-  }                                                                                                                // 483
+    if (message === 'Invalid or unexpected token') {                                                               // 481
+      return !bailOnIllegalToken(repl.lineParser);                                                                 // 482
+    }                                                                                                              // 483
+  }                                                                                                                // 484
                                                                                                                    //
-  return false;                                                                                                    // 485
-}                                                                                                                  // 486
+  return false;                                                                                                    // 486
+}                                                                                                                  // 487
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }]}}}},{"extensions":[".js",".json"]});
