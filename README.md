@@ -56,17 +56,17 @@ Activate login via Social Networks
 ======
 All credentials is set via env.var(s), if you're using "*Heroku's one click install-button*" - you will be able to pass all of them.
  - Facebook - [Create an App](https://developers.facebook.com/apps/):
-  * secret: `ACCOUNTS_FACEBOOK_SEC`
-  * appId: `ACCOUNTS_FACEBOOK_ID`
+   * secret: `ACCOUNTS_FACEBOOK_SEC`
+   * appId: `ACCOUNTS_FACEBOOK_ID`
  - Twitter - [Create an App](https://apps.twitter.com):
-  * secret: `ACCOUNTS_TWITTER_SEC`
-  * consumerKey: `ACCOUNTS_TWITTER_ID`
+   * secret: `ACCOUNTS_TWITTER_SEC`
+   * consumerKey: `ACCOUNTS_TWITTER_ID`
  - GitHub - [Create OAuth App](https://github.com/settings/developers):
-  * secret: `ACCOUNTS_GITHUB_SEC`
-  * clientId: `ACCOUNTS_GITHUB_ID`
+   * secret: `ACCOUNTS_GITHUB_SEC`
+   * clientId: `ACCOUNTS_GITHUB_ID`
  - Meteor Developer - [Create an App](https://www.meteor.com/account-settings):
-  * secret: `ACCOUNTS_METEOR_SEC`
-  * clientId: `ACCOUNTS_METEOR_ID`
+   * secret: `ACCOUNTS_METEOR_SEC`
+   * clientId: `ACCOUNTS_METEOR_ID`
 
 Deploy to Heroku
 ======
@@ -141,3 +141,10 @@ git push heroku master
  - If your app has errors:
    * Check logs: `heroku logs --tail`
    * Try to run locally and debug: `heroku run node`
+
+
+Support this project:
+======
+This project can't be possible without [ostr.io](https://ostr.io).
+
+By using [ostr.io](https://ostr.io) you are not only [protecting domain names](https://ostr.io/info/domain-names-protection), [monitoring websites and servers](https://ostr.io/info/monitoring), using [Prerendering for better SEO](https://ostr.io/info/prerendering) of your JavaScript website, but support our Open Source activity, and great packages like this one are available for free.
