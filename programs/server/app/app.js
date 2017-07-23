@@ -80,406 +80,409 @@ var useDropBox = false; // AWS:S3 usage:                                        
                                                                                                                      //
 var useS3 = false;                                                                                                   // 16
 var client = void 0;                                                                                                 // 17
+var sendToStorage = void 0;                                                                                          // 18
                                                                                                                      //
-var fs = require('fs-extra');                                                                                        // 19
+var fs = require('fs-extra');                                                                                        // 20
                                                                                                                      //
-var S3 = require('aws-sdk/clients/s3');                                                                              // 20
+var S3 = require('aws-sdk/clients/s3');                                                                              // 21
                                                                                                                      //
-var stream = require('stream');                                                                                      // 21
+var stream = require('stream');                                                                                      // 22
                                                                                                                      //
-var request = require('request');                                                                                    // 22
+var request = require('request');                                                                                    // 23
                                                                                                                      //
-var Dropbox = require('dropbox');                                                                                    // 23
+var Dropbox = require('dropbox');                                                                                    // 24
                                                                                                                      //
-var bound = Meteor.bindEnvironment(function (callback) {                                                             // 24
-  return callback();                                                                                                 // 25
-});                                                                                                                  // 26
+var bound = Meteor.bindEnvironment(function (callback) {                                                             // 25
+  return callback();                                                                                                 // 26
+});                                                                                                                  // 27
                                                                                                                      //
-if (process.env.DROPBOX) {                                                                                           // 28
-  Meteor.settings.dropbox = JSON.parse(process.env.DROPBOX).dropbox;                                                 // 29
-} else if (process.env.S3) {                                                                                         // 30
-  Meteor.settings.s3 = JSON.parse(process.env.S3).s3;                                                                // 31
-}                                                                                                                    // 32
+if (process.env.DROPBOX) {                                                                                           // 29
+  Meteor.settings.dropbox = JSON.parse(process.env.DROPBOX).dropbox;                                                 // 30
+} else if (process.env.S3) {                                                                                         // 31
+  Meteor.settings.s3 = JSON.parse(process.env.S3).s3;                                                                // 32
+}                                                                                                                    // 33
                                                                                                                      //
-var s3Conf = Meteor.settings.s3 || {};                                                                               // 34
-var dbConf = Meteor.settings.dropbox || {};                                                                          // 35
+var s3Conf = Meteor.settings.s3 || {};                                                                               // 35
+var dbConf = Meteor.settings.dropbox || {};                                                                          // 36
                                                                                                                      //
-if (dbConf && dbConf.key && dbConf.secret && dbConf.token) {                                                         // 37
-  useDropBox = true;                                                                                                 // 38
-  client = new Dropbox.Client({                                                                                      // 39
-    key: dbConf.key,                                                                                                 // 40
-    secret: dbConf.secret,                                                                                           // 41
-    token: dbConf.token                                                                                              // 42
-  });                                                                                                                // 39
-} else if (s3Conf && s3Conf.key && s3Conf.secret && s3Conf.bucket && s3Conf.region) {                                // 44
-  useS3 = true;                                                                                                      // 45
-  client = new S3({                                                                                                  // 46
-    secretAccessKey: s3Conf.secret,                                                                                  // 47
-    accessKeyId: s3Conf.key,                                                                                         // 48
-    region: s3Conf.region,                                                                                           // 49
-    sslEnabled: false,                                                                                               // 50
-    httpOptions: {                                                                                                   // 51
-      timeout: 6000,                                                                                                 // 52
-      agent: false                                                                                                   // 53
-    }                                                                                                                // 51
-  });                                                                                                                // 46
-}                                                                                                                    // 56
+if (dbConf && dbConf.key && dbConf.secret && dbConf.token) {                                                         // 38
+  useDropBox = true;                                                                                                 // 39
+  client = new Dropbox.Client({                                                                                      // 40
+    key: dbConf.key,                                                                                                 // 41
+    secret: dbConf.secret,                                                                                           // 42
+    token: dbConf.token                                                                                              // 43
+  });                                                                                                                // 40
+} else if (s3Conf && s3Conf.key && s3Conf.secret && s3Conf.bucket && s3Conf.region) {                                // 45
+  useS3 = true;                                                                                                      // 46
+  client = new S3({                                                                                                  // 47
+    secretAccessKey: s3Conf.secret,                                                                                  // 48
+    accessKeyId: s3Conf.key,                                                                                         // 49
+    region: s3Conf.region,                                                                                           // 50
+    sslEnabled: false,                                                                                               // 51
+    httpOptions: {                                                                                                   // 52
+      timeout: 6000,                                                                                                 // 53
+      agent: false                                                                                                   // 54
+    }                                                                                                                // 52
+  });                                                                                                                // 47
+}                                                                                                                    // 57
                                                                                                                      //
-Collections.files = new FilesCollection({                                                                            // 58
-  // debug: true,                                                                                                    // 59
-  // throttle: false,                                                                                                // 60
-  chunkSize: 1024 * 768,                                                                                             // 61
-  storagePath: 'assets/app/uploads/uploadedFiles',                                                                   // 62
-  collectionName: 'uploadedFiles',                                                                                   // 63
-  allowClientCode: true,                                                                                             // 64
-  "protected": function (fileObj) {                                                                                  // 58
-    if (fileObj) {                                                                                                   // 66
-      if (!(fileObj.meta && fileObj.meta.secured)) {                                                                 // 67
-        return true;                                                                                                 // 68
-      } else if (fileObj.meta && fileObj.meta.secured === true && this.userId === fileObj.userId) {                  // 69
-        return true;                                                                                                 // 70
-      }                                                                                                              // 71
-    }                                                                                                                // 72
+Collections.files = new FilesCollection({                                                                            // 59
+  // debug: true,                                                                                                    // 60
+  // throttle: false,                                                                                                // 61
+  chunkSize: 1024 * 768,                                                                                             // 62
+  storagePath: 'assets/app/uploads/uploadedFiles',                                                                   // 63
+  collectionName: 'uploadedFiles',                                                                                   // 64
+  allowClientCode: true,                                                                                             // 65
+  "protected": function (fileObj) {                                                                                  // 59
+    if (fileObj) {                                                                                                   // 67
+      if (!(fileObj.meta && fileObj.meta.secured)) {                                                                 // 68
+        return true;                                                                                                 // 69
+      } else if (fileObj.meta && fileObj.meta.secured === true && this.userId === fileObj.userId) {                  // 70
+        return true;                                                                                                 // 71
+      }                                                                                                              // 72
+    }                                                                                                                // 73
                                                                                                                      //
-    return false;                                                                                                    // 73
-  },                                                                                                                 // 74
-  onBeforeRemove: function (cursor) {                                                                                // 75
-    var _this = this;                                                                                                // 75
+    return false;                                                                                                    // 74
+  },                                                                                                                 // 75
+  onBeforeRemove: function (cursor) {                                                                                // 76
+    var _this = this;                                                                                                // 76
                                                                                                                      //
-    var res = cursor.map(function (file) {                                                                           // 76
-      if (file && file.userId && _.isString(file.userId)) {                                                          // 77
-        return file.userId === _this.userId;                                                                         // 78
-      }                                                                                                              // 79
+    var res = cursor.map(function (file) {                                                                           // 77
+      if (file && file.userId && _.isString(file.userId)) {                                                          // 78
+        return file.userId === _this.userId;                                                                         // 79
+      }                                                                                                              // 80
                                                                                                                      //
-      return false;                                                                                                  // 80
-    });                                                                                                              // 81
-    return !~res.indexOf(false);                                                                                     // 82
-  },                                                                                                                 // 83
-  onBeforeUpload: function () {                                                                                      // 84
-    if (this.file.size <= 1024 * 1024 * 128) {                                                                       // 85
-      return true;                                                                                                   // 86
-    }                                                                                                                // 87
+      return false;                                                                                                  // 81
+    });                                                                                                              // 82
+    return !~res.indexOf(false);                                                                                     // 83
+  },                                                                                                                 // 84
+  onBeforeUpload: function () {                                                                                      // 85
+    if (this.file.size <= 1024 * 1024 * 128) {                                                                       // 86
+      return true;                                                                                                   // 87
+    }                                                                                                                // 88
                                                                                                                      //
-    return "Max. file size is 128MB you've tried to upload " + filesize(this.file.size);                             // 88
-  },                                                                                                                 // 89
-  downloadCallback: function (fileObj) {                                                                             // 90
-    if (this.params && this.params.query && this.params.query.download === 'true') {                                 // 91
-      Collections.files.collection.update(fileObj._id, {                                                             // 92
-        $inc: {                                                                                                      // 93
-          'meta.downloads': 1                                                                                        // 94
-        }                                                                                                            // 93
-      }, _app.NOOP);                                                                                                 // 92
-    }                                                                                                                // 97
+    return "Max. file size is 128MB you've tried to upload " + filesize(this.file.size);                             // 89
+  },                                                                                                                 // 90
+  downloadCallback: function (fileObj) {                                                                             // 91
+    if (this.params && this.params.query && this.params.query.download === 'true') {                                 // 92
+      Collections.files.collection.update(fileObj._id, {                                                             // 93
+        $inc: {                                                                                                      // 94
+          'meta.downloads': 1                                                                                        // 95
+        }                                                                                                            // 94
+      }, _app.NOOP);                                                                                                 // 93
+    }                                                                                                                // 98
                                                                                                                      //
-    return true;                                                                                                     // 98
-  },                                                                                                                 // 99
-  interceptDownload: function (http, fileRef, version) {                                                             // 100
-    var path = void 0;                                                                                               // 101
+    return true;                                                                                                     // 99
+  },                                                                                                                 // 100
+  interceptDownload: function (http, fileRef, version) {                                                             // 101
+    var path = void 0;                                                                                               // 102
                                                                                                                      //
-    if (useDropBox) {                                                                                                // 102
+    if (useDropBox) {                                                                                                // 103
       path = fileRef && fileRef.versions && fileRef.versions[version] && fileRef.versions[version].meta && fileRef.versions[version].meta.pipeFrom ? fileRef.versions[version].meta.pipeFrom : void 0;
                                                                                                                      //
-      if (path) {                                                                                                    // 104
-        // If file is successfully moved to Storage                                                                  // 105
-        // We will pipe request to Storage                                                                           // 106
-        // So, original link will stay always secure                                                                 // 107
-        // To force ?play and ?download parameters                                                                   // 109
-        // and to keep original file name, content-type,                                                             // 110
-        // content-disposition and cache-control                                                                     // 111
-        // we're using low-level .serve() method                                                                     // 112
-        this.serve(http, fileRef, fileRef.versions[version], version, request({                                      // 113
-          url: path,                                                                                                 // 114
-          headers: _.pick(http.request.headers, 'range', 'cache-control', 'connection')                              // 115
-        }));                                                                                                         // 113
-        return true;                                                                                                 // 117
-      } // While file is not yet uploaded to Storage                                                                 // 118
-      // We will serve file from FS                                                                                  // 120
+      if (path) {                                                                                                    // 105
+        // If file is successfully moved to Storage                                                                  // 106
+        // We will pipe request to Storage                                                                           // 107
+        // So, original link will stay always secure                                                                 // 108
+        // To force ?play and ?download parameters                                                                   // 110
+        // and to keep original file name, content-type,                                                             // 111
+        // content-disposition and cache-control                                                                     // 112
+        // we're using low-level .serve() method                                                                     // 113
+        this.serve(http, fileRef, fileRef.versions[version], version, request({                                      // 114
+          url: path,                                                                                                 // 115
+          headers: _.pick(http.request.headers, 'range', 'cache-control', 'connection')                              // 116
+        }));                                                                                                         // 114
+        return true;                                                                                                 // 118
+      } // While file is not yet uploaded to Storage                                                                 // 119
+      // We will serve file from FS                                                                                  // 121
                                                                                                                      //
                                                                                                                      //
-      return false;                                                                                                  // 121
-    } else if (useS3) {                                                                                              // 122
+      return false;                                                                                                  // 122
+    } else if (useS3) {                                                                                              // 123
       path = fileRef && fileRef.versions && fileRef.versions[version] && fileRef.versions[version].meta && fileRef.versions[version].meta.pipePath ? fileRef.versions[version].meta.pipePath : void 0;
                                                                                                                      //
-      if (path) {                                                                                                    // 124
-        // If file is successfully moved to Storage                                                                  // 125
-        // We will pipe request to Storage                                                                           // 126
-        // So, original link will stay always secure                                                                 // 127
-        // To force ?play and ?download parameters                                                                   // 129
-        // and to keep original file name, content-type,                                                             // 130
-        // content-disposition and cache-control                                                                     // 131
-        // we're using low-level .serve() method                                                                     // 132
-        var opts = {                                                                                                 // 133
-          Bucket: s3Conf.bucket,                                                                                     // 134
-          Key: path                                                                                                  // 135
-        };                                                                                                           // 133
+      if (path) {                                                                                                    // 125
+        // If file is successfully moved to Storage                                                                  // 126
+        // We will pipe request to Storage                                                                           // 127
+        // So, original link will stay always secure                                                                 // 128
+        // To force ?play and ?download parameters                                                                   // 130
+        // and to keep original file name, content-type,                                                             // 131
+        // content-disposition and cache-control                                                                     // 132
+        // we're using low-level .serve() method                                                                     // 133
+        var opts = {                                                                                                 // 134
+          Bucket: s3Conf.bucket,                                                                                     // 135
+          Key: path                                                                                                  // 136
+        };                                                                                                           // 134
                                                                                                                      //
-        if (http.request.headers.range) {                                                                            // 138
-          var vRef = fileRef.versions[version];                                                                      // 139
+        if (http.request.headers.range) {                                                                            // 139
+          var vRef = fileRef.versions[version];                                                                      // 140
                                                                                                                      //
-          var range = _.clone(http.request.headers.range);                                                           // 140
+          var range = _.clone(http.request.headers.range);                                                           // 141
                                                                                                                      //
-          var array = range.split(/bytes=([0-9]*)-([0-9]*)/);                                                        // 141
-          var start = parseInt(array[1]);                                                                            // 142
-          var end = parseInt(array[2]);                                                                              // 143
+          var array = range.split(/bytes=([0-9]*)-([0-9]*)/);                                                        // 142
+          var start = parseInt(array[1]);                                                                            // 143
+          var end = parseInt(array[2]);                                                                              // 144
                                                                                                                      //
-          if (isNaN(end)) {                                                                                          // 144
-            // Request data from AWS:S3 by small chunks                                                              // 145
-            end = start + this.chunkSize - 1;                                                                        // 146
+          if (isNaN(end)) {                                                                                          // 145
+            // Request data from AWS:S3 by small chunks                                                              // 146
+            end = start + this.chunkSize - 1;                                                                        // 147
                                                                                                                      //
-            if (end >= vRef.size) {                                                                                  // 147
-              end = vRef.size - 1;                                                                                   // 148
-            }                                                                                                        // 149
-          }                                                                                                          // 150
+            if (end >= vRef.size) {                                                                                  // 148
+              end = vRef.size - 1;                                                                                   // 149
+            }                                                                                                        // 150
+          }                                                                                                          // 151
                                                                                                                      //
-          opts.Range = "bytes=" + start + "-" + end;                                                                 // 151
-          http.request.headers.range = "bytes=" + start + "-" + end;                                                 // 152
-        }                                                                                                            // 153
+          opts.Range = "bytes=" + start + "-" + end;                                                                 // 152
+          http.request.headers.range = "bytes=" + start + "-" + end;                                                 // 153
+        }                                                                                                            // 154
                                                                                                                      //
-        var fileColl = this;                                                                                         // 155
-        client.getObject(opts, function (error) {                                                                    // 156
-          if (error) {                                                                                               // 157
-            console.error(error);                                                                                    // 158
+        var fileColl = this;                                                                                         // 156
+        client.getObject(opts, function (error) {                                                                    // 157
+          if (error) {                                                                                               // 158
+            console.error(error);                                                                                    // 159
                                                                                                                      //
-            if (!http.response.finished) {                                                                           // 159
-              http.response.end();                                                                                   // 160
-            }                                                                                                        // 161
-          } else {                                                                                                   // 162
-            if (http.request.headers.range && this.httpResponse.headers['content-range']) {                          // 163
-              // Set proper range header in according to what is returned from AWS:S3                                // 164
+            if (!http.response.finished) {                                                                           // 160
+              http.response.end();                                                                                   // 161
+            }                                                                                                        // 162
+          } else {                                                                                                   // 163
+            if (http.request.headers.range && this.httpResponse.headers['content-range']) {                          // 164
+              // Set proper range header in according to what is returned from AWS:S3                                // 165
               http.request.headers.range = this.httpResponse.headers['content-range'].split('/')[0].replace('bytes ', 'bytes=');
-            }                                                                                                        // 166
+            }                                                                                                        // 167
                                                                                                                      //
-            var dataStream = new stream.PassThrough();                                                               // 168
-            fileColl.serve(http, fileRef, fileRef.versions[version], version, dataStream);                           // 169
-            dataStream.end(this.data.Body);                                                                          // 170
-          }                                                                                                          // 171
-        });                                                                                                          // 172
-        return true;                                                                                                 // 174
-      } // While file is not yet uploaded to Storage                                                                 // 175
-      // We will serve file from FS                                                                                  // 177
-                                                                                                                     //
-                                                                                                                     //
-      return false;                                                                                                  // 178
-    }                                                                                                                // 179
-                                                                                                                     //
-    return false;                                                                                                    // 180
-  }                                                                                                                  // 181
-});                                                                                                                  // 58
-Collections.files.denyClient();                                                                                      // 184
-Collections.files.on('afterUpload', function (fileRef) {                                                             // 185
-  var _this2 = this;                                                                                                 // 185
-                                                                                                                     //
-  if (useDropBox) {                                                                                                  // 186
-    var makeUrl = function (stat, fileRef, version) {                                                                // 187
-      var triesUrl = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                          // 187
-      client.makeUrl(stat.path, {                                                                                    // 188
-        long: true,                                                                                                  // 189
-        downloadHack: true                                                                                           // 190
-      }, function (error, xml) {                                                                                     // 188
-        bound(function () {                                                                                          // 192
-          // Store downloadable link in file's meta object                                                           // 193
-          if (error) {                                                                                               // 194
-            if (triesUrl < 10) {                                                                                     // 195
-              Meteor.setTimeout(function () {                                                                        // 196
-                makeUrl(stat, fileRef, version, ++triesUrl);                                                         // 197
-              }, 2048);                                                                                              // 198
-            } else {                                                                                                 // 199
-              console.error(error, {                                                                                 // 200
-                triesUrl: triesUrl                                                                                   // 201
-              });                                                                                                    // 200
-            }                                                                                                        // 203
-          } else if (xml) {                                                                                          // 204
-            var upd = {                                                                                              // 205
-              $set: {}                                                                                               // 205
-            };                                                                                                       // 205
-            upd['$set']['versions.' + version + '.meta.pipeFrom'] = xml.url;                                         // 206
-            upd['$set']['versions.' + version + '.meta.pipePath'] = stat.path;                                       // 207
-                                                                                                                     //
-            _this2.collection.update({                                                                               // 208
-              _id: fileRef._id                                                                                       // 209
-            }, upd, function (updError) {                                                                            // 208
-              if (updError) {                                                                                        // 211
-                console.error(updError);                                                                             // 212
-              } else {                                                                                               // 213
-                // Unlink original files from FS                                                                     // 214
-                // after successful upload to DropBox                                                                // 215
-                _this2.unlink(_this2.collection.findOne(fileRef._id), version);                                      // 216
-              }                                                                                                      // 217
-            });                                                                                                      // 218
-          } else {                                                                                                   // 219
-            if (triesUrl < 10) {                                                                                     // 220
-              Meteor.setTimeout(function () {                                                                        // 221
-                // Generate downloadable link                                                                        // 222
-                makeUrl(stat, fileRef, version, ++triesUrl);                                                         // 223
-              }, 2048);                                                                                              // 224
-            } else {                                                                                                 // 225
-              console.error("client.makeUrl doesn't returns xml", {                                                  // 226
-                triesUrl: triesUrl                                                                                   // 227
-              });                                                                                                    // 226
-            }                                                                                                        // 229
-          }                                                                                                          // 230
-        });                                                                                                          // 231
-      });                                                                                                            // 232
-    };                                                                                                               // 233
-                                                                                                                     //
-    var writeToDB = function (fileRef, version, data) {                                                              // 235
-      var triesSend = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                         // 235
-      // DropBox already uses random URLs                                                                            // 236
-      // No need to use random file names                                                                            // 237
-      client.writeFile(fileRef._id + '-' + version + '.' + fileRef.extension, data, function (error, stat) {         // 238
-        bound(function () {                                                                                          // 239
-          if (error) {                                                                                               // 240
-            if (triesSend < 10) {                                                                                    // 241
-              Meteor.setTimeout(function () {                                                                        // 242
-                // Write file to DropBox                                                                             // 243
-                writeToDB(fileRef, version, data, ++triesSend);                                                      // 244
-              }, 2048);                                                                                              // 245
-            } else {                                                                                                 // 246
-              console.error(error, {                                                                                 // 247
-                triesSend: triesSend                                                                                 // 248
-              });                                                                                                    // 247
-            }                                                                                                        // 250
-          } else {                                                                                                   // 251
-            makeUrl(stat, fileRef, version);                                                                         // 252
-          }                                                                                                          // 253
-        });                                                                                                          // 254
-      });                                                                                                            // 255
-    };                                                                                                               // 256
-                                                                                                                     //
-    var readFile = function (fileRef, vRef, version) {                                                               // 258
-      var triesRead = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                         // 258
-      fs.readFile(vRef.path, function (error, data) {                                                                // 259
-        bound(function () {                                                                                          // 260
-          if (error) {                                                                                               // 261
-            if (triesRead < 10) {                                                                                    // 262
-              readFile(fileRef, vRef, version, ++triesRead);                                                         // 263
-            } else {                                                                                                 // 264
-              console.error(error);                                                                                  // 265
-            }                                                                                                        // 266
-          } else {                                                                                                   // 267
-            writeToDB(fileRef, version, data);                                                                       // 268
-          }                                                                                                          // 269
-        });                                                                                                          // 270
-      });                                                                                                            // 271
-    };                                                                                                               // 272
-                                                                                                                     //
-    sendToStorage = function (fileRef) {                                                                             // 274
-      _.each(fileRef.versions, function (vRef, version) {                                                            // 275
-        readFile(fileRef, vRef, version);                                                                            // 276
-      });                                                                                                            // 277
-    };                                                                                                               // 278
-  } else if (useS3) {                                                                                                // 279
-    sendToStorage = function (fileRef) {                                                                             // 280
-      _.each(fileRef.versions, function (vRef, version) {                                                            // 281
-        // We use Random.id() instead of real file's _id                                                             // 282
-        // to secure files from reverse engineering                                                                  // 283
-        // As after viewing this code it will be easy                                                                // 284
-        // to get access to unlisted and protected files                                                             // 285
-        var filePath = 'files/' + Random.id() + '-' + version + '.' + fileRef.extension;                             // 286
-        client.putObject({                                                                                           // 288
-          StorageClass: 'STANDARD',                                                                                  // 289
-          Bucket: s3Conf.bucket,                                                                                     // 290
-          Key: filePath,                                                                                             // 291
-          Body: fs.createReadStream(vRef.path),                                                                      // 292
-          ContentType: vRef.type                                                                                     // 293
-        }, function (error) {                                                                                        // 288
-          bound(function () {                                                                                        // 295
-            if (error) {                                                                                             // 296
-              console.error(error);                                                                                  // 297
-            } else {                                                                                                 // 298
-              var upd = {                                                                                            // 299
-                $set: {}                                                                                             // 299
-              };                                                                                                     // 299
-              upd['$set']['versions.' + version + '.meta.pipePath'] = filePath;                                      // 300
-                                                                                                                     //
-              _this2.collection.update({                                                                             // 301
-                _id: fileRef._id                                                                                     // 302
-              }, upd, function (updError) {                                                                          // 301
-                if (updError) {                                                                                      // 304
-                  console.error(updError);                                                                           // 305
-                } else {                                                                                             // 306
-                  // Unlink original file from FS                                                                    // 307
-                  // after successful upload to AWS:S3                                                               // 308
-                  _this2.unlink(_this2.collection.findOne(fileRef._id), version);                                    // 309
-                }                                                                                                    // 310
-              });                                                                                                    // 311
-            }                                                                                                        // 312
-          });                                                                                                        // 313
-        });                                                                                                          // 314
-      });                                                                                                            // 315
-    };                                                                                                               // 316
-  }                                                                                                                  // 317
-                                                                                                                     //
-  if (/png|jpe?g/i.test(fileRef.extension || '')) {                                                                  // 319
-    _app.createThumbnails(this, fileRef, function (error, fileRef) {                                                 // 320
-      if (error) {                                                                                                   // 321
-        console.error(error);                                                                                        // 322
-      }                                                                                                              // 323
-                                                                                                                     //
-      if (useDropBox || useS3) {                                                                                     // 324
-        sendToStorage(_this2.collection.findOne(fileRef._id));                                                       // 325
-      }                                                                                                              // 326
-    });                                                                                                              // 327
-  } else {                                                                                                           // 328
-    if (useDropBox || useS3) {                                                                                       // 329
-      sendToStorage(fileRef);                                                                                        // 330
-    }                                                                                                                // 331
-  }                                                                                                                  // 332
-}); // This line now commented due to Heroku usage                                                                   // 333
-// Collections.files.collection._ensureIndex {'meta.expireAt': 1}, {expireAfterSeconds: 0, background: true}         // 336
-// Intercept FileCollection's remove method                                                                          // 338
-// to remove file from DropBox or AWS S3                                                                             // 339
-                                                                                                                     //
-if (useDropBox || useS3) {                                                                                           // 340
-  var _origRemove = Collections.files.remove;                                                                        // 341
-                                                                                                                     //
-  Collections.files.remove = function (search) {                                                                     // 342
-    var cursor = this.collection.find(search);                                                                       // 343
-    cursor.forEach(function (fileRef) {                                                                              // 344
-      _.each(fileRef.versions, function (vRef) {                                                                     // 345
-        if (vRef && vRef.meta && vRef.meta.pipePath != null) {                                                       // 346
-          if (useDropBox) {                                                                                          // 347
-            // DropBox usage:                                                                                        // 348
-            client.remove(vRef.meta.pipePath, function (error) {                                                     // 349
-              bound(function () {                                                                                    // 350
-                if (error) {                                                                                         // 351
-                  console.error(error);                                                                              // 352
-                }                                                                                                    // 353
-              });                                                                                                    // 354
-            });                                                                                                      // 355
-          } else {                                                                                                   // 356
-            // AWS:S3 usage:                                                                                         // 357
-            client.deleteObject({                                                                                    // 358
-              Bucket: s3Conf.bucket,                                                                                 // 359
-              Key: vRef.meta.pipePath                                                                                // 360
-            }, function (error) {                                                                                    // 358
-              bound(function () {                                                                                    // 362
-                if (error) {                                                                                         // 363
-                  console.error(error);                                                                              // 364
-                }                                                                                                    // 365
-              });                                                                                                    // 366
-            });                                                                                                      // 367
-          }                                                                                                          // 368
-        }                                                                                                            // 369
-      });                                                                                                            // 370
-    }); // Call original method                                                                                      // 371
-                                                                                                                     //
-    _origRemove.call(this, search);                                                                                  // 373
-  };                                                                                                                 // 374
-} // Remove all files on server load/reload, useful while testing/development                                        // 375
-// Meteor.startup -> Collections.files.remove {}                                                                     // 378
-// Remove files along with MongoDB records two minutes before expiration date                                        // 380
-// If we have 'expireAfterSeconds' index on 'meta.expireAt' field,                                                   // 381
-// it won't remove files themselves.                                                                                 // 382
+            var dataStream = new stream.PassThrough();                                                               // 169
+            fileColl.serve(http, fileRef, fileRef.versions[version], version, dataStream);                           // 170
+            dataStream.end(this.data.Body);                                                                          // 171
+          }                                                                                                          // 172
+        });                                                                                                          // 173
+        return true;                                                                                                 // 175
+      } // While file is not yet uploaded to Storage                                                                 // 176
+      // We will serve file from FS                                                                                  // 178
                                                                                                                      //
                                                                                                                      //
-Meteor.setInterval(function () {                                                                                     // 383
-  Collections.files.remove({                                                                                         // 384
-    'meta.expireAt': {                                                                                               // 385
-      $lte: new Date(+new Date() + 120000)                                                                           // 386
-    }                                                                                                                // 385
-  }, _app.NOOP);                                                                                                     // 384
-}, 120000);                                                                                                          // 389
+      return false;                                                                                                  // 179
+    }                                                                                                                // 180
+                                                                                                                     //
+    return false;                                                                                                    // 181
+  }                                                                                                                  // 182
+});                                                                                                                  // 59
+Collections.files.denyClient();                                                                                      // 185
+Collections.files.on('afterUpload', function (_fileRef) {                                                            // 186
+  var _this2 = this;                                                                                                 // 186
+                                                                                                                     //
+  if (useDropBox) {                                                                                                  // 187
+    var makeUrl = function (stat, fileRef, version) {                                                                // 188
+      var triesUrl = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                          // 188
+      client.makeUrl(stat.path, {                                                                                    // 189
+        long: true,                                                                                                  // 190
+        downloadHack: true                                                                                           // 191
+      }, function (error, xml) {                                                                                     // 189
+        bound(function () {                                                                                          // 193
+          // Store downloadable link in file's meta object                                                           // 194
+          if (error) {                                                                                               // 195
+            if (triesUrl < 10) {                                                                                     // 196
+              Meteor.setTimeout(function () {                                                                        // 197
+                makeUrl(stat, fileRef, version, ++triesUrl);                                                         // 198
+              }, 2048);                                                                                              // 199
+            } else {                                                                                                 // 200
+              console.error(error, {                                                                                 // 201
+                triesUrl: triesUrl                                                                                   // 202
+              });                                                                                                    // 201
+            }                                                                                                        // 204
+          } else if (xml) {                                                                                          // 205
+            var upd = {                                                                                              // 206
+              $set: {}                                                                                               // 206
+            };                                                                                                       // 206
+            upd['$set']['versions.' + version + '.meta.pipeFrom'] = xml.url;                                         // 207
+            upd['$set']['versions.' + version + '.meta.pipePath'] = stat.path;                                       // 208
+                                                                                                                     //
+            _this2.collection.update({                                                                               // 209
+              _id: fileRef._id                                                                                       // 210
+            }, upd, function (updError) {                                                                            // 209
+              if (updError) {                                                                                        // 212
+                console.error(updError);                                                                             // 213
+              } else {                                                                                               // 214
+                // Unlink original files from FS                                                                     // 215
+                // after successful upload to DropBox                                                                // 216
+                _this2.unlink(_this2.collection.findOne(fileRef._id), version);                                      // 217
+              }                                                                                                      // 218
+            });                                                                                                      // 219
+          } else {                                                                                                   // 220
+            if (triesUrl < 10) {                                                                                     // 221
+              Meteor.setTimeout(function () {                                                                        // 222
+                // Generate downloadable link                                                                        // 223
+                makeUrl(stat, fileRef, version, ++triesUrl);                                                         // 224
+              }, 2048);                                                                                              // 225
+            } else {                                                                                                 // 226
+              console.error("client.makeUrl doesn't returns xml", {                                                  // 227
+                triesUrl: triesUrl                                                                                   // 228
+              });                                                                                                    // 227
+            }                                                                                                        // 230
+          }                                                                                                          // 231
+        });                                                                                                          // 232
+      });                                                                                                            // 233
+    };                                                                                                               // 234
+                                                                                                                     //
+    var writeToDB = function (fileRef, version, data) {                                                              // 236
+      var triesSend = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                         // 236
+      // DropBox already uses random URLs                                                                            // 237
+      // No need to use random file names                                                                            // 238
+      client.writeFile(fileRef._id + '-' + version + '.' + fileRef.extension, data, function (error, stat) {         // 239
+        bound(function () {                                                                                          // 240
+          if (error) {                                                                                               // 241
+            if (triesSend < 10) {                                                                                    // 242
+              Meteor.setTimeout(function () {                                                                        // 243
+                // Write file to DropBox                                                                             // 244
+                writeToDB(fileRef, version, data, ++triesSend);                                                      // 245
+              }, 2048);                                                                                              // 246
+            } else {                                                                                                 // 247
+              console.error(error, {                                                                                 // 248
+                triesSend: triesSend                                                                                 // 249
+              });                                                                                                    // 248
+            }                                                                                                        // 251
+          } else {                                                                                                   // 252
+            makeUrl(stat, fileRef, version);                                                                         // 253
+          }                                                                                                          // 254
+        });                                                                                                          // 255
+      });                                                                                                            // 256
+    };                                                                                                               // 257
+                                                                                                                     //
+    var readFile = function (fileRef, vRef, version) {                                                               // 259
+      var triesRead = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;                         // 259
+      fs.readFile(vRef.path, function (error, data) {                                                                // 260
+        bound(function () {                                                                                          // 261
+          if (error) {                                                                                               // 262
+            if (triesRead < 10) {                                                                                    // 263
+              readFile(fileRef, vRef, version, ++triesRead);                                                         // 264
+            } else {                                                                                                 // 265
+              console.error(error);                                                                                  // 266
+            }                                                                                                        // 267
+          } else {                                                                                                   // 268
+            writeToDB(fileRef, version, data);                                                                       // 269
+          }                                                                                                          // 270
+        });                                                                                                          // 271
+      });                                                                                                            // 272
+    };                                                                                                               // 273
+                                                                                                                     //
+    sendToStorage = function (fileRef) {                                                                             // 275
+      _.each(fileRef.versions, function (vRef, version) {                                                            // 276
+        readFile(fileRef, vRef, version);                                                                            // 277
+      });                                                                                                            // 278
+    };                                                                                                               // 279
+  } else if (useS3) {                                                                                                // 280
+    sendToStorage = function (fileRef) {                                                                             // 281
+      _.each(fileRef.versions, function (vRef, version) {                                                            // 282
+        // We use Random.id() instead of real file's _id                                                             // 283
+        // to secure files from reverse engineering                                                                  // 284
+        // As after viewing this code it will be easy                                                                // 285
+        // to get access to unlisted and protected files                                                             // 286
+        var filePath = 'files/' + Random.id() + '-' + version + '.' + fileRef.extension;                             // 287
+        client.putObject({                                                                                           // 289
+          StorageClass: 'STANDARD',                                                                                  // 290
+          Bucket: s3Conf.bucket,                                                                                     // 291
+          Key: filePath,                                                                                             // 292
+          Body: fs.createReadStream(vRef.path),                                                                      // 293
+          ContentType: vRef.type                                                                                     // 294
+        }, function (error) {                                                                                        // 289
+          bound(function () {                                                                                        // 296
+            if (error) {                                                                                             // 297
+              console.error(error);                                                                                  // 298
+            } else {                                                                                                 // 299
+              var upd = {                                                                                            // 300
+                $set: {}                                                                                             // 300
+              };                                                                                                     // 300
+              upd['$set']['versions.' + version + '.meta.pipePath'] = filePath;                                      // 301
+                                                                                                                     //
+              _this2.collection.update({                                                                             // 302
+                _id: fileRef._id                                                                                     // 303
+              }, upd, function (updError) {                                                                          // 302
+                if (updError) {                                                                                      // 305
+                  console.error(updError);                                                                           // 306
+                } else {                                                                                             // 307
+                  // Unlink original file from FS                                                                    // 308
+                  // after successful upload to AWS:S3                                                               // 309
+                  _this2.unlink(_this2.collection.findOne(fileRef._id), version);                                    // 310
+                }                                                                                                    // 311
+              });                                                                                                    // 312
+            }                                                                                                        // 313
+          });                                                                                                        // 314
+        });                                                                                                          // 315
+      });                                                                                                            // 316
+    };                                                                                                               // 317
+  }                                                                                                                  // 318
+                                                                                                                     //
+  if (/png|jpe?g/i.test(_fileRef.extension || '')) {                                                                 // 320
+    Meteor.setTimeout(function () {                                                                                  // 321
+      _app.createThumbnails(_this2, _fileRef, function (error) {                                                     // 322
+        if (error) {                                                                                                 // 323
+          console.error(error);                                                                                      // 324
+        }                                                                                                            // 325
+                                                                                                                     //
+        if (useDropBox || useS3) {                                                                                   // 327
+          sendToStorage(_this2.collection.findOne(_fileRef._id));                                                    // 328
+        }                                                                                                            // 329
+      });                                                                                                            // 330
+    }, 1024);                                                                                                        // 331
+  } else {                                                                                                           // 332
+    if (useDropBox || useS3) {                                                                                       // 333
+      sendToStorage(_fileRef);                                                                                       // 334
+    }                                                                                                                // 335
+  }                                                                                                                  // 336
+}); // This line now commented due to Heroku usage                                                                   // 337
+// Collections.files.collection._ensureIndex {'meta.expireAt': 1}, {expireAfterSeconds: 0, background: true}         // 340
+// Intercept FileCollection's remove method                                                                          // 342
+// to remove file from DropBox or AWS S3                                                                             // 343
+                                                                                                                     //
+if (useDropBox || useS3) {                                                                                           // 344
+  var _origRemove = Collections.files.remove;                                                                        // 345
+                                                                                                                     //
+  Collections.files.remove = function (search) {                                                                     // 346
+    var cursor = this.collection.find(search);                                                                       // 347
+    cursor.forEach(function (fileRef) {                                                                              // 348
+      _.each(fileRef.versions, function (vRef) {                                                                     // 349
+        if (vRef && vRef.meta && vRef.meta.pipePath != null) {                                                       // 350
+          if (useDropBox) {                                                                                          // 351
+            // DropBox usage:                                                                                        // 352
+            client.remove(vRef.meta.pipePath, function (error) {                                                     // 353
+              bound(function () {                                                                                    // 354
+                if (error) {                                                                                         // 355
+                  console.error(error);                                                                              // 356
+                }                                                                                                    // 357
+              });                                                                                                    // 358
+            });                                                                                                      // 359
+          } else {                                                                                                   // 360
+            // AWS:S3 usage:                                                                                         // 361
+            client.deleteObject({                                                                                    // 362
+              Bucket: s3Conf.bucket,                                                                                 // 363
+              Key: vRef.meta.pipePath                                                                                // 364
+            }, function (error) {                                                                                    // 362
+              bound(function () {                                                                                    // 366
+                if (error) {                                                                                         // 367
+                  console.error(error);                                                                              // 368
+                }                                                                                                    // 369
+              });                                                                                                    // 370
+            });                                                                                                      // 371
+          }                                                                                                          // 372
+        }                                                                                                            // 373
+      });                                                                                                            // 374
+    }); // Call original method                                                                                      // 375
+                                                                                                                     //
+    _origRemove.call(this, search);                                                                                  // 377
+  };                                                                                                                 // 378
+} // Remove all files on server load/reload, useful while testing/development                                        // 379
+// Meteor.startup -> Collections.files.remove {}                                                                     // 382
+// Remove files along with MongoDB records two minutes before expiration date                                        // 384
+// If we have 'expireAfterSeconds' index on 'meta.expireAt' field,                                                   // 385
+// it won't remove files themselves.                                                                                 // 386
+                                                                                                                     //
+                                                                                                                     //
+Meteor.setInterval(function () {                                                                                     // 387
+  Collections.files.remove({                                                                                         // 388
+    'meta.expireAt': {                                                                                               // 389
+      $lte: new Date(+new Date() + 120000)                                                                           // 390
+    }                                                                                                                // 389
+  }, _app.NOOP);                                                                                                     // 388
+}, 120000);                                                                                                          // 393
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"image-processing.js":function(require,exports,module){
