@@ -8,13 +8,12 @@ var _ = Package.underscore._;
 var URL = Package.url.URL;
 var ECMAScript = Package.ecmascript.ECMAScript;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var makeErrorByStatus, populateData, HTTP, HTTPInternals;
@@ -240,7 +239,12 @@ HTTP.call = Meteor.wrapAsync(_call);                                            
 Meteor.http = HTTP;                                                                                                    // 3
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/http/httpcall_common.js");
 require("./node_modules/meteor/http/httpcall_server.js");
 require("./node_modules/meteor/http/deprecated.js");

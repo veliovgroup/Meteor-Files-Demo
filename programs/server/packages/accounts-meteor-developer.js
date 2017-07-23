@@ -11,12 +11,12 @@ var MeteorDeveloperAccounts = Package['meteor-developer-oauth'].MeteorDeveloperA
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                         //
-// packages/accounts-meteor-developer/notice.js                                            //
-//                                                                                         //
-/////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/accounts-meteor-developer/notice.js                                              //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
 if (Package['accounts-ui']
     && !Package['service-configuration']
     && !Package.hasOwnProperty('meteor-developer-config-ui')) {
@@ -30,7 +30,7 @@ if (Package['accounts-ui']
   );
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 
@@ -41,16 +41,16 @@ if (Package['accounts-ui']
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                         //
-// packages/accounts-meteor-developer/meteor-developer.js                                  //
-//                                                                                         //
-/////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                           //
+// packages/accounts-meteor-developer/meteor-developer.js                                    //
+//                                                                                           //
+///////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                             //
 Accounts.oauth.registerService("meteor-developer");
 
 if (Meteor.isClient) {
-  Meteor.loginWithMeteorDeveloperAccount = function (options, callback) {
+  const loginWithMeteorDeveloperAccount = function (options, callback) {
     // support a callback without options
     if (! callback && typeof options === "function") {
       callback = options;
@@ -60,6 +60,10 @@ if (Meteor.isClient) {
     var credentialRequestCompleteCallback =
           Accounts.oauth.credentialRequestCompleteHandler(callback);
     MeteorDeveloperAccounts.requestCredential(options, credentialRequestCompleteCallback);
+  };
+  Accounts.registerClientLoginFunction('meteor-developer', loginWithMeteorDeveloperAccount);
+  Meteor.loginWithMeteorDeveloperAccount = function () {
+    return Accounts.applyLoginFunction('meteor-developer', arguments);
   };
 } else {
   Accounts.addAutopublishFields({
@@ -74,7 +78,7 @@ if (Meteor.isClient) {
   });
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 

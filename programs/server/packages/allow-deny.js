@@ -14,13 +14,12 @@ var EJSON = Package.ejson.EJSON;
 var DDP = Package['ddp-client'].DDP;
 var DDPServer = Package['ddp-server'].DDPServer;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var AllowDeny;
@@ -524,13 +523,18 @@ function throwIfSelectorIsNotId(selector, methodName) {                         
 ; // Determine if we are in a DDP method simulation                                                              // 498
                                                                                                                  //
 function alreadyInSimulation() {                                                                                 // 501
-  var enclosing = DDP._CurrentInvocation.get();                                                                  // 502
+  var enclosing = DDP._CurrentMethodInvocation.get();                                                            // 502
                                                                                                                  //
   return enclosing && enclosing.isSimulation;                                                                    // 503
 }                                                                                                                // 504
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/allow-deny/allow-deny.js");
 
 /* Exports */

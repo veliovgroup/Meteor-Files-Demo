@@ -12,19 +12,19 @@ declare class Rekognition extends Service {
   constructor(options?: Rekognition.Types.ClientConfiguration)
   config: Config & Rekognition.Types.ClientConfiguration;
   /**
-   * Compares a face in the source input image with each face detected in the target input image.    If the source image contains multiple faces, the service detects the largest face and uses it to compare with each face detected in the target image.   In response, the operation returns an array of face matches ordered by similarity score with the highest similarity scores first. For each face match, the response provides a bounding box of the face and confidence value (indicating the level of confidence that the bounding box contains a face). The response also provides a similarity score, which indicates how closely the faces match.   By default, only faces with the similarity score of greater than or equal to 80% are returned in the response. You can change this value.  In addition to the face matches, the response returns information about the face in the source image, including the bounding box of the face and confidence value.   This is a stateless API operation. That is, the operation does not persist any data.  For an example, see get-started-exercise-compare-faces  This operation requires permissions to perform the rekognition:CompareFaces action.
+   * Compares a face in the source input image with each face detected in the target input image.    If the source image contains multiple faces, the service detects the largest face and compares it with each face detected in the target image.   In response, the operation returns an array of face matches ordered by similarity score in descending order. For each face match, the response provides a bounding box of the face, facial landmarks, pose details (pitch, role, and yaw), quality (brightness and sharpness), and confidence value (indicating the level of confidence that the bounding box contains a face). The response also provides a similarity score, which indicates how closely the faces match.   By default, only faces with a similarity score of greater than or equal to 80% are returned in the response. You can change this value by specifying the SimilarityThreshold parameter.   CompareFaces also returns an array of faces that don't match the source image. For each face, it returns a bounding box, confidence value, landmarks, pose details, and quality. The response also returns information about the face in the source image, including the bounding box of the face and confidence value. If the image doesn't contain Exif metadata, CompareFaces returns orientation information for the source and target images. Use these values to display the images with the correct image orientation.   This is a stateless API operation. That is, data returned by this operation doesn't persist.  For an example, see get-started-exercise-compare-faces. This operation requires permissions to perform the rekognition:CompareFaces action.
    */
   compareFaces(params: Rekognition.Types.CompareFacesRequest, callback?: (err: AWSError, data: Rekognition.Types.CompareFacesResponse) => void): Request<Rekognition.Types.CompareFacesResponse, AWSError>;
   /**
-   * Compares a face in the source input image with each face detected in the target input image.    If the source image contains multiple faces, the service detects the largest face and uses it to compare with each face detected in the target image.   In response, the operation returns an array of face matches ordered by similarity score with the highest similarity scores first. For each face match, the response provides a bounding box of the face and confidence value (indicating the level of confidence that the bounding box contains a face). The response also provides a similarity score, which indicates how closely the faces match.   By default, only faces with the similarity score of greater than or equal to 80% are returned in the response. You can change this value.  In addition to the face matches, the response returns information about the face in the source image, including the bounding box of the face and confidence value.   This is a stateless API operation. That is, the operation does not persist any data.  For an example, see get-started-exercise-compare-faces  This operation requires permissions to perform the rekognition:CompareFaces action.
+   * Compares a face in the source input image with each face detected in the target input image.    If the source image contains multiple faces, the service detects the largest face and compares it with each face detected in the target image.   In response, the operation returns an array of face matches ordered by similarity score in descending order. For each face match, the response provides a bounding box of the face, facial landmarks, pose details (pitch, role, and yaw), quality (brightness and sharpness), and confidence value (indicating the level of confidence that the bounding box contains a face). The response also provides a similarity score, which indicates how closely the faces match.   By default, only faces with a similarity score of greater than or equal to 80% are returned in the response. You can change this value by specifying the SimilarityThreshold parameter.   CompareFaces also returns an array of faces that don't match the source image. For each face, it returns a bounding box, confidence value, landmarks, pose details, and quality. The response also returns information about the face in the source image, including the bounding box of the face and confidence value. If the image doesn't contain Exif metadata, CompareFaces returns orientation information for the source and target images. Use these values to display the images with the correct image orientation.   This is a stateless API operation. That is, data returned by this operation doesn't persist.  For an example, see get-started-exercise-compare-faces. This operation requires permissions to perform the rekognition:CompareFaces action.
    */
   compareFaces(callback?: (err: AWSError, data: Rekognition.Types.CompareFacesResponse) => void): Request<Rekognition.Types.CompareFacesResponse, AWSError>;
   /**
-   * Creates a collection in an AWS Region. You can add faces to the collection using the operation.  For example, you might create collections, one for each of your application users. A user can then index faces using the IndexFaces operation and persist results in a specific collection. Then, a user can search the collection for faces in the user-specific container.  For an example, see example1.  This operation requires permissions to perform the rekognition:CreateCollection action.
+   * Creates a collection in an AWS Region. You can add faces to the collection using the operation.  For example, you might create collections, one for each of your application users. A user can then index faces using the IndexFaces operation and persist results in a specific collection. Then, a user can search the collection for faces in the user-specific container.   Collection names are case-sensitive.  For an example, see example1.  This operation requires permissions to perform the rekognition:CreateCollection action.
    */
   createCollection(params: Rekognition.Types.CreateCollectionRequest, callback?: (err: AWSError, data: Rekognition.Types.CreateCollectionResponse) => void): Request<Rekognition.Types.CreateCollectionResponse, AWSError>;
   /**
-   * Creates a collection in an AWS Region. You can add faces to the collection using the operation.  For example, you might create collections, one for each of your application users. A user can then index faces using the IndexFaces operation and persist results in a specific collection. Then, a user can search the collection for faces in the user-specific container.  For an example, see example1.  This operation requires permissions to perform the rekognition:CreateCollection action.
+   * Creates a collection in an AWS Region. You can add faces to the collection using the operation.  For example, you might create collections, one for each of your application users. A user can then index faces using the IndexFaces operation and persist results in a specific collection. Then, a user can search the collection for faces in the user-specific container.   Collection names are case-sensitive.  For an example, see example1.  This operation requires permissions to perform the rekognition:CreateCollection action.
    */
   createCollection(callback?: (err: AWSError, data: Rekognition.Types.CreateCollectionResponse) => void): Request<Rekognition.Types.CreateCollectionResponse, AWSError>;
   /**
@@ -60,19 +60,27 @@ declare class Rekognition extends Service {
    */
   detectLabels(callback?: (err: AWSError, data: Rekognition.Types.DetectLabelsResponse) => void): Request<Rekognition.Types.DetectLabelsResponse, AWSError>;
   /**
-   * Detects explicit or suggestive adult content in a specified .jpeg or .png image. Use DetectModerationLabels to moderate images depending on your requirements. For example, you might want to filter images that contain nudity, but not images containing suggestive content. To filter images, use the labels returned by DetectModerationLabels to determine which types of content are appropriate. For information about moderation labels, see howitworks-moderateimage.
+   * Detects explicit or suggestive adult content in a specified JPEG or PNG format image. Use DetectModerationLabels to moderate images depending on your requirements. For example, you might want to filter images that contain nudity, but not images containing suggestive content. To filter images, use the labels returned by DetectModerationLabels to determine which types of content are appropriate. For information about moderation labels, see image-moderation.
    */
   detectModerationLabels(params: Rekognition.Types.DetectModerationLabelsRequest, callback?: (err: AWSError, data: Rekognition.Types.DetectModerationLabelsResponse) => void): Request<Rekognition.Types.DetectModerationLabelsResponse, AWSError>;
   /**
-   * Detects explicit or suggestive adult content in a specified .jpeg or .png image. Use DetectModerationLabels to moderate images depending on your requirements. For example, you might want to filter images that contain nudity, but not images containing suggestive content. To filter images, use the labels returned by DetectModerationLabels to determine which types of content are appropriate. For information about moderation labels, see howitworks-moderateimage.
+   * Detects explicit or suggestive adult content in a specified JPEG or PNG format image. Use DetectModerationLabels to moderate images depending on your requirements. For example, you might want to filter images that contain nudity, but not images containing suggestive content. To filter images, use the labels returned by DetectModerationLabels to determine which types of content are appropriate. For information about moderation labels, see image-moderation.
    */
   detectModerationLabels(callback?: (err: AWSError, data: Rekognition.Types.DetectModerationLabelsResponse) => void): Request<Rekognition.Types.DetectModerationLabelsResponse, AWSError>;
   /**
-   * Detects faces in the input image and adds them to the specified collection.   Amazon Rekognition does not save the actual faces detected. Instead, the underlying detection algorithm first detects the faces in the input image, and for each face extracts facial features into a feature vector, and stores it in the back-end database. Amazon Rekognition uses feature vectors when performing face match and search operations using the and operations.  If you provide the optional externalImageID for the input image you provided, Amazon Rekognition associates this ID with all faces that it detects. When you call the operation, the response returns the external ID. You can use this external image ID to create a client-side index to associate the faces with each image. You can then use the index to find all faces in an image.  In response, the operation returns an array of metadata for all detected faces. This includes, the bounding box of the detected face, confidence value (indicating the bounding box contains a face), a face ID assigned by the service for each face that is detected and stored, and an image ID assigned by the service for the input image If you request all facial attributes (using the detectionAttributes parameter, Amazon Rekognition returns detailed facial attributes such as facial landmarks (for example, location of eye and mount) and other facial attributes such gender. If you provide the same image, specify the same collection, and use the same external ID in the IndexFaces operation, Amazon Rekognition doesn't save duplicate face metadata.  For an example, see example2. This operation requires permissions to perform the rekognition:IndexFaces action.
+   * Gets the name and additional information about a celebrity based on his or her Rekognition ID. The additional information is returned as an array of URLs. If there is no additional information about the celebrity, this list is empty. For more information, see celebrity-recognition. This operation requires permissions to perform the rekognition:GetCelebrityInfo action. 
+   */
+  getCelebrityInfo(params: Rekognition.Types.GetCelebrityInfoRequest, callback?: (err: AWSError, data: Rekognition.Types.GetCelebrityInfoResponse) => void): Request<Rekognition.Types.GetCelebrityInfoResponse, AWSError>;
+  /**
+   * Gets the name and additional information about a celebrity based on his or her Rekognition ID. The additional information is returned as an array of URLs. If there is no additional information about the celebrity, this list is empty. For more information, see celebrity-recognition. This operation requires permissions to perform the rekognition:GetCelebrityInfo action. 
+   */
+  getCelebrityInfo(callback?: (err: AWSError, data: Rekognition.Types.GetCelebrityInfoResponse) => void): Request<Rekognition.Types.GetCelebrityInfoResponse, AWSError>;
+  /**
+   * Detects faces in the input image and adds them to the specified collection.   Amazon Rekognition does not save the actual faces detected. Instead, the underlying detection algorithm first detects the faces in the input image, and for each face extracts facial features into a feature vector, and stores it in the back-end database. Amazon Rekognition uses feature vectors when performing face match and search operations using the and operations.  If you provide the optional externalImageID for the input image you provided, Amazon Rekognition associates this ID with all faces that it detects. When you call the operation, the response returns the external ID. You can use this external image ID to create a client-side index to associate the faces with each image. You can then use the index to find all faces in an image.  In response, the operation returns an array of metadata for all detected faces. This includes, the bounding box of the detected face, confidence value (indicating the bounding box contains a face), a face ID assigned by the service for each face that is detected and stored, and an image ID assigned by the service for the input image. If you request all facial attributes (using the detectionAttributes parameter, Amazon Rekognition returns detailed facial attributes such as facial landmarks (for example, location of eye and mount) and other facial attributes such gender. If you provide the same image, specify the same collection, and use the same external ID in the IndexFaces operation, Amazon Rekognition doesn't save duplicate face metadata.  For an example, see example2. This operation requires permissions to perform the rekognition:IndexFaces action.
    */
   indexFaces(params: Rekognition.Types.IndexFacesRequest, callback?: (err: AWSError, data: Rekognition.Types.IndexFacesResponse) => void): Request<Rekognition.Types.IndexFacesResponse, AWSError>;
   /**
-   * Detects faces in the input image and adds them to the specified collection.   Amazon Rekognition does not save the actual faces detected. Instead, the underlying detection algorithm first detects the faces in the input image, and for each face extracts facial features into a feature vector, and stores it in the back-end database. Amazon Rekognition uses feature vectors when performing face match and search operations using the and operations.  If you provide the optional externalImageID for the input image you provided, Amazon Rekognition associates this ID with all faces that it detects. When you call the operation, the response returns the external ID. You can use this external image ID to create a client-side index to associate the faces with each image. You can then use the index to find all faces in an image.  In response, the operation returns an array of metadata for all detected faces. This includes, the bounding box of the detected face, confidence value (indicating the bounding box contains a face), a face ID assigned by the service for each face that is detected and stored, and an image ID assigned by the service for the input image If you request all facial attributes (using the detectionAttributes parameter, Amazon Rekognition returns detailed facial attributes such as facial landmarks (for example, location of eye and mount) and other facial attributes such gender. If you provide the same image, specify the same collection, and use the same external ID in the IndexFaces operation, Amazon Rekognition doesn't save duplicate face metadata.  For an example, see example2. This operation requires permissions to perform the rekognition:IndexFaces action.
+   * Detects faces in the input image and adds them to the specified collection.   Amazon Rekognition does not save the actual faces detected. Instead, the underlying detection algorithm first detects the faces in the input image, and for each face extracts facial features into a feature vector, and stores it in the back-end database. Amazon Rekognition uses feature vectors when performing face match and search operations using the and operations.  If you provide the optional externalImageID for the input image you provided, Amazon Rekognition associates this ID with all faces that it detects. When you call the operation, the response returns the external ID. You can use this external image ID to create a client-side index to associate the faces with each image. You can then use the index to find all faces in an image.  In response, the operation returns an array of metadata for all detected faces. This includes, the bounding box of the detected face, confidence value (indicating the bounding box contains a face), a face ID assigned by the service for each face that is detected and stored, and an image ID assigned by the service for the input image. If you request all facial attributes (using the detectionAttributes parameter, Amazon Rekognition returns detailed facial attributes such as facial landmarks (for example, location of eye and mount) and other facial attributes such gender. If you provide the same image, specify the same collection, and use the same external ID in the IndexFaces operation, Amazon Rekognition doesn't save duplicate face metadata.  For an example, see example2. This operation requires permissions to perform the rekognition:IndexFaces action.
    */
   indexFaces(callback?: (err: AWSError, data: Rekognition.Types.IndexFacesResponse) => void): Request<Rekognition.Types.IndexFacesResponse, AWSError>;
   /**
@@ -91,6 +99,14 @@ declare class Rekognition extends Service {
    * Returns metadata for faces in the specified collection. This metadata includes information such as the bounding box coordinates, the confidence (that the bounding box contains a face), and face ID. For an example, see example3.  This operation requires permissions to perform the rekognition:ListFaces action.
    */
   listFaces(callback?: (err: AWSError, data: Rekognition.Types.ListFacesResponse) => void): Request<Rekognition.Types.ListFacesResponse, AWSError>;
+  /**
+   * Returns an array of celebrities recognized in the input image. The image is passed either as base64-encoded image bytes or as a reference to an image in an Amazon S3 bucket. The image must be either a PNG or JPEG formatted file. For more information, see celebrity-recognition.   RecognizeCelebrities returns the 15 largest faces in the image. It lists recognized celebrities in the CelebrityFaces list and unrecognized faces in the UnrecognizedFaces list. The operation doesn't return celebrities whose face sizes are smaller than the largest 15 faces in the image. For each celebrity recognized, the API returns a Celebrity object. The Celebrity object contains the celebrity name, ID, URL links to additional information, match confidence, and a ComparedFace object that you can use to locate the celebrity's face on the image. Rekognition does not retain information about which images a celebrity has been recognized in. Your application must store this information and use the Celebrity ID property as a unique identifier for the celebrity. If you don't store the celebrity name or additional information URLs returned by RecognizeCelebrities, you will need the ID to identify the celebrity in a call to the operation. For an example, see recognize-celebrities-tutorial. This operation requires permissions to perform the rekognition:RecognizeCelebrities operation.
+   */
+  recognizeCelebrities(params: Rekognition.Types.RecognizeCelebritiesRequest, callback?: (err: AWSError, data: Rekognition.Types.RecognizeCelebritiesResponse) => void): Request<Rekognition.Types.RecognizeCelebritiesResponse, AWSError>;
+  /**
+   * Returns an array of celebrities recognized in the input image. The image is passed either as base64-encoded image bytes or as a reference to an image in an Amazon S3 bucket. The image must be either a PNG or JPEG formatted file. For more information, see celebrity-recognition.   RecognizeCelebrities returns the 15 largest faces in the image. It lists recognized celebrities in the CelebrityFaces list and unrecognized faces in the UnrecognizedFaces list. The operation doesn't return celebrities whose face sizes are smaller than the largest 15 faces in the image. For each celebrity recognized, the API returns a Celebrity object. The Celebrity object contains the celebrity name, ID, URL links to additional information, match confidence, and a ComparedFace object that you can use to locate the celebrity's face on the image. Rekognition does not retain information about which images a celebrity has been recognized in. Your application must store this information and use the Celebrity ID property as a unique identifier for the celebrity. If you don't store the celebrity name or additional information URLs returned by RecognizeCelebrities, you will need the ID to identify the celebrity in a call to the operation. For an example, see recognize-celebrities-tutorial. This operation requires permissions to perform the rekognition:RecognizeCelebrities operation.
+   */
+  recognizeCelebrities(callback?: (err: AWSError, data: Rekognition.Types.RecognizeCelebritiesResponse) => void): Request<Rekognition.Types.RecognizeCelebritiesResponse, AWSError>;
   /**
    * For a given input face ID, searches for matching faces in the collection the face belongs to. You get a face ID when you add a face to the collection using the IndexFaces operation. The operation compares the features of the input face with faces in the specified collection.   You can also search faces without indexing faces by using the SearchFacesByImage operation.   The operation response returns an array of faces that match, ordered by similarity score with the highest similarity first. More specifically, it is an array of metadata for each face match that is found. Along with the metadata, the response also includes a confidence value for each face match, indicating the confidence that the specific face matches the input face.  For an example, see example3. This operation requires permissions to perform the rekognition:SearchFaces action.
    */
@@ -150,6 +166,29 @@ declare namespace Rekognition {
      */
     Top?: Float;
   }
+  export interface Celebrity {
+    /**
+     * An array of URLs pointing to additional information about the celebrity. If there is no additional information about the celebrity, this list is empty.
+     */
+    Urls?: Urls;
+    /**
+     * The name of the celebrity.
+     */
+    Name?: String;
+    /**
+     * A unique identifier for the celebrity. 
+     */
+    Id?: RekognitionUniqueId;
+    /**
+     * Provides information about the celebrity's face, such as its location on the image.
+     */
+    Face?: ComparedFace;
+    /**
+     * The confidence, in percentage, that Rekognition has that the recognized face is the celebrity.
+     */
+    MatchConfidence?: Percent;
+  }
+  export type CelebrityList = Celebrity[];
   export type CollectionId = string;
   export type CollectionIdList = CollectionId[];
   export interface CompareFacesMatch {
@@ -165,36 +204,68 @@ declare namespace Rekognition {
   export type CompareFacesMatchList = CompareFacesMatch[];
   export interface CompareFacesRequest {
     /**
-     * Source image either as bytes or an S3 object
+     * The source image, either as bytes or as an S3 object.
      */
     SourceImage: Image;
     /**
-     * Target image either as bytes or an S3 object
+     * The target image, either as bytes or as an S3 object.
      */
     TargetImage: Image;
     /**
-     * The minimum level of confidence in the match you want included in the result.
+     * The minimum level of confidence in the face matches that a match must meet to be included in the FaceMatches array.
      */
     SimilarityThreshold?: Percent;
   }
   export interface CompareFacesResponse {
     /**
-     * The face from the source image that was used for comparison.
+     * The face in the source image that was used for comparison.
      */
     SourceImageFace?: ComparedSourceImageFace;
     /**
-     * Provides an array of CompareFacesMatch objects. Each object provides the bounding box, confidence that the bounding box contains a face, and the similarity between the face in the bounding box and the face in the source image.
+     * An array of faces in the target image that match the source image face. Each CompareFacesMatch object provides the bounding box, the confidence level that the bounding box contains a face, and the similarity score for the face in the bounding box and the face in the source image.
      */
     FaceMatches?: CompareFacesMatchList;
+    /**
+     * An array of faces in the target image that did not match the source image face.
+     */
+    UnmatchedFaces?: CompareFacesUnmatchList;
+    /**
+     *  The orientation of the source image (counterclockwise direction). If your application displays the source image, you can use this value to correct image orientation. The bounding box coordinates returned in SourceImageFace represent the location of the face before the image orientation is corrected.   If the source image is in .jpeg format, it might contain exchangeable image (Exif) metadata that includes the image's orientation. If the Exif metadata for the source image populates the orientation field, the value of OrientationCorrection is null and the SourceImageFace bounding box coordinates represent the location of the face after Exif metadata is used to correct the orientation. Images in .png format don't contain Exif metadata. 
+     */
+    SourceImageOrientationCorrection?: OrientationCorrection;
+    /**
+     *  The orientation of the target image (in counterclockwise direction). If your application displays the target image, you can use this value to correct the orientation of the image. The bounding box coordinates returned in FaceMatches and UnmatchedFaces represent face locations before the image orientation is corrected.   If the target image is in .jpg format, it might contain Exif metadata that includes the orientation of the image. If the Exif metadata for the target image populates the orientation field, the value of OrientationCorrection is null and the bounding box coordinates in FaceMatches and UnmatchedFaces represent the location of the face after Exif metadata is used to correct the orientation. Images in .png format don't contain Exif metadata. 
+     */
+    TargetImageOrientationCorrection?: OrientationCorrection;
   }
+  export type CompareFacesUnmatchList = ComparedFace[];
   export interface ComparedFace {
+    /**
+     * Bounding box of the face.
+     */
     BoundingBox?: BoundingBox;
     /**
      * Level of confidence that what the bounding box contains is a face.
      */
     Confidence?: Percent;
+    /**
+     * An array of facial landmarks.
+     */
+    Landmarks?: Landmarks;
+    /**
+     * Indicates the pose of the face as determined by its pitch, roll, and yaw.
+     */
+    Pose?: Pose;
+    /**
+     * Identifies face image brightness and sharpness. 
+     */
+    Quality?: ImageQuality;
   }
+  export type ComparedFaceList = ComparedFace[];
   export interface ComparedSourceImageFace {
+    /**
+     * Bounding box of the face.
+     */
     BoundingBox?: BoundingBox;
     /**
      * Confidence level that the selected bounding box contains a face.
@@ -252,7 +323,7 @@ declare namespace Rekognition {
      */
     Image: Image;
     /**
-     * A list of facial attributes you want to be returned. This can be the default list of attributes or all attributes. If you don't specify a value for Attributes or if you specify ["DEFAULT"], the API returns the following subset of facial attributes: BoundingBox, Confidence, Pose, Quality and Landmarks. If you provide ["ALL"], all facial attributes are returned but the operation will take longer to complete. If you provide both, ["ALL", "DEFAULT"], the service uses a logical AND operator to determine which attributes to return (in this case, all attributes). 
+     * An array of facial attributes you want to be returned. This can be the default list of attributes or all attributes. If you don't specify a value for Attributes or if you specify ["DEFAULT"], the API returns the following subset of facial attributes: BoundingBox, Confidence, Pose, Quality and Landmarks. If you provide ["ALL"], all facial attributes are returned but the operation will take longer to complete. If you provide both, ["ALL", "DEFAULT"], the service uses a logical AND operator to determine which attributes to return (in this case, all attributes). 
      */
     Attributes?: Attributes;
   }
@@ -262,7 +333,7 @@ declare namespace Rekognition {
      */
     FaceDetails?: FaceDetailList;
     /**
-     * The algorithm detects the image orientation. If it detects that the image was rotated, it returns the degrees of rotation. If your application is displaying the image, you can use this value to adjust the orientation.  For example, if the service detects that the input image was rotated by 90 degrees, it corrects orientation, performs face detection, and then returns the faces. That is, the bounding box coordinates in the response are based on the corrected orientation.   If the source image Exif metadata populates the orientation field, Amazon Rekognition does not perform orientation correction and the value of OrientationCorrection will be nil. 
+     *  The orientation of the input image (counter-clockwise direction). If your application displays the image, you can use this value to correct image orientation. The bounding box coordinates returned in FaceDetails represent face locations before the image orientation is corrected.   If the input image is in .jpeg format, it might contain exchangeable image (Exif) metadata that includes the image's orientation. If so, and the Exif metadata for the input image populates the orientation field, the value of OrientationCorrection is null and the FaceDetails bounding box coordinates represent face locations after Exif metadata is used to correct the image orientation. Images in .png format don't contain Exif metadata. 
      */
     OrientationCorrection?: OrientationCorrection;
   }
@@ -286,11 +357,14 @@ declare namespace Rekognition {
      */
     Labels?: Labels;
     /**
-     *  Amazon Rekognition returns the orientation of the input image that was detected (clockwise direction). If your application displays the image, you can use this value to correct the orientation. If Amazon Rekognition detects that the input image was rotated (for example, by 90 degrees), it first corrects the orientation before detecting the labels.   If the source image Exif metadata populates the orientation field, Amazon Rekognition does not perform orientation correction and the value of OrientationCorrection will be nil. 
+     *  The orientation of the input image (counter-clockwise direction). If your application displays the image, you can use this value to correct the orientation. If Amazon Rekognition detects that the input image was rotated (for example, by 90 degrees), it first corrects the orientation before detecting the labels.   If the input image Exif metadata populates the orientation field, Amazon Rekognition does not perform orientation correction and the value of OrientationCorrection will be null. 
      */
     OrientationCorrection?: OrientationCorrection;
   }
   export interface DetectModerationLabelsRequest {
+    /**
+     * The input image as bytes or an S3 object.
+     */
     Image: Image;
     /**
      * Specifies the minimum confidence level for the labels to return. Amazon Rekognition doesn't return any labels with a confidence level lower than this specified value. If you don't specify MinConfidence, the operation returns labels with confidence values greater than or equal to 50 percent.
@@ -299,7 +373,7 @@ declare namespace Rekognition {
   }
   export interface DetectModerationLabelsResponse {
     /**
-     * A list of labels for explicit or suggestive adult content found in the image. The list includes the top-level label and each child label detected in the image. This is useful for filtering specific categories of content. 
+     * An array of labels for explicit or suggestive adult content found in the image. The list includes the top-level label and each child label detected in the image. This is useful for filtering specific categories of content. 
      */
     ModerationLabels?: ModerationLabels;
   }
@@ -341,9 +415,12 @@ declare namespace Rekognition {
      * Unique identifier that Amazon Rekognition assigns to the face.
      */
     FaceId?: FaceId;
+    /**
+     * Bounding box of the face.
+     */
     BoundingBox?: BoundingBox;
     /**
-     * Unique identifier that Amazon Rekognition assigns to the source image.
+     * Unique identifier that Amazon Rekognition assigns to the input image.
      */
     ImageId?: ImageId;
     /**
@@ -401,11 +478,11 @@ declare namespace Rekognition {
      */
     Emotions?: Emotions;
     /**
-     * Indicates the location of the landmark on the face.
+     * Indicates the location of landmarks on the face.
      */
     Landmarks?: Landmarks;
     /**
-     * Indicates the pose of the face as determined by pitch, roll, and the yaw.
+     * Indicates the pose of the face as determined by its pitch, roll, and yaw.
      */
     Pose?: Pose;
     /**
@@ -426,11 +503,20 @@ declare namespace Rekognition {
      * Confidence in the match of this face with the input face.
      */
     Similarity?: Percent;
+    /**
+     * Describes the face properties such as the bounding box, face ID, image ID of the source image, and external image ID that you assigned.
+     */
     Face?: Face;
   }
   export type FaceMatchList = FaceMatch[];
   export interface FaceRecord {
+    /**
+     * Describes the face properties such as the bounding box, face ID, image ID of the input image, and external image ID that you assigned. 
+     */
     Face?: Face;
+    /**
+     * Structure containing attributes of the face that the algorithm detected.
+     */
     FaceDetail?: FaceDetail;
   }
   export type FaceRecordList = FaceRecord[];
@@ -446,6 +532,22 @@ declare namespace Rekognition {
     Confidence?: Percent;
   }
   export type GenderType = "MALE"|"FEMALE"|string;
+  export interface GetCelebrityInfoRequest {
+    /**
+     * The ID for the celebrity. You get the celebrity ID from a call to the operation, which recognizes celebrities in an image. 
+     */
+    Id: RekognitionUniqueId;
+  }
+  export interface GetCelebrityInfoResponse {
+    /**
+     * An array of URLs pointing to additional celebrity information. 
+     */
+    Urls?: Urls;
+    /**
+     * The name of the celebrity.
+     */
+    Name?: String;
+  }
   export interface Image {
     /**
      * Blob of image bytes up to 5 MBs.
@@ -473,13 +575,16 @@ declare namespace Rekognition {
      * The ID of an existing collection to which you want to add the faces that are detected in the input images.
      */
     CollectionId: CollectionId;
+    /**
+     * The input image as bytes or an S3 object.
+     */
     Image: Image;
     /**
      * ID you want to assign to all the faces detected in the image.
      */
     ExternalImageId?: ExternalImageId;
     /**
-     * A list of facial attributes that you want to be returned. This can be the default list of attributes or all attributes. If you don't specify a value for Attributes or if you specify ["DEFAULT"], the API returns the following subset of facial attributes: BoundingBox, Confidence, Pose, Quality and Landmarks. If you provide ["ALL"], all facial attributes are returned but the operation will take longer to complete. If you provide both, ["ALL", "DEFAULT"], the service uses a logical AND operator to determine which attributes to return (in this case, all attributes). 
+     * An array of facial attributes that you want to be returned. This can be the default list of attributes or all attributes. If you don't specify a value for Attributes or if you specify ["DEFAULT"], the API returns the following subset of facial attributes: BoundingBox, Confidence, Pose, Quality and Landmarks. If you provide ["ALL"], all facial attributes are returned but the operation will take longer to complete. If you provide both, ["ALL", "DEFAULT"], the service uses a logical AND operator to determine which attributes to return (in this case, all attributes). 
      */
     DetectionAttributes?: Attributes;
   }
@@ -489,7 +594,7 @@ declare namespace Rekognition {
      */
     FaceRecords?: FaceRecordList;
     /**
-     * The algorithm detects the image orientation. If it detects that the image was rotated, it returns the degree of rotation. You can use this value to correct the orientation and also appropriately analyze the bounding box coordinates that are returned.   If the source image Exif metadata populates the orientation field, Amazon Rekognition does not perform orientation correction and the value of OrientationCorrection will be nil. 
+     * The orientation of the input image (counterclockwise direction). If your application displays the image, you can use this value to correct image orientation. The bounding box coordinates returned in FaceRecords represent face locations before the image orientation is corrected.   If the input image is in jpeg format, it might contain exchangeable image (Exif) metadata. If so, and the Exif metadata populates the orientation field, the value of OrientationCorrection is null and the bounding box coordinates in FaceRecords represent face locations after Exif metadata is used to correct the image orientation. Images in .png format don't contain Exif metadata. 
      */
     OrientationCorrection?: OrientationCorrection;
   }
@@ -618,6 +723,27 @@ declare namespace Rekognition {
      */
     Pitch?: Degree;
   }
+  export interface RecognizeCelebritiesRequest {
+    /**
+     * The input image to use for celebrity recognition.
+     */
+    Image: Image;
+  }
+  export interface RecognizeCelebritiesResponse {
+    /**
+     * Details about each celebrity found in the image. Amazon Rekognition can detect a maximum of 15 celebrities in an image.
+     */
+    CelebrityFaces?: CelebrityList;
+    /**
+     * Details about each unrecognized face in the image.
+     */
+    UnrecognizedFaces?: ComparedFaceList;
+    /**
+     * The orientation of the input image (counterclockwise direction). If your application displays the image, you can use this value to correct the orientation. The bounding box coordinates returned in CelebrityFaces and UnrecognizedFaces represent face locations before the image orientation is corrected.   If the input image is in .jpeg format, it might contain exchangeable image (Exif) metadata that includes the image's orientation. If so, and the Exif metadata for the input image populates the orientation field, the value of OrientationCorrection is null and the CelebrityFaces and UnrecognizedFaces bounding box coordinates represent face locations after Exif metadata is used to correct the image orientation. Images in .png format don't contain Exif metadata.  
+     */
+    OrientationCorrection?: OrientationCorrection;
+  }
+  export type RekognitionUniqueId = string;
   export type S3Bucket = string;
   export interface S3Object {
     /**
@@ -640,6 +766,9 @@ declare namespace Rekognition {
      * ID of the collection to search.
      */
     CollectionId: CollectionId;
+    /**
+     * The input image as bytes or an S3 object.
+     */
     Image: Image;
     /**
      * Maximum number of faces to return. The operation returns the maximum number of faces with the highest confidence in the match.
@@ -714,6 +843,8 @@ declare namespace Rekognition {
     Confidence?: Percent;
   }
   export type UInteger = number;
+  export type Url = string;
+  export type Urls = Url[];
   /**
    * A string in YYYY-MM-DD format that represents the latest possible API version that can be used in this service. Specify 'latest' to use the latest possible version.
    */

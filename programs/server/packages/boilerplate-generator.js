@@ -56,7 +56,7 @@ Boilerplate.prototype.toHTML = function (extraData) {
     throw new Error('Boilerplate did not instantiate correctly.');
 
   return  "<!DOCTYPE html>\n" +
-    Blaze.toHTML(Blaze.With(_.extend(self.baseData, extraData),
+    Blaze.toHTML(Blaze.With(_.extend({}, self.baseData, extraData),
                             self.func));
 };
 
@@ -98,7 +98,10 @@ Boilerplate.prototype._generateBoilerplateFromManifestAndSource =
       if (item.type === 'css' && item.where === 'client') {
         boilerplateBaseData.css.push(itemObj);
       }
-      if (item.type === 'js' && item.where === 'client') {
+      if (item.type === 'js' && item.where === 'client' &&
+          // Dynamic JS modules should not be loaded eagerly in the
+          // initial HTML of the app.
+          ! item.path.startsWith('dynamic/')) {
         boilerplateBaseData.js.push(itemObj);
       }
       if (item.type === 'head') {

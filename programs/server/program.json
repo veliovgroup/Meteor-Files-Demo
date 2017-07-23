@@ -10,16 +10,6 @@
       "path": "packages/meteor.js"
     },
     {
-      "path": "packages/meteor-base.js"
-    },
-    {
-      "path": "packages/mobile-experience.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
-      "path": "packages/npm-mongo.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/modules-runtime/node_modules",
       "path": "packages/modules-runtime.js"
     },
@@ -28,12 +18,29 @@
       "path": "packages/modules.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
+      "path": "packages/es5-shim.js"
+    },
+    {
+      "path": "packages/meteor-base.js"
+    },
+    {
+      "path": "packages/fastclick.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
+      "path": "packages/npm-mongo.js"
+    },
+    {
+      "path": "packages/ecmascript-runtime.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/promise/node_modules",
       "path": "packages/promise.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/ecmascript-runtime/node_modules",
-      "path": "packages/ecmascript-runtime.js"
+      "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
+      "path": "packages/ecmascript-runtime-server.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/babel-compiler/node_modules",
@@ -186,17 +193,20 @@
       "path": "packages/blaze-html-templates.js"
     },
     {
-      "sourceMap": "packages/shell-server.js.map",
-      "path": "packages/shell-server.js"
-    },
-    {
-      "path": "packages/session.js"
+      "path": "packages/reload.js"
     },
     {
       "path": "packages/seba_minifiers-autoprefixer.js"
     },
     {
       "path": "packages/standard-minifier-js.js"
+    },
+    {
+      "sourceMap": "packages/dynamic-import.js.map",
+      "path": "packages/dynamic-import.js"
+    },
+    {
+      "path": "packages/mrt_filesize.js"
     },
     {
       "path": "packages/markdown.js"
@@ -239,9 +249,6 @@
       "path": "packages/perak_markdown.js"
     },
     {
-      "path": "packages/mrt_filesize.js"
-    },
-    {
       "path": "packages/meteorhacks_subs-manager.js"
     },
     {
@@ -259,9 +266,6 @@
     {
       "node_modules": "npm/node_modules/meteor/ostrio_cstorage/node_modules",
       "path": "packages/ostrio_cstorage.js"
-    },
-    {
-      "path": "packages/ostrio_fps-meter.js"
     },
     {
       "path": "packages/ostrio_templatehelpers.js"
@@ -343,13 +347,7 @@
       "path": "packages/hot-code-push.js"
     },
     {
-      "path": "packages/launch-screen.js"
-    },
-    {
       "path": "packages/autoupdate.js"
-    },
-    {
-      "path": "packages/reload.js"
     },
     {
       "node_modules": "npm/node_modules",

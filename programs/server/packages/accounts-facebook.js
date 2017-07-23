@@ -48,7 +48,7 @@ if (Package['accounts-ui']
 Accounts.oauth.registerService('facebook');
 
 if (Meteor.isClient) {
-  Meteor.loginWithFacebook = function(options, callback) {
+  const loginWithFacebook = function(options, callback) {
     // support a callback without options
     if (! callback && typeof options === "function") {
       callback = options;
@@ -57,6 +57,10 @@ if (Meteor.isClient) {
 
     var credentialRequestCompleteCallback = Accounts.oauth.credentialRequestCompleteHandler(callback);
     Facebook.requestCredential(options, credentialRequestCompleteCallback);
+  };
+  Accounts.registerClientLoginFunction('facebook', loginWithFacebook);
+  Meteor.loginWithFacebook = function () {
+    return Accounts.applyLoginFunction('facebook', arguments);
   };
 } else {
   Accounts.addAutopublishFields({

@@ -5,9 +5,9 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
 var ECMAScript = Package.ecmascript.ECMAScript;
+var Promise = Package.promise.Promise;
 var Blaze = Package.blaze.Blaze;
 var UI = Package.blaze.UI;
 var Handlebars = Package.blaze.Handlebars;
@@ -17,14 +17,13 @@ var Deps = Package.tracker.Deps;
 var ReactiveDict = Package['reactive-dict'].ReactiveDict;
 var ReactiveVar = Package['reactive-var'].ReactiveVar;
 var EJSON = Package.ejson.EJSON;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
-var Promise = Package.promise.Promise;
 var HTML = Package.htmljs.HTML;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
-var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra":{"server":{"_init.js":["./router.js","./route.js","./group.js",function(require,exports,module){
+var require = meteorInstall({"node_modules":{"meteor":{"ostrio:flow-router-extra":{"server":{"_init.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
@@ -53,19 +52,19 @@ module.export({                                                                 
   }                                                                                               // 1
 });                                                                                               // 1
 var Router = void 0;                                                                              // 1
-module.importSync("./router.js", {                                                                // 1
+module.watch(require("./router.js"), {                                                            // 1
   "default": function (v) {                                                                       // 1
     Router = v;                                                                                   // 1
   }                                                                                               // 1
 }, 0);                                                                                            // 1
 var Route = void 0;                                                                               // 1
-module.importSync("./route.js", {                                                                 // 1
+module.watch(require("./route.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Route = v;                                                                                    // 1
   }                                                                                               // 1
 }, 1);                                                                                            // 1
 var Group = void 0;                                                                               // 1
-module.importSync("./group.js", {                                                                 // 1
+module.watch(require("./group.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Group = v;                                                                                    // 1
   }                                                                                               // 1
@@ -77,7 +76,7 @@ FlowRouter.Router = Router;                                                     
 FlowRouter.Route = Route;                                                                         // 10
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"group.js":["babel-runtime/helpers/classCallCheck","meteor/underscore",function(require,exports,module){
+},"group.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
@@ -93,74 +92,79 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
                                                                                                   //
 var _ = void 0;                                                                                   // 1
                                                                                                   //
-module.importSync("meteor/underscore", {                                                          // 1
+module.watch(require("meteor/underscore"), {                                                      // 1
   _: function (v) {                                                                               // 1
     _ = v;                                                                                        // 1
   }                                                                                               // 1
 }, 0);                                                                                            // 1
                                                                                                   //
-var makeTriggers = function (base, _triggers) {                                                   // 3
-  var triggers = _triggers || [];                                                                 // 4
+var makeTrigger = function (trigger) {                                                            // 3
+  if (_.isFunction(trigger)) {                                                                    // 4
+    return [trigger];                                                                             // 5
+  } else if (!_.isArray(trigger)) {                                                               // 6
+    return [];                                                                                    // 7
+  }                                                                                               // 8
                                                                                                   //
-  if (triggers) {                                                                                 // 5
-    if (!_.isArray(triggers)) {                                                                   // 6
-      triggers = [triggers];                                                                      // 7
-    }                                                                                             // 8
-  }                                                                                               // 9
+  return trigger;                                                                                 // 10
+};                                                                                                // 11
                                                                                                   //
-  return (base || []).concat(triggers);                                                           // 11
-};                                                                                                // 12
+var makeTriggers = function (_base, _triggers) {                                                  // 13
+  if (!_base && !_triggers) {                                                                     // 14
+    return [];                                                                                    // 15
+  }                                                                                               // 16
+                                                                                                  //
+  return makeTrigger(_base).concat(makeTrigger(_triggers));                                       // 17
+};                                                                                                // 18
                                                                                                   //
 var Group = function () {                                                                         //
-  function Group(router) {                                                                        // 15
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};         // 15
-    var parent = arguments[2];                                                                    // 15
-    (0, _classCallCheck3.default)(this, Group);                                                   // 15
+  function Group(router) {                                                                        // 21
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};         // 21
+    var parent = arguments[2];                                                                    // 21
+    (0, _classCallCheck3.default)(this, Group);                                                   // 21
                                                                                                   //
-    if (options.prefix && !/^\/.*/.test(options.prefix)) {                                        // 16
-      throw new Error('group\'s prefix must start with "/"');                                     // 17
-    }                                                                                             // 18
+    if (options.prefix && !/^\//.test(options.prefix)) {                                          // 22
+      throw new Error('group\'s prefix must start with "/"');                                     // 23
+    }                                                                                             // 24
                                                                                                   //
-    this._router = router;                                                                        // 20
-    this.prefix = options.prefix || '';                                                           // 21
-    this.name = options.name;                                                                     // 22
-    this.options = options;                                                                       // 23
-    this._triggersEnter = makeTriggers(this._triggersEnter, options.triggersEnter);               // 25
-    this._triggersExit = makeTriggers(this._triggersExit, options.triggersExit);                  // 26
-    this.parent = parent;                                                                         // 28
+    this._router = router;                                                                        // 26
+    this.prefix = options.prefix || '';                                                           // 27
+    this.name = options.name;                                                                     // 28
+    this.options = options;                                                                       // 29
+    this._triggersEnter = makeTriggers(options.triggersEnter, this._triggersEnter);               // 31
+    this._triggersExit = makeTriggers(this._triggersExit, options.triggersExit);                  // 32
+    this._subscriptions = options.subscriptions || Function.prototype;                            // 34
+    this.parent = parent;                                                                         // 36
                                                                                                   //
-    if (this.parent) {                                                                            // 29
-      this.prefix = parent.prefix + this.prefix;                                                  // 30
-      this._triggersEnter = makeTriggers(this._triggersEnter, parent.triggersEnter);              // 32
-      this._triggersExit = makeTriggers(this._triggersExit, parent.triggersExit);                 // 33
-    }                                                                                             // 34
-  }                                                                                               // 35
+    if (this.parent) {                                                                            // 37
+      this.prefix = parent.prefix + this.prefix;                                                  // 38
+      this._triggersEnter = makeTriggers(parent._triggersEnter, this._triggersEnter);             // 39
+      this._triggersExit = makeTriggers(this._triggersExit, parent._triggersExit);                // 40
+    }                                                                                             // 41
+  }                                                                                               // 42
                                                                                                   //
   Group.prototype.route = function () {                                                           //
     function route(_pathDef) {                                                                    //
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};       // 37
-      var _group = arguments[2];                                                                  // 37
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};       // 44
+      var _group = arguments[2];                                                                  // 44
                                                                                                   //
-      if (!/^\/.*/.test(_pathDef)) {                                                              // 38
-        throw new Error('route\'s path must start with "/"');                                     // 39
-      }                                                                                           // 40
+      if (!/^\//.test(_pathDef)) {                                                                // 45
+        throw new Error('route\'s path must start with "/"');                                     // 46
+      }                                                                                           // 47
                                                                                                   //
-      var group = _group || this;                                                                 // 42
-      var pathDef = this.prefix + _pathDef;                                                       // 43
-      options.triggersEnter = makeTriggers(this._triggersEnter, options.triggersEnter);           // 45
-      options.triggersExit = makeTriggers(this._triggersExit, options.triggersExit);              // 46
-      return this._router.route(pathDef, options, group);                                         // 48
-    }                                                                                             // 49
+      var group = _group || this;                                                                 // 49
+      var pathDef = this.prefix + _pathDef;                                                       // 50
+      options.triggersEnter = makeTriggers(this._triggersEnter, options.triggersEnter);           // 52
+      options.triggersExit = makeTriggers(options.triggersExit, this._triggersExit);              // 53
+      return this._router.route(pathDef, options, group);                                         // 55
+    }                                                                                             // 56
                                                                                                   //
     return route;                                                                                 //
   }();                                                                                            //
                                                                                                   //
   Group.prototype.group = function () {                                                           //
     function group(options) {                                                                     //
-      var group = new Group(this._router, options, this);                                         // 52
-      group.parent = this;                                                                        // 53
-      return group;                                                                               // 55
-    }                                                                                             // 56
+      return new Group(this._router, options, this);                                              // 59
+    }                                                                                             // 60
                                                                                                   //
     return group;                                                                                 //
   }();                                                                                            //
@@ -168,10 +172,10 @@ var Group = function () {                                                       
   return Group;                                                                                   //
 }();                                                                                              //
                                                                                                   //
-module.export("default", exports.default = Group);                                                // 1
+module.exportDefault(Group);                                                                      // 1
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"route.js":["babel-runtime/helpers/classCallCheck",function(require,exports,module){
+},"route.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
@@ -225,10 +229,10 @@ var Route = function () {                                                       
   return Route;                                                                                   //
 }();                                                                                              //
                                                                                                   //
-module.export("default", exports.default = Route);                                                // 1
+module.exportDefault(Route);                                                                      // 1
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"router.js":["babel-runtime/helpers/classCallCheck","meteor/underscore","./route.js","./group.js","meteor/meteor","qs",function(require,exports,module){
+},"router.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
@@ -244,25 +248,25 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
                                                                                                   //
 var _ = void 0;                                                                                   // 1
                                                                                                   //
-module.importSync("meteor/underscore", {                                                          // 1
+module.watch(require("meteor/underscore"), {                                                      // 1
   _: function (v) {                                                                               // 1
     _ = v;                                                                                        // 1
   }                                                                                               // 1
 }, 0);                                                                                            // 1
 var Route = void 0;                                                                               // 1
-module.importSync("./route.js", {                                                                 // 1
+module.watch(require("./route.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Route = v;                                                                                    // 1
   }                                                                                               // 1
 }, 1);                                                                                            // 1
 var Group = void 0;                                                                               // 1
-module.importSync("./group.js", {                                                                 // 1
+module.watch(require("./group.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Group = v;                                                                                    // 1
   }                                                                                               // 1
 }, 2);                                                                                            // 1
 var Meteor = void 0;                                                                              // 1
-module.importSync("meteor/meteor", {                                                              // 1
+module.watch(require("meteor/meteor"), {                                                          // 1
   Meteor: function (v) {                                                                          // 1
     Meteor = v;                                                                                   // 1
   }                                                                                               // 1
@@ -292,7 +296,7 @@ var Router = function () {                                                      
     function route(pathDef) {                                                                     //
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};       // 28
                                                                                                   //
-      if (!/^\/.*/.test(pathDef)) {                                                               // 29
+      if (!/^\/.*/.test(pathDef) && pathDef !== '*') {                                            // 29
         throw new Error('route\'s path must start with "/"');                                     // 30
       }                                                                                           // 31
                                                                                                   //
@@ -471,19 +475,19 @@ var Router = function () {                                                      
   return Router;                                                                                  //
 }();                                                                                              //
                                                                                                   //
-module.export("default", exports.default = Router);                                               // 1
+module.exportDefault(Router);                                                                     // 1
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}]},"node_modules":{"qs":{"package.json":function(require,exports){
+}},"node_modules":{"qs":{"package.json":function(require,exports){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
-// ../../.3.1.1.1jlmbkc++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
+// ../../.3.2.1.1scx2fm++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
 //                                                                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                   //
 exports.name = "qs";
-exports.version = "6.4.0";
+exports.version = "6.5.0";
 exports.main = "lib/index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +514,12 @@ module.exports = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 var exports = require("./node_modules/meteor/ostrio:flow-router-extra/server/_init.js");
 
 /* Exports */

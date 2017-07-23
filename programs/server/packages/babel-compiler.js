@@ -4,9 +4,9 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var Babel, BabelCompiler;
@@ -19,15 +19,18 @@ var Babel, BabelCompiler;
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
                                                                               //
+var meteorBabel = null;
+function getMeteorBabel() {
+  return meteorBabel || (meteorBabel = Npm.require("meteor-babel"));
+}
+
 /**
  * Returns a new object containing default options appropriate for
  */
 function getDefaultOptions(extraFeatures) {
-  var meteorBabel = Npm.require('meteor-babel');
-
   // See https://github.com/meteor/babel/blob/master/options.js for more
   // information about what the default options are.
-  var options = meteorBabel.getDefaultOptions(extraFeatures);
+  var options = getMeteorBabel().getDefaultOptions(extraFeatures);
 
   // The sourceMap option should probably be removed from the default
   // options returned by meteorBabel.getDefaultOptions.
@@ -42,20 +45,26 @@ Babel = {
   // Deprecated, now a no-op.
   validateExtraFeatures: Function.prototype,
 
+  parse: function (source) {
+    return getMeteorBabel().parse(source);
+  },
+
   compile: function (source, options) {
-    var meteorBabel = Npm.require('meteor-babel');
     options = options || getDefaultOptions();
-    return meteorBabel.compile(source, options);
+    return getMeteorBabel().compile(source, options);
   },
 
   setCacheDir: function (cacheDir) {
-    Npm.require('meteor-babel').setCacheDir(cacheDir);
+    getMeteorBabel().setCacheDir(cacheDir);
   },
 
-  minify: function(source, options) {
-    var meteorBabel = Npm.require('meteor-babel');
-    var options = options || meteorBabel.getMinifierOptions();
-    return meteorBabel.minify(source, options);
+  minify: function (source, options) {
+    var options = options || getMeteorBabel().getMinifierOptions();
+    return getMeteorBabel().minify(source, options);
+  },
+
+  getMinifierOptions: function (extraFeatures) {
+    return getMeteorBabel().getMinifierOptions(extraFeatures);
   }
 };
 
@@ -164,8 +173,8 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     babelOptions.sourceMap = true;
     babelOptions.filename =
       babelOptions.sourceFileName = packageName
-      ? "/packages/" + packageName + "/" + inputFilePath
-      : "/" + inputFilePath;
+      ? "packages/" + packageName + "/" + inputFilePath
+      : inputFilePath;
 
     babelOptions.sourceMapTarget = babelOptions.filename + ".map";
 

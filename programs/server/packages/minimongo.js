@@ -16,18 +16,17 @@ var DiffSequence = Package['diff-sequence'].DiffSequence;
 var ECMAScript = Package.ecmascript.ECMAScript;
 var GeoJSON = Package['geojson-utils'].GeoJSON;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var LocalCollection, Minimongo, MinimongoTest, MinimongoError, isArray, isPlainObject, isIndexable, isOperatorObject, isNumericKey, regexpElementMatcher, equalityElementMatcher, ELEMENT_OPERATORS, makeLookupFunction, expandArraysInBranches, projectionDetails, pathsToTree, combineImportantPathsIntoProjection;
 
-var require = meteorInstall({"node_modules":{"meteor":{"minimongo":{"minimongo.js":["./validation.js",function(require,exports,module){
+var require = meteorInstall({"node_modules":{"meteor":{"minimongo":{"minimongo.js":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -36,7 +35,7 @@ var require = meteorInstall({"node_modules":{"meteor":{"minimongo":{"minimongo.j
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                        //
 var assertHasValidFieldNames = void 0;                                                                                 // 1
-module.importSync("./validation.js", {                                                                                 // 1
+module.watch(require("./validation.js"), {                                                                             // 1
   assertHasValidFieldNames: function (v) {                                                                             // 1
     assertHasValidFieldNames = v;                                                                                      // 1
   }                                                                                                                    // 1
@@ -705,7 +704,7 @@ LocalCollection.prototype.update = function (selector, mod, options, callback) {
   }                                                                                                                    // 699
                                                                                                                        //
   if (!options) options = {};                                                                                          // 700
-  var matcher = new Minimongo.Matcher(selector); // Save the original results of any query that we might need to       // 702
+  var matcher = new Minimongo.Matcher(selector, true); // Save the original results of any query that we might need to
   // _recomputeResults on, because _modifyAndNotify will mutate the objects in                                         // 705
   // it. (We don't need to save the original results of paused queries because                                         // 706
   // they already have a resultsSnapshot and we won't be diffing in                                                    // 707
@@ -792,340 +791,355 @@ LocalCollection.prototype.update = function (selector, mod, options, callback) {
   var insertedId;                                                                                                      // 783
                                                                                                                        //
   if (updateCount === 0 && options.upsert) {                                                                           // 784
-    var newDoc = LocalCollection._removeDollarOperators(selector);                                                     // 785
+    var selectorModifier = LocalCollection._selectorIsId(selector) ? {                                                 // 786
+      _id: selector                                                                                                    // 787
+    } : selector;                                                                                                      // 787
+    selectorModifier = LocalCollection._removeDollarOperators(selectorModifier);                                       // 790
+    var newDoc = {};                                                                                                   // 792
                                                                                                                        //
-    LocalCollection._modify(newDoc, mod, {                                                                             // 786
-      isInsert: true                                                                                                   // 786
-    });                                                                                                                // 786
-                                                                                                                       //
-    if (!newDoc._id && options.insertedId) newDoc._id = options.insertedId;                                            // 787
-    insertedId = self.insert(newDoc);                                                                                  // 789
-    updateCount = 1;                                                                                                   // 790
-  } // Return the number of affected documents, or in the upsert case, an object                                       // 791
-  // containing the number of affected docs and the id of the doc that was                                             // 794
-  // inserted, if any.                                                                                                 // 795
-                                                                                                                       //
-                                                                                                                       //
-  var result;                                                                                                          // 796
-                                                                                                                       //
-  if (options._returnObject) {                                                                                         // 797
-    result = {                                                                                                         // 798
-      numberAffected: updateCount                                                                                      // 799
-    };                                                                                                                 // 798
-    if (insertedId !== undefined) result.insertedId = insertedId;                                                      // 801
-  } else {                                                                                                             // 803
-    result = updateCount;                                                                                              // 804
-  }                                                                                                                    // 805
-                                                                                                                       //
-  if (callback) Meteor.defer(function () {                                                                             // 807
-    callback(null, result);                                                                                            // 809
-  });                                                                                                                  // 810
-  return result;                                                                                                       // 811
-}; // A convenience wrapper on update. LocalCollection.upsert(sel, mod) is                                             // 812
-// equivalent to LocalCollection.update(sel, mod, { upsert: true, _returnObject:                                       // 815
-// true }).                                                                                                            // 816
+    if (selectorModifier._id) {                                                                                        // 793
+      newDoc._id = selectorModifier._id;                                                                               // 794
+      delete selectorModifier._id;                                                                                     // 795
+    } // This double _modify call is made to help work around an issue where collection                                // 796
+    // upserts won't work properly, with nested properties (see issue #8631).                                          // 799
                                                                                                                        //
                                                                                                                        //
-LocalCollection.prototype.upsert = function (selector, mod, options, callback) {                                       // 817
-  var self = this;                                                                                                     // 818
+    LocalCollection._modify(newDoc, {                                                                                  // 800
+      $set: selectorModifier                                                                                           // 800
+    });                                                                                                                // 800
                                                                                                                        //
-  if (!callback && typeof options === "function") {                                                                    // 819
-    callback = options;                                                                                                // 820
-    options = {};                                                                                                      // 821
-  }                                                                                                                    // 822
+    LocalCollection._modify(newDoc, mod, {                                                                             // 801
+      isInsert: true                                                                                                   // 801
+    });                                                                                                                // 801
                                                                                                                        //
-  return self.update(selector, mod, _.extend({}, options, {                                                            // 823
-    upsert: true,                                                                                                      // 824
-    _returnObject: true                                                                                                // 825
-  }), callback);                                                                                                       // 823
-};                                                                                                                     // 827
+    if (!newDoc._id && options.insertedId) newDoc._id = options.insertedId;                                            // 803
+    insertedId = self.insert(newDoc);                                                                                  // 805
+    updateCount = 1;                                                                                                   // 806
+  } // Return the number of affected documents, or in the upsert case, an object                                       // 807
+  // containing the number of affected docs and the id of the doc that was                                             // 810
+  // inserted, if any.                                                                                                 // 811
                                                                                                                        //
-LocalCollection.prototype._modifyAndNotify = function (doc, mod, recomputeQids, arrayIndices) {                        // 829
-  var self = this;                                                                                                     // 831
-  var matched_before = {};                                                                                             // 833
                                                                                                                        //
-  for (var qid in meteorBabelHelpers.sanitizeForInObject(self.queries)) {                                              // 834
-    var query = self.queries[qid];                                                                                     // 835
-    if (query.dirty) continue;                                                                                         // 836
+  var result;                                                                                                          // 812
                                                                                                                        //
-    if (query.ordered) {                                                                                               // 838
-      matched_before[qid] = query.matcher.documentMatches(doc).result;                                                 // 839
-    } else {                                                                                                           // 840
-      // Because we don't support skip or limit (yet) in unordered queries, we                                         // 841
-      // can just do a direct lookup.                                                                                  // 842
-      matched_before[qid] = query.results.has(doc._id);                                                                // 843
-    }                                                                                                                  // 844
-  }                                                                                                                    // 845
+  if (options._returnObject) {                                                                                         // 813
+    result = {                                                                                                         // 814
+      numberAffected: updateCount                                                                                      // 815
+    };                                                                                                                 // 814
+    if (insertedId !== undefined) result.insertedId = insertedId;                                                      // 817
+  } else {                                                                                                             // 819
+    result = updateCount;                                                                                              // 820
+  }                                                                                                                    // 821
                                                                                                                        //
-  var old_doc = EJSON.clone(doc);                                                                                      // 847
+  if (callback) Meteor.defer(function () {                                                                             // 823
+    callback(null, result);                                                                                            // 825
+  });                                                                                                                  // 826
+  return result;                                                                                                       // 827
+}; // A convenience wrapper on update. LocalCollection.upsert(sel, mod) is                                             // 828
+// equivalent to LocalCollection.update(sel, mod, { upsert: true, _returnObject:                                       // 831
+// true }).                                                                                                            // 832
                                                                                                                        //
-  LocalCollection._modify(doc, mod, {                                                                                  // 849
-    arrayIndices: arrayIndices                                                                                         // 849
-  });                                                                                                                  // 849
                                                                                                                        //
-  for (qid in meteorBabelHelpers.sanitizeForInObject(self.queries)) {                                                  // 851
-    query = self.queries[qid];                                                                                         // 852
-    if (query.dirty) continue;                                                                                         // 853
-    var before = matched_before[qid];                                                                                  // 855
-    var afterMatch = query.matcher.documentMatches(doc);                                                               // 856
-    var after = afterMatch.result;                                                                                     // 857
+LocalCollection.prototype.upsert = function (selector, mod, options, callback) {                                       // 833
+  var self = this;                                                                                                     // 834
+                                                                                                                       //
+  if (!callback && typeof options === "function") {                                                                    // 835
+    callback = options;                                                                                                // 836
+    options = {};                                                                                                      // 837
+  }                                                                                                                    // 838
+                                                                                                                       //
+  return self.update(selector, mod, _.extend({}, options, {                                                            // 839
+    upsert: true,                                                                                                      // 840
+    _returnObject: true                                                                                                // 841
+  }), callback);                                                                                                       // 839
+};                                                                                                                     // 843
+                                                                                                                       //
+LocalCollection.prototype._modifyAndNotify = function (doc, mod, recomputeQids, arrayIndices) {                        // 845
+  var self = this;                                                                                                     // 847
+  var matched_before = {};                                                                                             // 849
+                                                                                                                       //
+  for (var qid in meteorBabelHelpers.sanitizeForInObject(self.queries)) {                                              // 850
+    var query = self.queries[qid];                                                                                     // 851
+    if (query.dirty) continue;                                                                                         // 852
+                                                                                                                       //
+    if (query.ordered) {                                                                                               // 854
+      matched_before[qid] = query.matcher.documentMatches(doc).result;                                                 // 855
+    } else {                                                                                                           // 856
+      // Because we don't support skip or limit (yet) in unordered queries, we                                         // 857
+      // can just do a direct lookup.                                                                                  // 858
+      matched_before[qid] = query.results.has(doc._id);                                                                // 859
+    }                                                                                                                  // 860
+  }                                                                                                                    // 861
+                                                                                                                       //
+  var old_doc = EJSON.clone(doc);                                                                                      // 863
+                                                                                                                       //
+  LocalCollection._modify(doc, mod, {                                                                                  // 865
+    arrayIndices: arrayIndices                                                                                         // 865
+  });                                                                                                                  // 865
+                                                                                                                       //
+  for (qid in meteorBabelHelpers.sanitizeForInObject(self.queries)) {                                                  // 867
+    query = self.queries[qid];                                                                                         // 868
+    if (query.dirty) continue;                                                                                         // 869
+    var before = matched_before[qid];                                                                                  // 871
+    var afterMatch = query.matcher.documentMatches(doc);                                                               // 872
+    var after = afterMatch.result;                                                                                     // 873
     if (after && query.distances && afterMatch.distance !== undefined) query.distances.set(doc._id, afterMatch.distance);
                                                                                                                        //
-    if (query.cursor.skip || query.cursor.limit) {                                                                     // 861
-      // We need to recompute any query where the doc may have been in the                                             // 862
-      // cursor's window either before or after the update. (Note that if skip                                         // 863
-      // or limit is set, "before" and "after" being true do not necessarily                                           // 864
-      // mean that the document is in the cursor's output after skip/limit is                                          // 865
-      // applied... but if they are false, then the document definitely is NOT                                         // 866
-      // in the output. So it's safe to skip recompute if neither before or                                            // 867
-      // after are true.)                                                                                              // 868
-      if (before || after) recomputeQids[qid] = true;                                                                  // 869
-    } else if (before && !after) {                                                                                     // 871
-      LocalCollection._removeFromResults(query, doc);                                                                  // 872
-    } else if (!before && after) {                                                                                     // 873
-      LocalCollection._insertInResults(query, doc);                                                                    // 874
-    } else if (before && after) {                                                                                      // 875
-      LocalCollection._updateInResults(query, doc, old_doc);                                                           // 876
-    }                                                                                                                  // 877
-  }                                                                                                                    // 878
-}; // XXX the sorted-query logic below is laughably inefficient. we'll                                                 // 879
-// need to come up with a better datastructure for this.                                                               // 882
-//                                                                                                                     // 883
-// XXX the logic for observing with a skip or a limit is even more                                                     // 884
-// laughably inefficient. we recompute the whole results every time!                                                   // 885
+    if (query.cursor.skip || query.cursor.limit) {                                                                     // 877
+      // We need to recompute any query where the doc may have been in the                                             // 878
+      // cursor's window either before or after the update. (Note that if skip                                         // 879
+      // or limit is set, "before" and "after" being true do not necessarily                                           // 880
+      // mean that the document is in the cursor's output after skip/limit is                                          // 881
+      // applied... but if they are false, then the document definitely is NOT                                         // 882
+      // in the output. So it's safe to skip recompute if neither before or                                            // 883
+      // after are true.)                                                                                              // 884
+      if (before || after) recomputeQids[qid] = true;                                                                  // 885
+    } else if (before && !after) {                                                                                     // 887
+      LocalCollection._removeFromResults(query, doc);                                                                  // 888
+    } else if (!before && after) {                                                                                     // 889
+      LocalCollection._insertInResults(query, doc);                                                                    // 890
+    } else if (before && after) {                                                                                      // 891
+      LocalCollection._updateInResults(query, doc, old_doc);                                                           // 892
+    }                                                                                                                  // 893
+  }                                                                                                                    // 894
+}; // XXX the sorted-query logic below is laughably inefficient. we'll                                                 // 895
+// need to come up with a better datastructure for this.                                                               // 898
+//                                                                                                                     // 899
+// XXX the logic for observing with a skip or a limit is even more                                                     // 900
+// laughably inefficient. we recompute the whole results every time!                                                   // 901
                                                                                                                        //
                                                                                                                        //
-LocalCollection._insertInResults = function (query, doc) {                                                             // 887
-  var fields = EJSON.clone(doc);                                                                                       // 888
-  delete fields._id;                                                                                                   // 889
+LocalCollection._insertInResults = function (query, doc) {                                                             // 903
+  var fields = EJSON.clone(doc);                                                                                       // 904
+  delete fields._id;                                                                                                   // 905
                                                                                                                        //
-  if (query.ordered) {                                                                                                 // 890
-    if (!query.sorter) {                                                                                               // 891
-      query.addedBefore(doc._id, query.projectionFn(fields), null);                                                    // 892
-      query.results.push(doc);                                                                                         // 893
-    } else {                                                                                                           // 894
-      var i = LocalCollection._insertInSortedList(query.sorter.getComparator({                                         // 895
-        distances: query.distances                                                                                     // 896
-      }), query.results, doc);                                                                                         // 896
+  if (query.ordered) {                                                                                                 // 906
+    if (!query.sorter) {                                                                                               // 907
+      query.addedBefore(doc._id, query.projectionFn(fields), null);                                                    // 908
+      query.results.push(doc);                                                                                         // 909
+    } else {                                                                                                           // 910
+      var i = LocalCollection._insertInSortedList(query.sorter.getComparator({                                         // 911
+        distances: query.distances                                                                                     // 912
+      }), query.results, doc);                                                                                         // 912
                                                                                                                        //
-      var next = query.results[i + 1];                                                                                 // 898
-      if (next) next = next._id;else next = null;                                                                      // 899
-      query.addedBefore(doc._id, query.projectionFn(fields), next);                                                    // 903
-    }                                                                                                                  // 904
+      var next = query.results[i + 1];                                                                                 // 914
+      if (next) next = next._id;else next = null;                                                                      // 915
+      query.addedBefore(doc._id, query.projectionFn(fields), next);                                                    // 919
+    }                                                                                                                  // 920
                                                                                                                        //
-    query.added(doc._id, query.projectionFn(fields));                                                                  // 905
-  } else {                                                                                                             // 906
-    query.added(doc._id, query.projectionFn(fields));                                                                  // 907
-    query.results.set(doc._id, doc);                                                                                   // 908
-  }                                                                                                                    // 909
-};                                                                                                                     // 910
+    query.added(doc._id, query.projectionFn(fields));                                                                  // 921
+  } else {                                                                                                             // 922
+    query.added(doc._id, query.projectionFn(fields));                                                                  // 923
+    query.results.set(doc._id, doc);                                                                                   // 924
+  }                                                                                                                    // 925
+};                                                                                                                     // 926
                                                                                                                        //
-LocalCollection._removeFromResults = function (query, doc) {                                                           // 912
-  if (query.ordered) {                                                                                                 // 913
-    var i = LocalCollection._findInOrderedResults(query, doc);                                                         // 914
+LocalCollection._removeFromResults = function (query, doc) {                                                           // 928
+  if (query.ordered) {                                                                                                 // 929
+    var i = LocalCollection._findInOrderedResults(query, doc);                                                         // 930
                                                                                                                        //
-    query.removed(doc._id);                                                                                            // 915
-    query.results.splice(i, 1);                                                                                        // 916
-  } else {                                                                                                             // 917
-    var id = doc._id; // in case callback mutates doc                                                                  // 918
+    query.removed(doc._id);                                                                                            // 931
+    query.results.splice(i, 1);                                                                                        // 932
+  } else {                                                                                                             // 933
+    var id = doc._id; // in case callback mutates doc                                                                  // 934
                                                                                                                        //
-    query.removed(doc._id);                                                                                            // 919
-    query.results.remove(id);                                                                                          // 920
-  }                                                                                                                    // 921
-};                                                                                                                     // 922
-                                                                                                                       //
-LocalCollection._updateInResults = function (query, doc, old_doc) {                                                    // 924
-  if (!EJSON.equals(doc._id, old_doc._id)) throw new Error("Can't change a doc's _id while updating");                 // 925
-  var projectionFn = query.projectionFn;                                                                               // 927
-  var changedFields = DiffSequence.makeChangedFields(projectionFn(doc), projectionFn(old_doc));                        // 928
-                                                                                                                       //
-  if (!query.ordered) {                                                                                                // 931
-    if (!_.isEmpty(changedFields)) {                                                                                   // 932
-      query.changed(doc._id, changedFields);                                                                           // 933
-      query.results.set(doc._id, doc);                                                                                 // 934
-    }                                                                                                                  // 935
-                                                                                                                       //
-    return;                                                                                                            // 936
+    query.removed(doc._id);                                                                                            // 935
+    query.results.remove(id);                                                                                          // 936
   }                                                                                                                    // 937
+};                                                                                                                     // 938
                                                                                                                        //
-  var orig_idx = LocalCollection._findInOrderedResults(query, doc);                                                    // 939
+LocalCollection._updateInResults = function (query, doc, old_doc) {                                                    // 940
+  if (!EJSON.equals(doc._id, old_doc._id)) throw new Error("Can't change a doc's _id while updating");                 // 941
+  var projectionFn = query.projectionFn;                                                                               // 943
+  var changedFields = DiffSequence.makeChangedFields(projectionFn(doc), projectionFn(old_doc));                        // 944
                                                                                                                        //
-  if (!_.isEmpty(changedFields)) query.changed(doc._id, changedFields);                                                // 941
-  if (!query.sorter) return; // just take it out and put it back in again, and see if the index                        // 943
-  // changes                                                                                                           // 947
+  if (!query.ordered) {                                                                                                // 947
+    if (!_.isEmpty(changedFields)) {                                                                                   // 948
+      query.changed(doc._id, changedFields);                                                                           // 949
+      query.results.set(doc._id, doc);                                                                                 // 950
+    }                                                                                                                  // 951
                                                                                                                        //
-  query.results.splice(orig_idx, 1);                                                                                   // 948
+    return;                                                                                                            // 952
+  }                                                                                                                    // 953
                                                                                                                        //
-  var new_idx = LocalCollection._insertInSortedList(query.sorter.getComparator({                                       // 949
-    distances: query.distances                                                                                         // 950
-  }), query.results, doc);                                                                                             // 950
+  var orig_idx = LocalCollection._findInOrderedResults(query, doc);                                                    // 955
                                                                                                                        //
-  if (orig_idx !== new_idx) {                                                                                          // 952
-    var next = query.results[new_idx + 1];                                                                             // 953
-    if (next) next = next._id;else next = null;                                                                        // 954
-    query.movedBefore && query.movedBefore(doc._id, next);                                                             // 958
-  }                                                                                                                    // 959
-}; // Recomputes the results of a query and runs observe callbacks for the                                             // 960
-// difference between the previous results and the current results (unless                                             // 963
-// paused). Used for skip/limit queries.                                                                               // 964
-//                                                                                                                     // 965
-// When this is used by insert or remove, it can just use query.results for the                                        // 966
-// old results (and there's no need to pass in oldResults), because these                                              // 967
-// operations don't mutate the documents in the collection. Update needs to pass                                       // 968
-// in an oldResults which was deep-copied before the modifier was applied.                                             // 969
-//                                                                                                                     // 970
-// oldResults is guaranteed to be ignored if the query is not paused.                                                  // 971
+  if (!_.isEmpty(changedFields)) query.changed(doc._id, changedFields);                                                // 957
+  if (!query.sorter) return; // just take it out and put it back in again, and see if the index                        // 959
+  // changes                                                                                                           // 963
                                                                                                                        //
+  query.results.splice(orig_idx, 1);                                                                                   // 964
                                                                                                                        //
-LocalCollection.prototype._recomputeResults = function (query, oldResults) {                                           // 972
-  var self = this;                                                                                                     // 973
+  var new_idx = LocalCollection._insertInSortedList(query.sorter.getComparator({                                       // 965
+    distances: query.distances                                                                                         // 966
+  }), query.results, doc);                                                                                             // 966
                                                                                                                        //
-  if (self.paused) {                                                                                                   // 974
-    // There's no reason to recompute the results now as we're still paused.                                           // 975
-    // By flagging the query as "dirty", the recompute will be performed                                               // 976
-    // when resumeObservers is called.                                                                                 // 977
-    query.dirty = true;                                                                                                // 978
-    return;                                                                                                            // 979
-  }                                                                                                                    // 980
-                                                                                                                       //
-  if (!self.paused && !oldResults) oldResults = query.results;                                                         // 982
-  if (query.distances) query.distances.clear();                                                                        // 984
-  query.results = query.cursor._getRawObjects({                                                                        // 986
-    ordered: query.ordered,                                                                                            // 987
-    distances: query.distances                                                                                         // 987
-  });                                                                                                                  // 986
-                                                                                                                       //
-  if (!self.paused) {                                                                                                  // 989
-    LocalCollection._diffQueryChanges(query.ordered, oldResults, query.results, query, {                               // 990
-      projectionFn: query.projectionFn                                                                                 // 992
-    });                                                                                                                // 992
-  }                                                                                                                    // 993
-};                                                                                                                     // 994
-                                                                                                                       //
-LocalCollection._findInOrderedResults = function (query, doc) {                                                        // 997
-  if (!query.ordered) throw new Error("Can't call _findInOrderedResults on unordered query");                          // 998
-                                                                                                                       //
-  for (var i = 0; i < query.results.length; i++) {                                                                     // 1000
-    if (query.results[i] === doc) return i;                                                                            // 1001
-  }                                                                                                                    // 1000
-                                                                                                                       //
-  throw Error("object missing from query");                                                                            // 1003
-}; // This binary search puts a value between any equal values, and the first                                          // 1004
-// lesser value.                                                                                                       // 1007
+  if (orig_idx !== new_idx) {                                                                                          // 968
+    var next = query.results[new_idx + 1];                                                                             // 969
+    if (next) next = next._id;else next = null;                                                                        // 970
+    query.movedBefore && query.movedBefore(doc._id, next);                                                             // 974
+  }                                                                                                                    // 975
+}; // Recomputes the results of a query and runs observe callbacks for the                                             // 976
+// difference between the previous results and the current results (unless                                             // 979
+// paused). Used for skip/limit queries.                                                                               // 980
+//                                                                                                                     // 981
+// When this is used by insert or remove, it can just use query.results for the                                        // 982
+// old results (and there's no need to pass in oldResults), because these                                              // 983
+// operations don't mutate the documents in the collection. Update needs to pass                                       // 984
+// in an oldResults which was deep-copied before the modifier was applied.                                             // 985
+//                                                                                                                     // 986
+// oldResults is guaranteed to be ignored if the query is not paused.                                                  // 987
                                                                                                                        //
                                                                                                                        //
-LocalCollection._binarySearch = function (cmp, array, value) {                                                         // 1008
-  var first = 0,                                                                                                       // 1009
-      rangeLength = array.length;                                                                                      // 1009
+LocalCollection.prototype._recomputeResults = function (query, oldResults) {                                           // 988
+  var self = this;                                                                                                     // 989
                                                                                                                        //
-  while (rangeLength > 0) {                                                                                            // 1011
-    var halfRange = Math.floor(rangeLength / 2);                                                                       // 1012
+  if (self.paused) {                                                                                                   // 990
+    // There's no reason to recompute the results now as we're still paused.                                           // 991
+    // By flagging the query as "dirty", the recompute will be performed                                               // 992
+    // when resumeObservers is called.                                                                                 // 993
+    query.dirty = true;                                                                                                // 994
+    return;                                                                                                            // 995
+  }                                                                                                                    // 996
                                                                                                                        //
-    if (cmp(value, array[first + halfRange]) >= 0) {                                                                   // 1013
-      first += halfRange + 1;                                                                                          // 1014
-      rangeLength -= halfRange + 1;                                                                                    // 1015
-    } else {                                                                                                           // 1016
-      rangeLength = halfRange;                                                                                         // 1017
-    }                                                                                                                  // 1018
-  }                                                                                                                    // 1019
+  if (!self.paused && !oldResults) oldResults = query.results;                                                         // 998
+  if (query.distances) query.distances.clear();                                                                        // 1000
+  query.results = query.cursor._getRawObjects({                                                                        // 1002
+    ordered: query.ordered,                                                                                            // 1003
+    distances: query.distances                                                                                         // 1003
+  });                                                                                                                  // 1002
                                                                                                                        //
-  return first;                                                                                                        // 1020
-};                                                                                                                     // 1021
+  if (!self.paused) {                                                                                                  // 1005
+    LocalCollection._diffQueryChanges(query.ordered, oldResults, query.results, query, {                               // 1006
+      projectionFn: query.projectionFn                                                                                 // 1008
+    });                                                                                                                // 1008
+  }                                                                                                                    // 1009
+};                                                                                                                     // 1010
                                                                                                                        //
-LocalCollection._insertInSortedList = function (cmp, array, value) {                                                   // 1023
-  if (array.length === 0) {                                                                                            // 1024
-    array.push(value);                                                                                                 // 1025
-    return 0;                                                                                                          // 1026
-  }                                                                                                                    // 1027
+LocalCollection._findInOrderedResults = function (query, doc) {                                                        // 1013
+  if (!query.ordered) throw new Error("Can't call _findInOrderedResults on unordered query");                          // 1014
                                                                                                                        //
-  var idx = LocalCollection._binarySearch(cmp, array, value);                                                          // 1029
+  for (var i = 0; i < query.results.length; i++) {                                                                     // 1016
+    if (query.results[i] === doc) return i;                                                                            // 1017
+  }                                                                                                                    // 1016
                                                                                                                        //
-  array.splice(idx, 0, value);                                                                                         // 1030
-  return idx;                                                                                                          // 1031
-}; // To track what documents are affected by a piece of code, call saveOriginals()                                    // 1032
-// before it and retrieveOriginals() after it. retrieveOriginals returns an                                            // 1035
-// object whose keys are the ids of the documents that were affected since the                                         // 1036
-// call to saveOriginals(), and the values are equal to the document's contents                                        // 1037
-// at the time of saveOriginals. (In the case of an inserted document, undefined                                       // 1038
-// is the value.) You must alternate between calls to saveOriginals() and                                              // 1039
-// retrieveOriginals().                                                                                                // 1040
-                                                                                                                       //
-                                                                                                                       //
-LocalCollection.prototype.saveOriginals = function () {                                                                // 1041
-  var self = this;                                                                                                     // 1042
-  if (self._savedOriginals) throw new Error("Called saveOriginals twice without retrieveOriginals");                   // 1043
-  self._savedOriginals = new LocalCollection._IdMap();                                                                 // 1045
-};                                                                                                                     // 1046
-                                                                                                                       //
-LocalCollection.prototype.retrieveOriginals = function () {                                                            // 1047
-  var self = this;                                                                                                     // 1048
-  if (!self._savedOriginals) throw new Error("Called retrieveOriginals without saveOriginals");                        // 1049
-  var originals = self._savedOriginals;                                                                                // 1052
-  self._savedOriginals = null;                                                                                         // 1053
-  return originals;                                                                                                    // 1054
-};                                                                                                                     // 1055
-                                                                                                                       //
-LocalCollection.prototype._saveOriginal = function (id, doc) {                                                         // 1057
-  var self = this; // Are we even trying to save originals?                                                            // 1058
-                                                                                                                       //
-  if (!self._savedOriginals) return; // Have we previously mutated the original (and so 'doc' is not actually          // 1060
-  // original)?  (Note the 'has' check rather than truth: we store undefined                                           // 1063
-  // here for inserted docs!)                                                                                          // 1064
-                                                                                                                       //
-  if (self._savedOriginals.has(id)) return;                                                                            // 1065
-                                                                                                                       //
-  self._savedOriginals.set(id, EJSON.clone(doc));                                                                      // 1067
-}; // Pause the observers. No callbacks from observers will fire until                                                 // 1068
-// 'resumeObservers' is called.                                                                                        // 1071
+  throw Error("object missing from query");                                                                            // 1019
+}; // This binary search puts a value between any equal values, and the first                                          // 1020
+// lesser value.                                                                                                       // 1023
                                                                                                                        //
                                                                                                                        //
-LocalCollection.prototype.pauseObservers = function () {                                                               // 1072
-  // No-op if already paused.                                                                                          // 1073
-  if (this.paused) return; // Set the 'paused' flag such that new observer messages don't fire.                        // 1074
+LocalCollection._binarySearch = function (cmp, array, value) {                                                         // 1024
+  var first = 0,                                                                                                       // 1025
+      rangeLength = array.length;                                                                                      // 1025
                                                                                                                        //
-  this.paused = true; // Take a snapshot of the query results for each query.                                          // 1078
+  while (rangeLength > 0) {                                                                                            // 1027
+    var halfRange = Math.floor(rangeLength / 2);                                                                       // 1028
                                                                                                                        //
-  for (var qid in meteorBabelHelpers.sanitizeForInObject(this.queries)) {                                              // 1081
-    var query = this.queries[qid];                                                                                     // 1082
-    query.resultsSnapshot = EJSON.clone(query.results);                                                                // 1084
-  }                                                                                                                    // 1085
-}; // Resume the observers. Observers immediately receive change                                                       // 1086
-// notifications to bring them to the current state of the                                                             // 1089
-// database. Note that this is not just replaying all the changes that                                                 // 1090
-// happened during the pause, it is a smarter 'coalesced' diff.                                                        // 1091
+    if (cmp(value, array[first + halfRange]) >= 0) {                                                                   // 1029
+      first += halfRange + 1;                                                                                          // 1030
+      rangeLength -= halfRange + 1;                                                                                    // 1031
+    } else {                                                                                                           // 1032
+      rangeLength = halfRange;                                                                                         // 1033
+    }                                                                                                                  // 1034
+  }                                                                                                                    // 1035
+                                                                                                                       //
+  return first;                                                                                                        // 1036
+};                                                                                                                     // 1037
+                                                                                                                       //
+LocalCollection._insertInSortedList = function (cmp, array, value) {                                                   // 1039
+  if (array.length === 0) {                                                                                            // 1040
+    array.push(value);                                                                                                 // 1041
+    return 0;                                                                                                          // 1042
+  }                                                                                                                    // 1043
+                                                                                                                       //
+  var idx = LocalCollection._binarySearch(cmp, array, value);                                                          // 1045
+                                                                                                                       //
+  array.splice(idx, 0, value);                                                                                         // 1046
+  return idx;                                                                                                          // 1047
+}; // To track what documents are affected by a piece of code, call saveOriginals()                                    // 1048
+// before it and retrieveOriginals() after it. retrieveOriginals returns an                                            // 1051
+// object whose keys are the ids of the documents that were affected since the                                         // 1052
+// call to saveOriginals(), and the values are equal to the document's contents                                        // 1053
+// at the time of saveOriginals. (In the case of an inserted document, undefined                                       // 1054
+// is the value.) You must alternate between calls to saveOriginals() and                                              // 1055
+// retrieveOriginals().                                                                                                // 1056
                                                                                                                        //
                                                                                                                        //
-LocalCollection.prototype.resumeObservers = function () {                                                              // 1092
-  var self = this; // No-op if not paused.                                                                             // 1093
+LocalCollection.prototype.saveOriginals = function () {                                                                // 1057
+  var self = this;                                                                                                     // 1058
+  if (self._savedOriginals) throw new Error("Called saveOriginals twice without retrieveOriginals");                   // 1059
+  self._savedOriginals = new LocalCollection._IdMap();                                                                 // 1061
+};                                                                                                                     // 1062
                                                                                                                        //
-  if (!this.paused) return; // Unset the 'paused' flag. Make sure to do this first, otherwise                          // 1095
-  // observer methods won't actually fire when we trigger them.                                                        // 1099
+LocalCollection.prototype.retrieveOriginals = function () {                                                            // 1063
+  var self = this;                                                                                                     // 1064
+  if (!self._savedOriginals) throw new Error("Called retrieveOriginals without saveOriginals");                        // 1065
+  var originals = self._savedOriginals;                                                                                // 1068
+  self._savedOriginals = null;                                                                                         // 1069
+  return originals;                                                                                                    // 1070
+};                                                                                                                     // 1071
                                                                                                                        //
-  this.paused = false;                                                                                                 // 1100
+LocalCollection.prototype._saveOriginal = function (id, doc) {                                                         // 1073
+  var self = this; // Are we even trying to save originals?                                                            // 1074
                                                                                                                        //
-  for (var qid in meteorBabelHelpers.sanitizeForInObject(this.queries)) {                                              // 1102
-    var query = self.queries[qid];                                                                                     // 1103
+  if (!self._savedOriginals) return; // Have we previously mutated the original (and so 'doc' is not actually          // 1076
+  // original)?  (Note the 'has' check rather than truth: we store undefined                                           // 1079
+  // here for inserted docs!)                                                                                          // 1080
                                                                                                                        //
-    if (query.dirty) {                                                                                                 // 1104
-      query.dirty = false; // re-compute results will perform `LocalCollection._diffQueryChanges` automatically.       // 1105
+  if (self._savedOriginals.has(id)) return;                                                                            // 1081
                                                                                                                        //
-      self._recomputeResults(query, query.resultsSnapshot);                                                            // 1107
-    } else {                                                                                                           // 1108
-      // Diff the current results against the snapshot and send to observers.                                          // 1109
-      // pass the query object for its observer callbacks.                                                             // 1110
-      LocalCollection._diffQueryChanges(query.ordered, query.resultsSnapshot, query.results, query, {                  // 1111
-        projectionFn: query.projectionFn                                                                               // 1113
-      });                                                                                                              // 1113
-    }                                                                                                                  // 1114
+  self._savedOriginals.set(id, EJSON.clone(doc));                                                                      // 1083
+}; // Pause the observers. No callbacks from observers will fire until                                                 // 1084
+// 'resumeObservers' is called.                                                                                        // 1087
                                                                                                                        //
-    query.resultsSnapshot = null;                                                                                      // 1115
-  }                                                                                                                    // 1116
                                                                                                                        //
-  self._observeQueue.drain();                                                                                          // 1117
-};                                                                                                                     // 1118
+LocalCollection.prototype.pauseObservers = function () {                                                               // 1088
+  // No-op if already paused.                                                                                          // 1089
+  if (this.paused) return; // Set the 'paused' flag such that new observer messages don't fire.                        // 1090
+                                                                                                                       //
+  this.paused = true; // Take a snapshot of the query results for each query.                                          // 1094
+                                                                                                                       //
+  for (var qid in meteorBabelHelpers.sanitizeForInObject(this.queries)) {                                              // 1097
+    var query = this.queries[qid];                                                                                     // 1098
+    query.resultsSnapshot = EJSON.clone(query.results);                                                                // 1100
+  }                                                                                                                    // 1101
+}; // Resume the observers. Observers immediately receive change                                                       // 1102
+// notifications to bring them to the current state of the                                                             // 1105
+// database. Note that this is not just replaying all the changes that                                                 // 1106
+// happened during the pause, it is a smarter 'coalesced' diff.                                                        // 1107
+                                                                                                                       //
+                                                                                                                       //
+LocalCollection.prototype.resumeObservers = function () {                                                              // 1108
+  var self = this; // No-op if not paused.                                                                             // 1109
+                                                                                                                       //
+  if (!this.paused) return; // Unset the 'paused' flag. Make sure to do this first, otherwise                          // 1111
+  // observer methods won't actually fire when we trigger them.                                                        // 1115
+                                                                                                                       //
+  this.paused = false;                                                                                                 // 1116
+                                                                                                                       //
+  for (var qid in meteorBabelHelpers.sanitizeForInObject(this.queries)) {                                              // 1118
+    var query = self.queries[qid];                                                                                     // 1119
+                                                                                                                       //
+    if (query.dirty) {                                                                                                 // 1120
+      query.dirty = false; // re-compute results will perform `LocalCollection._diffQueryChanges` automatically.       // 1121
+                                                                                                                       //
+      self._recomputeResults(query, query.resultsSnapshot);                                                            // 1123
+    } else {                                                                                                           // 1124
+      // Diff the current results against the snapshot and send to observers.                                          // 1125
+      // pass the query object for its observer callbacks.                                                             // 1126
+      LocalCollection._diffQueryChanges(query.ordered, query.resultsSnapshot, query.results, query, {                  // 1127
+        projectionFn: query.projectionFn                                                                               // 1129
+      });                                                                                                              // 1129
+    }                                                                                                                  // 1130
+                                                                                                                       //
+    query.resultsSnapshot = null;                                                                                      // 1131
+  }                                                                                                                    // 1132
+                                                                                                                       //
+  self._observeQueue.drain();                                                                                          // 1133
+};                                                                                                                     // 1134
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"wrap_transform.js":function(){
+},"wrap_transform.js":function(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -1234,13 +1248,17 @@ isNumericKey = function (s) {                                                   
 };                                                                                                                     // 45
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"selector.js":["babel-runtime/helpers/typeof",function(require){
+},"selector.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
 // packages/minimongo/selector.js                                                                                      //
 //                                                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                       //
+var _toConsumableArray2 = require("babel-runtime/helpers/toConsumableArray");                                          //
+                                                                                                                       //
+var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);                                                 //
                                                                                                                        //
 var _typeof2 = require("babel-runtime/helpers/typeof");                                                                //
                                                                                                                        //
@@ -1267,6 +1285,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 //   var matcher = new Minimongo.Matcher({a: {$gt: 5}});                                                               // 19
 //   if (matcher.documentMatches({a: 7})) ...                                                                          // 20
 Minimongo.Matcher = function (selector) {                                                                              // 21
+  var isUpdate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;                            // 21
   var self = this; // A set (object mapping string -> *) of all of the document paths looked                           // 22
   // at by the selector. Also includes the empty string if it may look at any                                          // 24
   // path (eg, $where).                                                                                                // 25
@@ -1288,1211 +1307,1200 @@ Minimongo.Matcher = function (selector) {                                       
   // Sorter._useWithMatcher.                                                                                           // 41
                                                                                                                        //
   self._selector = null;                                                                                               // 42
-  self._docMatcher = self._compileSelector(selector);                                                                  // 43
-};                                                                                                                     // 44
+  self._docMatcher = self._compileSelector(selector); // Set to true if selection is done for an update operation      // 43
+  // Default is false                                                                                                  // 45
+  // Used for $near array update (issue #3599)                                                                         // 46
                                                                                                                        //
-_.extend(Minimongo.Matcher.prototype, {                                                                                // 46
-  documentMatches: function (doc) {                                                                                    // 47
-    if (!doc || (typeof doc === "undefined" ? "undefined" : (0, _typeof3.default)(doc)) !== "object") {                // 48
-      throw Error("documentMatches needs a document");                                                                 // 49
-    }                                                                                                                  // 50
+  self._isUpdate = isUpdate;                                                                                           // 47
+};                                                                                                                     // 48
                                                                                                                        //
-    return this._docMatcher(doc);                                                                                      // 51
-  },                                                                                                                   // 52
-  hasGeoQuery: function () {                                                                                           // 53
-    return this._hasGeoQuery;                                                                                          // 54
-  },                                                                                                                   // 55
-  hasWhere: function () {                                                                                              // 56
-    return this._hasWhere;                                                                                             // 57
-  },                                                                                                                   // 58
-  isSimple: function () {                                                                                              // 59
-    return this._isSimple;                                                                                             // 60
-  },                                                                                                                   // 61
-  // Given a selector, return a function that takes one argument, a                                                    // 63
-  // document. It returns a result object.                                                                             // 64
-  _compileSelector: function (selector) {                                                                              // 65
-    var self = this; // you can pass a literal function instead of a selector                                          // 66
+_.extend(Minimongo.Matcher.prototype, {                                                                                // 50
+  documentMatches: function (doc) {                                                                                    // 51
+    if (!doc || (typeof doc === "undefined" ? "undefined" : (0, _typeof3.default)(doc)) !== "object") {                // 52
+      throw Error("documentMatches needs a document");                                                                 // 53
+    }                                                                                                                  // 54
                                                                                                                        //
-    if (selector instanceof Function) {                                                                                // 68
-      self._isSimple = false;                                                                                          // 69
-      self._selector = selector;                                                                                       // 70
+    return this._docMatcher(doc);                                                                                      // 55
+  },                                                                                                                   // 56
+  hasGeoQuery: function () {                                                                                           // 57
+    return this._hasGeoQuery;                                                                                          // 58
+  },                                                                                                                   // 59
+  hasWhere: function () {                                                                                              // 60
+    return this._hasWhere;                                                                                             // 61
+  },                                                                                                                   // 62
+  isSimple: function () {                                                                                              // 63
+    return this._isSimple;                                                                                             // 64
+  },                                                                                                                   // 65
+  // Given a selector, return a function that takes one argument, a                                                    // 67
+  // document. It returns a result object.                                                                             // 68
+  _compileSelector: function (selector) {                                                                              // 69
+    var self = this; // you can pass a literal function instead of a selector                                          // 70
                                                                                                                        //
-      self._recordPathUsed('');                                                                                        // 71
+    if (selector instanceof Function) {                                                                                // 72
+      self._isSimple = false;                                                                                          // 73
+      self._selector = selector;                                                                                       // 74
                                                                                                                        //
-      return function (doc) {                                                                                          // 72
-        return {                                                                                                       // 73
-          result: !!selector.call(doc)                                                                                 // 73
-        };                                                                                                             // 73
-      };                                                                                                               // 74
-    } // shorthand -- scalars match _id                                                                                // 75
+      self._recordPathUsed('');                                                                                        // 75
+                                                                                                                       //
+      return function (doc) {                                                                                          // 76
+        return {                                                                                                       // 77
+          result: !!selector.call(doc)                                                                                 // 77
+        };                                                                                                             // 77
+      };                                                                                                               // 78
+    } // shorthand -- scalars match _id                                                                                // 79
                                                                                                                        //
                                                                                                                        //
-    if (LocalCollection._selectorIsId(selector)) {                                                                     // 78
-      self._selector = {                                                                                               // 79
-        _id: selector                                                                                                  // 79
-      };                                                                                                               // 79
-                                                                                                                       //
-      self._recordPathUsed('_id');                                                                                     // 80
-                                                                                                                       //
-      return function (doc) {                                                                                          // 81
-        return {                                                                                                       // 82
-          result: EJSON.equals(doc._id, selector)                                                                      // 82
-        };                                                                                                             // 82
+    if (LocalCollection._selectorIsId(selector)) {                                                                     // 82
+      self._selector = {                                                                                               // 83
+        _id: selector                                                                                                  // 83
       };                                                                                                               // 83
-    } // protect against dangerous selectors.  falsey and {_id: falsey} are both                                       // 84
-    // likely programmer error, and not what you want, particularly for                                                // 87
-    // destructive operations.                                                                                         // 88
+                                                                                                                       //
+      self._recordPathUsed('_id');                                                                                     // 84
+                                                                                                                       //
+      return function (doc) {                                                                                          // 85
+        return {                                                                                                       // 86
+          result: EJSON.equals(doc._id, selector)                                                                      // 86
+        };                                                                                                             // 86
+      };                                                                                                               // 87
+    } // protect against dangerous selectors.  falsey and {_id: falsey} are both                                       // 88
+    // likely programmer error, and not what you want, particularly for                                                // 91
+    // destructive operations.                                                                                         // 92
                                                                                                                        //
                                                                                                                        //
-    if (!selector || '_id' in selector && !selector._id) {                                                             // 89
-      self._isSimple = false;                                                                                          // 90
-      return nothingMatcher;                                                                                           // 91
-    } // Top level can't be an array or true or binary.                                                                // 92
+    if (!selector || '_id' in selector && !selector._id) {                                                             // 93
+      self._isSimple = false;                                                                                          // 94
+      return nothingMatcher;                                                                                           // 95
+    } // Top level can't be an array or true or binary.                                                                // 96
                                                                                                                        //
                                                                                                                        //
     if (typeof selector === 'boolean' || isArray(selector) || EJSON.isBinary(selector)) throw new Error("Invalid selector: " + selector);
-    self._selector = EJSON.clone(selector);                                                                            // 99
-    return compileDocumentSelector(selector, self, {                                                                   // 100
-      isRoot: true                                                                                                     // 100
-    });                                                                                                                // 100
-  },                                                                                                                   // 101
-  _recordPathUsed: function (path) {                                                                                   // 102
-    this._paths[path] = true;                                                                                          // 103
-  },                                                                                                                   // 104
-  // Returns a list of key paths the given selector is looking for. It includes                                        // 105
-  // the empty string if there is a $where.                                                                            // 106
-  _getPaths: function () {                                                                                             // 107
-    return _.keys(this._paths);                                                                                        // 108
-  }                                                                                                                    // 109
-}); // Takes in a selector that could match a full document (eg, the original                                          // 46
-// selector). Returns a function mapping document->result object.                                                      // 114
-//                                                                                                                     // 115
-// matcher is the Matcher object we are compiling.                                                                     // 116
-//                                                                                                                     // 117
-// If this is the root document selector (ie, not wrapped in $and or the like),                                        // 118
-// then isRoot is true. (This is used by $near.)                                                                       // 119
+    self._selector = EJSON.clone(selector);                                                                            // 103
+    return compileDocumentSelector(selector, self, {                                                                   // 104
+      isRoot: true                                                                                                     // 104
+    });                                                                                                                // 104
+  },                                                                                                                   // 105
+  _recordPathUsed: function (path) {                                                                                   // 106
+    this._paths[path] = true;                                                                                          // 107
+  },                                                                                                                   // 108
+  // Returns a list of key paths the given selector is looking for. It includes                                        // 109
+  // the empty string if there is a $where.                                                                            // 110
+  _getPaths: function () {                                                                                             // 111
+    return _.keys(this._paths);                                                                                        // 112
+  }                                                                                                                    // 113
+}); // Takes in a selector that could match a full document (eg, the original                                          // 50
+// selector). Returns a function mapping document->result object.                                                      // 118
+//                                                                                                                     // 119
+// matcher is the Matcher object we are compiling.                                                                     // 120
+//                                                                                                                     // 121
+// If this is the root document selector (ie, not wrapped in $and or the like),                                        // 122
+// then isRoot is true. (This is used by $near.)                                                                       // 123
                                                                                                                        //
                                                                                                                        //
-var compileDocumentSelector = function (docSelector, matcher, options) {                                               // 120
-  options = options || {};                                                                                             // 121
-  var docMatchers = [];                                                                                                // 122
+var compileDocumentSelector = function (docSelector, matcher, options) {                                               // 124
+  options = options || {};                                                                                             // 125
+  var docMatchers = [];                                                                                                // 126
                                                                                                                        //
-  _.each(docSelector, function (subSelector, key) {                                                                    // 123
-    if (key.substr(0, 1) === '$') {                                                                                    // 124
-      // Outer operators are either logical operators (they recurse back into                                          // 125
-      // this function), or $where.                                                                                    // 126
-      if (!_.has(LOGICAL_OPERATORS, key)) throw new Error("Unrecognized logical operator: " + key);                    // 127
-      matcher._isSimple = false;                                                                                       // 129
-      docMatchers.push(LOGICAL_OPERATORS[key](subSelector, matcher, options.inElemMatch));                             // 130
-    } else {                                                                                                           // 132
-      // Record this path, but only if we aren't in an elemMatcher, since in an                                        // 133
-      // elemMatch this is a path inside an object in an array, not in the doc                                         // 134
-      // root.                                                                                                         // 135
-      if (!options.inElemMatch) matcher._recordPathUsed(key);                                                          // 136
-      var lookUpByIndex = makeLookupFunction(key);                                                                     // 138
-      var valueMatcher = compileValueSelector(subSelector, matcher, options.isRoot);                                   // 139
-      docMatchers.push(function (doc) {                                                                                // 141
-        var branchValues = lookUpByIndex(doc);                                                                         // 142
-        return valueMatcher(branchValues);                                                                             // 143
-      });                                                                                                              // 144
-    }                                                                                                                  // 145
-  });                                                                                                                  // 146
+  _.each(docSelector, function (subSelector, key) {                                                                    // 127
+    if (key.substr(0, 1) === '$') {                                                                                    // 128
+      // Outer operators are either logical operators (they recurse back into                                          // 129
+      // this function), or $where.                                                                                    // 130
+      if (!_.has(LOGICAL_OPERATORS, key)) throw new Error("Unrecognized logical operator: " + key);                    // 131
+      matcher._isSimple = false;                                                                                       // 133
+      docMatchers.push(LOGICAL_OPERATORS[key](subSelector, matcher, options.inElemMatch));                             // 134
+    } else {                                                                                                           // 136
+      // Record this path, but only if we aren't in an elemMatcher, since in an                                        // 137
+      // elemMatch this is a path inside an object in an array, not in the doc                                         // 138
+      // root.                                                                                                         // 139
+      if (!options.inElemMatch) matcher._recordPathUsed(key);                                                          // 140
+      var lookUpByIndex = makeLookupFunction(key);                                                                     // 142
+      var valueMatcher = compileValueSelector(subSelector, matcher, options.isRoot);                                   // 143
+      docMatchers.push(function (doc) {                                                                                // 145
+        var branchValues = lookUpByIndex(doc);                                                                         // 146
+        return valueMatcher(branchValues);                                                                             // 147
+      });                                                                                                              // 148
+    }                                                                                                                  // 149
+  });                                                                                                                  // 150
                                                                                                                        //
-  return andDocumentMatchers(docMatchers);                                                                             // 148
-}; // Takes in a selector that could match a key-indexed value in a document; eg,                                      // 149
-// {$gt: 5, $lt: 9}, or a regular expression, or any non-expression object (to                                         // 152
-// indicate equality).  Returns a branched matcher: a function mapping                                                 // 153
-// [branched value]->result object.                                                                                    // 154
-                                                                                                                       //
-                                                                                                                       //
-var compileValueSelector = function (valueSelector, matcher, isRoot) {                                                 // 155
-  if (valueSelector instanceof RegExp) {                                                                               // 156
-    matcher._isSimple = false;                                                                                         // 157
-    return convertElementMatcherToBranchedMatcher(regexpElementMatcher(valueSelector));                                // 158
-  } else if (isOperatorObject(valueSelector)) {                                                                        // 160
-    return operatorBranchedMatcher(valueSelector, matcher, isRoot);                                                    // 161
-  } else {                                                                                                             // 162
-    return convertElementMatcherToBranchedMatcher(equalityElementMatcher(valueSelector));                              // 163
-  }                                                                                                                    // 165
-}; // Given an element matcher (which evaluates a single value), returns a branched                                    // 166
-// value (which evaluates the element matcher on all the branches and returns a                                        // 169
-// more structured return value possibly including arrayIndices).                                                      // 170
+  return andDocumentMatchers(docMatchers);                                                                             // 152
+}; // Takes in a selector that could match a key-indexed value in a document; eg,                                      // 153
+// {$gt: 5, $lt: 9}, or a regular expression, or any non-expression object (to                                         // 156
+// indicate equality).  Returns a branched matcher: a function mapping                                                 // 157
+// [branched value]->result object.                                                                                    // 158
                                                                                                                        //
                                                                                                                        //
-var convertElementMatcherToBranchedMatcher = function (elementMatcher, options) {                                      // 171
-  options = options || {};                                                                                             // 173
-  return function (branches) {                                                                                         // 174
-    var expanded = branches;                                                                                           // 175
+var compileValueSelector = function (valueSelector, matcher, isRoot) {                                                 // 159
+  if (valueSelector instanceof RegExp) {                                                                               // 160
+    matcher._isSimple = false;                                                                                         // 161
+    return convertElementMatcherToBranchedMatcher(regexpElementMatcher(valueSelector));                                // 162
+  } else if (isOperatorObject(valueSelector)) {                                                                        // 164
+    return operatorBranchedMatcher(valueSelector, matcher, isRoot);                                                    // 165
+  } else {                                                                                                             // 166
+    return convertElementMatcherToBranchedMatcher(equalityElementMatcher(valueSelector));                              // 167
+  }                                                                                                                    // 169
+}; // Given an element matcher (which evaluates a single value), returns a branched                                    // 170
+// value (which evaluates the element matcher on all the branches and returns a                                        // 173
+// more structured return value possibly including arrayIndices).                                                      // 174
                                                                                                                        //
-    if (!options.dontExpandLeafArrays) {                                                                               // 176
-      expanded = expandArraysInBranches(branches, options.dontIncludeLeafArrays);                                      // 177
-    }                                                                                                                  // 179
                                                                                                                        //
-    var ret = {};                                                                                                      // 180
-    ret.result = _.any(expanded, function (element) {                                                                  // 181
+var convertElementMatcherToBranchedMatcher = function (elementMatcher, options) {                                      // 175
+  options = options || {};                                                                                             // 177
+  return function (branches) {                                                                                         // 178
+    var expanded = branches;                                                                                           // 179
+                                                                                                                       //
+    if (!options.dontExpandLeafArrays) {                                                                               // 180
+      expanded = expandArraysInBranches(branches, options.dontIncludeLeafArrays);                                      // 181
+    }                                                                                                                  // 183
+                                                                                                                       //
+    var ret = {};                                                                                                      // 184
+    ret.result = _.any(expanded, function (element) {                                                                  // 185
       var matched = elementMatcher(element.value); // Special case for $elemMatch: it means "true, and use this as an array
-      // index if I didn't already have one".                                                                          // 185
+      // index if I didn't already have one".                                                                          // 189
                                                                                                                        //
-      if (typeof matched === 'number') {                                                                               // 186
-        // XXX This code dates from when we only stored a single array index                                           // 187
-        // (for the outermost array). Should we be also including deeper array                                         // 188
-        // indices from the $elemMatch match?                                                                          // 189
-        if (!element.arrayIndices) element.arrayIndices = [matched];                                                   // 190
-        matched = true;                                                                                                // 192
-      } // If some element matched, and it's tagged with array indices, include                                        // 193
-      // those indices in our result object.                                                                           // 196
-                                                                                                                       //
-                                                                                                                       //
-      if (matched && element.arrayIndices) ret.arrayIndices = element.arrayIndices;                                    // 197
-      return matched;                                                                                                  // 200
-    });                                                                                                                // 201
-    return ret;                                                                                                        // 202
-  };                                                                                                                   // 203
-}; // Takes a RegExp object and returns an element matcher.                                                            // 204
+      if (typeof matched === 'number') {                                                                               // 190
+        // XXX This code dates from when we only stored a single array index                                           // 191
+        // (for the outermost array). Should we be also including deeper array                                         // 192
+        // indices from the $elemMatch match?                                                                          // 193
+        if (!element.arrayIndices) element.arrayIndices = [matched];                                                   // 194
+        matched = true;                                                                                                // 196
+      } // If some element matched, and it's tagged with array indices, include                                        // 197
+      // those indices in our result object.                                                                           // 200
                                                                                                                        //
                                                                                                                        //
-regexpElementMatcher = function (regexp) {                                                                             // 207
-  return function (value) {                                                                                            // 208
-    if (value instanceof RegExp) {                                                                                     // 209
-      // Comparing two regexps means seeing if the regexps are identical                                               // 210
-      // (really!). Underscore knows how.                                                                              // 211
-      return _.isEqual(value, regexp);                                                                                 // 212
-    } // Regexps only work against strings.                                                                            // 213
+      if (matched && element.arrayIndices) ret.arrayIndices = element.arrayIndices;                                    // 201
+      return matched;                                                                                                  // 204
+    });                                                                                                                // 205
+    return ret;                                                                                                        // 206
+  };                                                                                                                   // 207
+}; // Takes a RegExp object and returns an element matcher.                                                            // 208
+                                                                                                                       //
+                                                                                                                       //
+regexpElementMatcher = function (regexp) {                                                                             // 211
+  return function (value) {                                                                                            // 212
+    if (value instanceof RegExp) {                                                                                     // 213
+      // Comparing two regexps means seeing if the regexps are identical                                               // 214
+      // (really!). Underscore knows how.                                                                              // 215
+      return _.isEqual(value, regexp);                                                                                 // 216
+    } // Regexps only work against strings.                                                                            // 217
                                                                                                                        //
                                                                                                                        //
     if (typeof value !== 'string') return false; // Reset regexp's state to avoid inconsistent matching for objects with the
-    // same value on consecutive calls of regexp.test. This happens only if the                                        // 219
-    // regexp has the 'g' flag. Also note that ES6 introduces a new flag 'y' for                                       // 220
-    // which we should *not* change the lastIndex but MongoDB doesn't support                                          // 221
-    // either of these flags.                                                                                          // 222
+    // same value on consecutive calls of regexp.test. This happens only if the                                        // 223
+    // regexp has the 'g' flag. Also note that ES6 introduces a new flag 'y' for                                       // 224
+    // which we should *not* change the lastIndex but MongoDB doesn't support                                          // 225
+    // either of these flags.                                                                                          // 226
                                                                                                                        //
-    regexp.lastIndex = 0;                                                                                              // 223
-    return regexp.test(value);                                                                                         // 225
-  };                                                                                                                   // 226
-}; // Takes something that is not an operator object and returns an element matcher                                    // 227
-// for equality with that thing.                                                                                       // 230
+    regexp.lastIndex = 0;                                                                                              // 227
+    return regexp.test(value);                                                                                         // 229
+  };                                                                                                                   // 230
+}; // Takes something that is not an operator object and returns an element matcher                                    // 231
+// for equality with that thing.                                                                                       // 234
                                                                                                                        //
                                                                                                                        //
-equalityElementMatcher = function (elementSelector) {                                                                  // 231
+equalityElementMatcher = function (elementSelector) {                                                                  // 235
   if (isOperatorObject(elementSelector)) throw Error("Can't create equalityValueSelector for operator object"); // Special-case: null and undefined are equal (if you got undefined in there
-  // somewhere, or if you got it due to some branch being non-existent in the                                          // 236
-  // weird special case), even though they aren't with EJSON.equals.                                                   // 237
+  // somewhere, or if you got it due to some branch being non-existent in the                                          // 240
+  // weird special case), even though they aren't with EJSON.equals.                                                   // 241
                                                                                                                        //
-  if (elementSelector == null) {                                                                                       // 238
-    // undefined or null                                                                                               // 238
-    return function (value) {                                                                                          // 239
-      return value == null; // undefined or null                                                                       // 240
-    };                                                                                                                 // 241
-  }                                                                                                                    // 242
+  if (elementSelector == null) {                                                                                       // 242
+    // undefined or null                                                                                               // 242
+    return function (value) {                                                                                          // 243
+      return value == null; // undefined or null                                                                       // 244
+    };                                                                                                                 // 245
+  }                                                                                                                    // 246
                                                                                                                        //
-  return function (value) {                                                                                            // 244
-    return LocalCollection._f._equal(elementSelector, value);                                                          // 245
-  };                                                                                                                   // 246
-}; // Takes an operator object (an object with $ keys) and returns a branched                                          // 247
-// matcher for it.                                                                                                     // 250
+  return function (value) {                                                                                            // 248
+    return LocalCollection._f._equal(elementSelector, value);                                                          // 249
+  };                                                                                                                   // 250
+}; // Takes an operator object (an object with $ keys) and returns a branched                                          // 251
+// matcher for it.                                                                                                     // 254
                                                                                                                        //
                                                                                                                        //
-var operatorBranchedMatcher = function (valueSelector, matcher, isRoot) {                                              // 251
-  // Each valueSelector works separately on the various branches.  So one                                              // 252
-  // operator can match one branch and another can match another branch.  This                                         // 253
-  // is OK.                                                                                                            // 254
-  var operatorMatchers = [];                                                                                           // 256
+var operatorBranchedMatcher = function (valueSelector, matcher, isRoot) {                                              // 255
+  // Each valueSelector works separately on the various branches.  So one                                              // 256
+  // operator can match one branch and another can match another branch.  This                                         // 257
+  // is OK.                                                                                                            // 258
+  var operatorMatchers = [];                                                                                           // 260
                                                                                                                        //
-  _.each(valueSelector, function (operand, operator) {                                                                 // 257
-    var simpleRange = _.contains(['$lt', '$lte', '$gt', '$gte'], operator) && _.isNumber(operand);                     // 258
+  _.each(valueSelector, function (operand, operator) {                                                                 // 261
+    var simpleRange = _.contains(['$lt', '$lte', '$gt', '$gte'], operator) && _.isNumber(operand);                     // 262
                                                                                                                        //
-    var simpleEquality = _.contains(['$ne', '$eq'], operator) && !_.isObject(operand);                                 // 260
-    var simpleInclusion = _.contains(['$in', '$nin'], operator) && _.isArray(operand) && !_.any(operand, _.isObject);  // 261
+    var simpleEquality = _.contains(['$ne', '$eq'], operator) && !_.isObject(operand);                                 // 264
+    var simpleInclusion = _.contains(['$in', '$nin'], operator) && _.isArray(operand) && !_.any(operand, _.isObject);  // 265
                                                                                                                        //
-    if (!(simpleRange || simpleInclusion || simpleEquality)) {                                                         // 264
-      matcher._isSimple = false;                                                                                       // 265
-    }                                                                                                                  // 266
+    if (!(simpleRange || simpleInclusion || simpleEquality)) {                                                         // 268
+      matcher._isSimple = false;                                                                                       // 269
+    }                                                                                                                  // 270
                                                                                                                        //
-    if (_.has(VALUE_OPERATORS, operator)) {                                                                            // 268
-      operatorMatchers.push(VALUE_OPERATORS[operator](operand, valueSelector, matcher, isRoot));                       // 269
-    } else if (_.has(ELEMENT_OPERATORS, operator)) {                                                                   // 271
-      var options = ELEMENT_OPERATORS[operator];                                                                       // 272
+    if (_.has(VALUE_OPERATORS, operator)) {                                                                            // 272
+      operatorMatchers.push(VALUE_OPERATORS[operator](operand, valueSelector, matcher, isRoot));                       // 273
+    } else if (_.has(ELEMENT_OPERATORS, operator)) {                                                                   // 275
+      var options = ELEMENT_OPERATORS[operator];                                                                       // 276
       operatorMatchers.push(convertElementMatcherToBranchedMatcher(options.compileElementSelector(operand, valueSelector, matcher), options));
-    } else {                                                                                                           // 278
-      throw new Error("Unrecognized operator: " + operator);                                                           // 279
-    }                                                                                                                  // 280
-  });                                                                                                                  // 281
+    } else {                                                                                                           // 282
+      throw new Error("Unrecognized operator: " + operator);                                                           // 283
+    }                                                                                                                  // 284
+  });                                                                                                                  // 285
                                                                                                                        //
-  return andBranchedMatchers(operatorMatchers);                                                                        // 283
-};                                                                                                                     // 284
+  return andBranchedMatchers(operatorMatchers);                                                                        // 287
+};                                                                                                                     // 288
                                                                                                                        //
-var compileArrayOfDocumentSelectors = function (selectors, matcher, inElemMatch) {                                     // 286
-  if (!isArray(selectors) || _.isEmpty(selectors)) throw Error("$and/$or/$nor must be nonempty array");                // 288
-  return _.map(selectors, function (subSelector) {                                                                     // 290
-    if (!isPlainObject(subSelector)) throw Error("$or/$and/$nor entries need to be full objects");                     // 291
-    return compileDocumentSelector(subSelector, matcher, {                                                             // 293
-      inElemMatch: inElemMatch                                                                                         // 294
-    });                                                                                                                // 294
-  });                                                                                                                  // 295
-}; // Operators that appear at the top level of a document selector.                                                   // 296
+var compileArrayOfDocumentSelectors = function (selectors, matcher, inElemMatch) {                                     // 290
+  if (!isArray(selectors) || _.isEmpty(selectors)) throw Error("$and/$or/$nor must be nonempty array");                // 292
+  return _.map(selectors, function (subSelector) {                                                                     // 294
+    if (!isPlainObject(subSelector)) throw Error("$or/$and/$nor entries need to be full objects");                     // 295
+    return compileDocumentSelector(subSelector, matcher, {                                                             // 297
+      inElemMatch: inElemMatch                                                                                         // 298
+    });                                                                                                                // 298
+  });                                                                                                                  // 299
+}; // Operators that appear at the top level of a document selector.                                                   // 300
                                                                                                                        //
                                                                                                                        //
-var LOGICAL_OPERATORS = {                                                                                              // 299
-  $and: function (subSelector, matcher, inElemMatch) {                                                                 // 300
-    var matchers = compileArrayOfDocumentSelectors(subSelector, matcher, inElemMatch);                                 // 301
-    return andDocumentMatchers(matchers);                                                                              // 303
-  },                                                                                                                   // 304
-  $or: function (subSelector, matcher, inElemMatch) {                                                                  // 306
+var LOGICAL_OPERATORS = {                                                                                              // 303
+  $and: function (subSelector, matcher, inElemMatch) {                                                                 // 304
+    var matchers = compileArrayOfDocumentSelectors(subSelector, matcher, inElemMatch);                                 // 305
+    return andDocumentMatchers(matchers);                                                                              // 307
+  },                                                                                                                   // 308
+  $or: function (subSelector, matcher, inElemMatch) {                                                                  // 310
     var matchers = compileArrayOfDocumentSelectors(subSelector, matcher, inElemMatch); // Special case: if there is only one matcher, use it directly, *preserving*
-    // any arrayIndices it returns.                                                                                    // 311
+    // any arrayIndices it returns.                                                                                    // 315
                                                                                                                        //
-    if (matchers.length === 1) return matchers[0];                                                                     // 312
-    return function (doc) {                                                                                            // 315
-      var result = _.any(matchers, function (f) {                                                                      // 316
-        return f(doc).result;                                                                                          // 317
-      }); // $or does NOT set arrayIndices when it has multiple                                                        // 318
-      // sub-expressions. (Tested against MongoDB.)                                                                    // 320
-                                                                                                                       //
-                                                                                                                       //
-      return {                                                                                                         // 321
-        result: result                                                                                                 // 321
-      };                                                                                                               // 321
-    };                                                                                                                 // 322
-  },                                                                                                                   // 323
-  $nor: function (subSelector, matcher, inElemMatch) {                                                                 // 325
-    var matchers = compileArrayOfDocumentSelectors(subSelector, matcher, inElemMatch);                                 // 326
-    return function (doc) {                                                                                            // 328
-      var result = _.all(matchers, function (f) {                                                                      // 329
-        return !f(doc).result;                                                                                         // 330
-      }); // Never set arrayIndices, because we only match if nothing in particular                                    // 331
-      // "matched" (and because this is consistent with MongoDB).                                                      // 333
+    if (matchers.length === 1) return matchers[0];                                                                     // 316
+    return function (doc) {                                                                                            // 319
+      var result = _.any(matchers, function (f) {                                                                      // 320
+        return f(doc).result;                                                                                          // 321
+      }); // $or does NOT set arrayIndices when it has multiple                                                        // 322
+      // sub-expressions. (Tested against MongoDB.)                                                                    // 324
                                                                                                                        //
                                                                                                                        //
-      return {                                                                                                         // 334
-        result: result                                                                                                 // 334
-      };                                                                                                               // 334
-    };                                                                                                                 // 335
-  },                                                                                                                   // 336
-  $where: function (selectorValue, matcher) {                                                                          // 338
-    // Record that *any* path may be used.                                                                             // 339
-    matcher._recordPathUsed('');                                                                                       // 340
+      return {                                                                                                         // 325
+        result: result                                                                                                 // 325
+      };                                                                                                               // 325
+    };                                                                                                                 // 326
+  },                                                                                                                   // 327
+  $nor: function (subSelector, matcher, inElemMatch) {                                                                 // 329
+    var matchers = compileArrayOfDocumentSelectors(subSelector, matcher, inElemMatch);                                 // 330
+    return function (doc) {                                                                                            // 332
+      var result = _.all(matchers, function (f) {                                                                      // 333
+        return !f(doc).result;                                                                                         // 334
+      }); // Never set arrayIndices, because we only match if nothing in particular                                    // 335
+      // "matched" (and because this is consistent with MongoDB).                                                      // 337
                                                                                                                        //
-    matcher._hasWhere = true;                                                                                          // 341
                                                                                                                        //
-    if (!(selectorValue instanceof Function)) {                                                                        // 342
-      // XXX MongoDB seems to have more complex logic to decide where or or not                                        // 343
-      // to add "return"; not sure exactly what it is.                                                                 // 344
-      selectorValue = Function("obj", "return " + selectorValue);                                                      // 345
-    }                                                                                                                  // 346
+      return {                                                                                                         // 338
+        result: result                                                                                                 // 338
+      };                                                                                                               // 338
+    };                                                                                                                 // 339
+  },                                                                                                                   // 340
+  $where: function (selectorValue, matcher) {                                                                          // 342
+    // Record that *any* path may be used.                                                                             // 343
+    matcher._recordPathUsed('');                                                                                       // 344
                                                                                                                        //
-    return function (doc) {                                                                                            // 347
-      // We make the document available as both `this` and `obj`.                                                      // 348
-      // XXX not sure what we should do if this throws                                                                 // 349
-      return {                                                                                                         // 350
-        result: selectorValue.call(doc, doc)                                                                           // 350
-      };                                                                                                               // 350
-    };                                                                                                                 // 351
-  },                                                                                                                   // 352
-  // This is just used as a comment in the query (in MongoDB, it also ends up in                                       // 354
-  // query logs); it has no effect on the actual selection.                                                            // 355
-  $comment: function () {                                                                                              // 356
-    return function () {                                                                                               // 357
-      return {                                                                                                         // 358
-        result: true                                                                                                   // 358
-      };                                                                                                               // 358
-    };                                                                                                                 // 359
-  }                                                                                                                    // 360
-}; // Returns a branched matcher that matches iff the given matcher does not.                                          // 299
-// Note that this implicitly "deMorganizes" the wrapped function.  ie, it                                              // 364
-// means that ALL branch values need to fail to match innerBranchedMatcher.                                            // 365
+    matcher._hasWhere = true;                                                                                          // 345
                                                                                                                        //
-var invertBranchedMatcher = function (branchedMatcher) {                                                               // 366
-  return function (branchValues) {                                                                                     // 367
+    if (!(selectorValue instanceof Function)) {                                                                        // 346
+      // XXX MongoDB seems to have more complex logic to decide where or or not                                        // 347
+      // to add "return"; not sure exactly what it is.                                                                 // 348
+      selectorValue = Function("obj", "return " + selectorValue);                                                      // 349
+    }                                                                                                                  // 350
+                                                                                                                       //
+    return function (doc) {                                                                                            // 351
+      // We make the document available as both `this` and `obj`.                                                      // 352
+      // XXX not sure what we should do if this throws                                                                 // 353
+      return {                                                                                                         // 354
+        result: selectorValue.call(doc, doc)                                                                           // 354
+      };                                                                                                               // 354
+    };                                                                                                                 // 355
+  },                                                                                                                   // 356
+  // This is just used as a comment in the query (in MongoDB, it also ends up in                                       // 358
+  // query logs); it has no effect on the actual selection.                                                            // 359
+  $comment: function () {                                                                                              // 360
+    return function () {                                                                                               // 361
+      return {                                                                                                         // 362
+        result: true                                                                                                   // 362
+      };                                                                                                               // 362
+    };                                                                                                                 // 363
+  }                                                                                                                    // 364
+}; // Returns a branched matcher that matches iff the given matcher does not.                                          // 303
+// Note that this implicitly "deMorganizes" the wrapped function.  ie, it                                              // 368
+// means that ALL branch values need to fail to match innerBranchedMatcher.                                            // 369
+                                                                                                                       //
+var invertBranchedMatcher = function (branchedMatcher) {                                                               // 370
+  return function (branchValues) {                                                                                     // 371
     var invertMe = branchedMatcher(branchValues); // We explicitly choose to strip arrayIndices here: it doesn't make sense to
-    // say "update the array element that does not match something", at least                                          // 370
-    // in mongo-land.                                                                                                  // 371
+    // say "update the array element that does not match something", at least                                          // 374
+    // in mongo-land.                                                                                                  // 375
                                                                                                                        //
-    return {                                                                                                           // 372
-      result: !invertMe.result                                                                                         // 372
-    };                                                                                                                 // 372
-  };                                                                                                                   // 373
-}; // Operators that (unlike LOGICAL_OPERATORS) pertain to individual paths in a                                       // 374
-// document, but (unlike ELEMENT_OPERATORS) do not have a simple definition as                                         // 377
-// "match each branched value independently and combine with                                                           // 378
-// convertElementMatcherToBranchedMatcher".                                                                            // 379
+    return {                                                                                                           // 376
+      result: !invertMe.result                                                                                         // 376
+    };                                                                                                                 // 376
+  };                                                                                                                   // 377
+}; // Operators that (unlike LOGICAL_OPERATORS) pertain to individual paths in a                                       // 378
+// document, but (unlike ELEMENT_OPERATORS) do not have a simple definition as                                         // 381
+// "match each branched value independently and combine with                                                           // 382
+// convertElementMatcherToBranchedMatcher".                                                                            // 383
                                                                                                                        //
                                                                                                                        //
-var VALUE_OPERATORS = {                                                                                                // 380
-  $eq: function (operand) {                                                                                            // 381
-    return convertElementMatcherToBranchedMatcher(equalityElementMatcher(operand));                                    // 382
-  },                                                                                                                   // 384
-  $not: function (operand, valueSelector, matcher) {                                                                   // 385
-    return invertBranchedMatcher(compileValueSelector(operand, matcher));                                              // 386
-  },                                                                                                                   // 387
-  $ne: function (operand) {                                                                                            // 388
-    return invertBranchedMatcher(convertElementMatcherToBranchedMatcher(equalityElementMatcher(operand)));             // 389
+var VALUE_OPERATORS = {                                                                                                // 384
+  $eq: function (operand) {                                                                                            // 385
+    return convertElementMatcherToBranchedMatcher(equalityElementMatcher(operand));                                    // 386
+  },                                                                                                                   // 388
+  $not: function (operand, valueSelector, matcher) {                                                                   // 389
+    return invertBranchedMatcher(compileValueSelector(operand, matcher));                                              // 390
   },                                                                                                                   // 391
-  $nin: function (operand) {                                                                                           // 392
-    return invertBranchedMatcher(convertElementMatcherToBranchedMatcher(ELEMENT_OPERATORS.$in.compileElementSelector(operand)));
+  $ne: function (operand) {                                                                                            // 392
+    return invertBranchedMatcher(convertElementMatcherToBranchedMatcher(equalityElementMatcher(operand)));             // 393
   },                                                                                                                   // 395
-  $exists: function (operand) {                                                                                        // 396
-    var exists = convertElementMatcherToBranchedMatcher(function (value) {                                             // 397
-      return value !== undefined;                                                                                      // 398
-    });                                                                                                                // 399
-    return operand ? exists : invertBranchedMatcher(exists);                                                           // 400
-  },                                                                                                                   // 401
-  // $options just provides options for $regex; its logic is inside $regex                                             // 402
-  $options: function (operand, valueSelector) {                                                                        // 403
-    if (!_.has(valueSelector, '$regex')) throw Error("$options needs a $regex");                                       // 404
-    return everythingMatcher;                                                                                          // 406
-  },                                                                                                                   // 407
-  // $maxDistance is basically an argument to $near                                                                    // 408
-  $maxDistance: function (operand, valueSelector) {                                                                    // 409
-    if (!valueSelector.$near) throw Error("$maxDistance needs a $near");                                               // 410
-    return everythingMatcher;                                                                                          // 412
-  },                                                                                                                   // 413
-  $all: function (operand, valueSelector, matcher) {                                                                   // 414
+  $nin: function (operand) {                                                                                           // 396
+    return invertBranchedMatcher(convertElementMatcherToBranchedMatcher(ELEMENT_OPERATORS.$in.compileElementSelector(operand)));
+  },                                                                                                                   // 399
+  $exists: function (operand) {                                                                                        // 400
+    var exists = convertElementMatcherToBranchedMatcher(function (value) {                                             // 401
+      return value !== undefined;                                                                                      // 402
+    });                                                                                                                // 403
+    return operand ? exists : invertBranchedMatcher(exists);                                                           // 404
+  },                                                                                                                   // 405
+  // $options just provides options for $regex; its logic is inside $regex                                             // 406
+  $options: function (operand, valueSelector) {                                                                        // 407
+    if (!_.has(valueSelector, '$regex')) throw Error("$options needs a $regex");                                       // 408
+    return everythingMatcher;                                                                                          // 410
+  },                                                                                                                   // 411
+  // $maxDistance is basically an argument to $near                                                                    // 412
+  $maxDistance: function (operand, valueSelector) {                                                                    // 413
+    if (!valueSelector.$near) throw Error("$maxDistance needs a $near");                                               // 414
+    return everythingMatcher;                                                                                          // 416
+  },                                                                                                                   // 417
+  $all: function (operand, valueSelector, matcher) {                                                                   // 418
     if (!isArray(operand)) throw Error("$all requires array"); // Not sure why, but this seems to be what MongoDB does.
                                                                                                                        //
-    if (_.isEmpty(operand)) return nothingMatcher;                                                                     // 418
-    var branchedMatchers = [];                                                                                         // 421
+    if (_.isEmpty(operand)) return nothingMatcher;                                                                     // 422
+    var branchedMatchers = [];                                                                                         // 425
                                                                                                                        //
-    _.each(operand, function (criterion) {                                                                             // 422
-      // XXX handle $all/$elemMatch combination                                                                        // 423
+    _.each(operand, function (criterion) {                                                                             // 426
+      // XXX handle $all/$elemMatch combination                                                                        // 427
       if (isOperatorObject(criterion)) throw Error("no $ expressions in $all"); // This is always a regexp or equality selector.
                                                                                                                        //
-      branchedMatchers.push(compileValueSelector(criterion, matcher));                                                 // 427
-    }); // andBranchedMatchers does NOT require all selectors to return true on the                                    // 428
-    // SAME branch.                                                                                                    // 430
+      branchedMatchers.push(compileValueSelector(criterion, matcher));                                                 // 431
+    }); // andBranchedMatchers does NOT require all selectors to return true on the                                    // 432
+    // SAME branch.                                                                                                    // 434
                                                                                                                        //
                                                                                                                        //
-    return andBranchedMatchers(branchedMatchers);                                                                      // 431
-  },                                                                                                                   // 432
-  $near: function (operand, valueSelector, matcher, isRoot) {                                                          // 433
-    if (!isRoot) throw Error("$near can't be inside another $ operator");                                              // 434
-    matcher._hasGeoQuery = true; // There are two kinds of geodata in MongoDB: legacy coordinate pairs and             // 436
-    // GeoJSON. They use different distance metrics, too. GeoJSON queries are                                          // 439
-    // marked with a $geometry property, though legacy coordinates can be                                              // 440
-    // matched using $geometry.                                                                                        // 441
+    return andBranchedMatchers(branchedMatchers);                                                                      // 435
+  },                                                                                                                   // 436
+  $near: function (operand, valueSelector, matcher, isRoot) {                                                          // 437
+    if (!isRoot) throw Error("$near can't be inside another $ operator");                                              // 438
+    matcher._hasGeoQuery = true; // There are two kinds of geodata in MongoDB: legacy coordinate pairs and             // 440
+    // GeoJSON. They use different distance metrics, too. GeoJSON queries are                                          // 443
+    // marked with a $geometry property, though legacy coordinates can be                                              // 444
+    // matched using $geometry.                                                                                        // 445
                                                                                                                        //
-    var maxDistance, point, distance;                                                                                  // 443
+    var maxDistance, point, distance;                                                                                  // 447
                                                                                                                        //
-    if (isPlainObject(operand) && _.has(operand, '$geometry')) {                                                       // 444
-      // GeoJSON "2dsphere" mode.                                                                                      // 445
-      maxDistance = operand.$maxDistance;                                                                              // 446
-      point = operand.$geometry;                                                                                       // 447
+    if (isPlainObject(operand) && _.has(operand, '$geometry')) {                                                       // 448
+      // GeoJSON "2dsphere" mode.                                                                                      // 449
+      maxDistance = operand.$maxDistance;                                                                              // 450
+      point = operand.$geometry;                                                                                       // 451
                                                                                                                        //
-      distance = function (value) {                                                                                    // 448
-        // XXX: for now, we don't calculate the actual distance between, say,                                          // 449
-        // polygon and circle. If people care about this use-case it will get                                          // 450
-        // a priority.                                                                                                 // 451
-        if (!value) return null;                                                                                       // 452
-        if (!value.type) return GeoJSON.pointDistance(point, {                                                         // 454
-          type: "Point",                                                                                               // 456
-          coordinates: pointToArray(value)                                                                             // 456
-        });                                                                                                            // 456
+      distance = function (value) {                                                                                    // 452
+        // XXX: for now, we don't calculate the actual distance between, say,                                          // 453
+        // polygon and circle. If people care about this use-case it will get                                          // 454
+        // a priority.                                                                                                 // 455
+        if (!value) return null;                                                                                       // 456
+        if (!value.type) return GeoJSON.pointDistance(point, {                                                         // 458
+          type: "Point",                                                                                               // 460
+          coordinates: pointToArray(value)                                                                             // 460
+        });                                                                                                            // 460
                                                                                                                        //
-        if (value.type === "Point") {                                                                                  // 457
-          return GeoJSON.pointDistance(point, value);                                                                  // 458
-        } else {                                                                                                       // 459
-          return GeoJSON.geometryWithinRadius(value, point, maxDistance) ? 0 : maxDistance + 1;                        // 460
-        }                                                                                                              // 462
-      };                                                                                                               // 463
-    } else {                                                                                                           // 464
-      maxDistance = valueSelector.$maxDistance;                                                                        // 465
+        if (value.type === "Point") {                                                                                  // 461
+          return GeoJSON.pointDistance(point, value);                                                                  // 462
+        } else {                                                                                                       // 463
+          return GeoJSON.geometryWithinRadius(value, point, maxDistance) ? 0 : maxDistance + 1;                        // 464
+        }                                                                                                              // 466
+      };                                                                                                               // 467
+    } else {                                                                                                           // 468
+      maxDistance = valueSelector.$maxDistance;                                                                        // 469
       if (!isArray(operand) && !isPlainObject(operand)) throw Error("$near argument must be coordinate pair or GeoJSON");
-      point = pointToArray(operand);                                                                                   // 468
+      point = pointToArray(operand);                                                                                   // 472
                                                                                                                        //
-      distance = function (value) {                                                                                    // 469
-        if (!isArray(value) && !isPlainObject(value)) return null;                                                     // 470
-        return distanceCoordinatePairs(point, value);                                                                  // 472
-      };                                                                                                               // 473
-    }                                                                                                                  // 474
+      distance = function (value) {                                                                                    // 473
+        if (!isArray(value) && !isPlainObject(value)) return null;                                                     // 474
+        return distanceCoordinatePairs(point, value);                                                                  // 476
+      };                                                                                                               // 477
+    }                                                                                                                  // 478
                                                                                                                        //
-    return function (branchedValues) {                                                                                 // 476
-      // There might be multiple points in the document that match the given                                           // 477
-      // field. Only one of them needs to be within $maxDistance, but we need to                                       // 478
-      // evaluate all of them and use the nearest one for the implicit sort                                            // 479
-      // specifier. (That's why we can't just use ELEMENT_OPERATORS here.)                                             // 480
-      //                                                                                                               // 481
-      // Note: This differs from MongoDB's implementation, where a document will                                       // 482
-      // actually show up *multiple times* in the result set, with one entry for                                       // 483
-      // each within-$maxDistance branching point.                                                                     // 484
-      branchedValues = expandArraysInBranches(branchedValues);                                                         // 485
-      var result = {                                                                                                   // 486
-        result: false                                                                                                  // 486
-      };                                                                                                               // 486
+    return function (branchedValues) {                                                                                 // 480
+      // There might be multiple points in the document that match the given                                           // 481
+      // field. Only one of them needs to be within $maxDistance, but we need to                                       // 482
+      // evaluate all of them and use the nearest one for the implicit sort                                            // 483
+      // specifier. (That's why we can't just use ELEMENT_OPERATORS here.)                                             // 484
+      //                                                                                                               // 485
+      // Note: This differs from MongoDB's implementation, where a document will                                       // 486
+      // actually show up *multiple times* in the result set, with one entry for                                       // 487
+      // each within-$maxDistance branching point.                                                                     // 488
+      branchedValues = expandArraysInBranches(branchedValues);                                                         // 489
+      var result = {                                                                                                   // 490
+        result: false                                                                                                  // 490
+      };                                                                                                               // 490
                                                                                                                        //
-      _.each(branchedValues, function (branch) {                                                                       // 487
-        if (!((0, _typeof3.default)(branch.value) === "object")) {                                                     // 488
-          return;                                                                                                      // 489
-        }                                                                                                              // 490
+      _.every(branchedValues, function (branch) {                                                                      // 491
+        // if operation is an update, don't skip branches, just return the first one (#3599)                           // 492
+        if (!matcher._isUpdate) {                                                                                      // 493
+          if (!((0, _typeof3.default)(branch.value) === "object")) {                                                   // 494
+            return true;                                                                                               // 495
+          }                                                                                                            // 496
                                                                                                                        //
-        var curDistance = distance(branch.value); // Skip branches that aren't real points or are too far away.        // 491
+          var curDistance = distance(branch.value); // Skip branches that aren't real points or are too far away.      // 497
                                                                                                                        //
-        if (curDistance === null || curDistance > maxDistance) return; // Skip anything that's a tie.                  // 493
+          if (curDistance === null || curDistance > maxDistance) return true; // Skip anything that's a tie.           // 499
                                                                                                                        //
-        if (result.distance !== undefined && result.distance <= curDistance) return;                                   // 496
-        result.result = true;                                                                                          // 498
-        result.distance = curDistance;                                                                                 // 499
-        if (!branch.arrayIndices) delete result.arrayIndices;else result.arrayIndices = branch.arrayIndices;           // 500
-      });                                                                                                              // 504
+          if (result.distance !== undefined && result.distance <= curDistance) return true;                            // 502
+        }                                                                                                              // 504
                                                                                                                        //
-      return result;                                                                                                   // 505
-    };                                                                                                                 // 506
-  }                                                                                                                    // 507
-}; // Helpers for $near.                                                                                               // 380
+        result.result = true;                                                                                          // 505
+        result.distance = curDistance;                                                                                 // 506
+        if (!branch.arrayIndices) delete result.arrayIndices;else result.arrayIndices = branch.arrayIndices;           // 507
+        if (matcher._isUpdate) return false;                                                                           // 511
+        return true;                                                                                                   // 513
+      });                                                                                                              // 514
                                                                                                                        //
-var distanceCoordinatePairs = function (a, b) {                                                                        // 511
-  a = pointToArray(a);                                                                                                 // 512
-  b = pointToArray(b);                                                                                                 // 513
-  var x = a[0] - b[0];                                                                                                 // 514
-  var y = a[1] - b[1];                                                                                                 // 515
-  if (_.isNaN(x) || _.isNaN(y)) return null;                                                                           // 516
-  return Math.sqrt(x * x + y * y);                                                                                     // 518
-}; // Makes sure we get 2 elements array and assume the first one to be x and                                          // 519
-// the second one to y no matter what user passes.                                                                     // 521
-// In case user passes { lon: x, lat: y } returns [x, y]                                                               // 522
+      return result;                                                                                                   // 515
+    };                                                                                                                 // 516
+  }                                                                                                                    // 517
+}; // Helpers for $near.                                                                                               // 384
                                                                                                                        //
-                                                                                                                       //
-var pointToArray = function (point) {                                                                                  // 523
-  return _.map(point, _.identity);                                                                                     // 524
-}; // Helper for $lt/$gt/$lte/$gte.                                                                                    // 525
-                                                                                                                       //
-                                                                                                                       //
-var makeInequality = function (cmpValueComparator) {                                                                   // 528
-  return {                                                                                                             // 529
-    compileElementSelector: function (operand) {                                                                       // 530
-      // Arrays never compare false with non-arrays for any inequality.                                                // 531
-      // XXX This was behavior we observed in pre-release MongoDB 2.5, but                                             // 532
-      //     it seems to have been reverted.                                                                           // 533
-      //     See https://jira.mongodb.org/browse/SERVER-11444                                                          // 534
-      if (isArray(operand)) {                                                                                          // 535
-        return function () {                                                                                           // 536
-          return false;                                                                                                // 537
-        };                                                                                                             // 538
-      } // Special case: consider undefined and null the same (so true with                                            // 539
-      // $gte/$lte).                                                                                                   // 542
+var distanceCoordinatePairs = function (a, b) {                                                                        // 521
+  a = pointToArray(a);                                                                                                 // 522
+  b = pointToArray(b);                                                                                                 // 523
+  var x = a[0] - b[0];                                                                                                 // 524
+  var y = a[1] - b[1];                                                                                                 // 525
+  if (_.isNaN(x) || _.isNaN(y)) return null;                                                                           // 526
+  return Math.sqrt(x * x + y * y);                                                                                     // 528
+}; // Makes sure we get 2 elements array and assume the first one to be x and                                          // 529
+// the second one to y no matter what user passes.                                                                     // 531
+// In case user passes { lon: x, lat: y } returns [x, y]                                                               // 532
                                                                                                                        //
                                                                                                                        //
-      if (operand === undefined) operand = null;                                                                       // 543
-                                                                                                                       //
-      var operandType = LocalCollection._f._type(operand);                                                             // 546
-                                                                                                                       //
-      return function (value) {                                                                                        // 548
-        if (value === undefined) value = null; // Comparisons are never true among things of different type (except    // 549
-        // null vs undefined).                                                                                         // 552
-                                                                                                                       //
-        if (LocalCollection._f._type(value) !== operandType) return false;                                             // 553
-        return cmpValueComparator(LocalCollection._f._cmp(value, operand));                                            // 555
-      };                                                                                                               // 556
-    }                                                                                                                  // 557
-  };                                                                                                                   // 529
-};                                                                                                                     // 559
-                                                                                                                       //
-var isBitSet = function (value, bit) {                                                                                 // 561
-  if (value === 0) return false;                                                                                       // 562
-  return (value & 1 << bit) !== 0;                                                                                     // 564
-};                                                                                                                     // 565
-                                                                                                                       //
-var eightBits = [0, 1, 2, 3, 4, 5, 6, 7];                                                                              // 567
-                                                                                                                       //
-var get8BitsSet = function (value) {                                                                                   // 568
-  if (value === 0) return [];                                                                                          // 569
-  return _.filter(eightBits, function (bit) {                                                                          // 571
-    return isBitSet(value, bit);                                                                                       // 572
-  });                                                                                                                  // 573
-};                                                                                                                     // 574
-                                                                                                                       //
-var convertNumberToUint8Array = function (number) {                                                                    // 576
-  var numOfBits = number.toString(2).length;                                                                           // 577
-  var num8BitGroups = Math.ceil(numOfBits / 8);                                                                        // 578
-  var byteArray = new Uint8Array(num8BitGroups);                                                                       // 579
-                                                                                                                       //
-  for (var i = 0; i < byteArray.length; i++) {                                                                         // 581
-    var byte = number & 0xff;                                                                                          // 582
-    byteArray[i] = byte;                                                                                               // 583
-    number = (number - byte) / 256;                                                                                    // 584
-  }                                                                                                                    // 585
-                                                                                                                       //
-  return byteArray;                                                                                                    // 587
-};                                                                                                                     // 588
-                                                                                                                       //
-var ensureUint8Array = function (number) {                                                                             // 590
-  return number instanceof Uint8Array ? number : convertNumberToUint8Array(number);                                    // 591
-};                                                                                                                     // 593
-                                                                                                                       //
-var ensureOperandUint8Array = function (operand) {                                                                     // 595
-  if (!(operand instanceof Uint8Array)) {                                                                              // 596
-    operand = _.reduce(operand, function (num, n) {                                                                    // 597
-      return num | 1 << n;                                                                                             // 598
-    }, 0);                                                                                                             // 599
-    operand = convertNumberToUint8Array(operand);                                                                      // 601
-  }                                                                                                                    // 602
-                                                                                                                       //
-  return operand;                                                                                                      // 604
-};                                                                                                                     // 605
-                                                                                                                       //
-var bitsClear = function (bitsSetOp, bitsSetVal) {                                                                     // 607
-  return _.isUndefined(_.find(bitsSetOp, function (bit) {                                                              // 608
-    return bitsSetVal.indexOf(bit) === -1;                                                                             // 610
-  }));                                                                                                                 // 611
-};                                                                                                                     // 613
-                                                                                                                       //
-var bitsSet = function (bitsSetOp, bitsSetVal) {                                                                       // 615
-  return _.isUndefined(_.find(bitsSetOp, function (bit) {                                                              // 616
-    return bitsSetVal.indexOf(bit) !== -1;                                                                             // 618
-  }));                                                                                                                 // 619
-};                                                                                                                     // 621
-                                                                                                                       //
-var anyBitCompare = function (operand, value, setOrClear) {                                                            // 623
-  return _.isUndefined(_.find(operand, function (op, i) {                                                              // 624
-    var bitsSetOp = get8BitsSet(op);                                                                                   // 626
-    var bitsSetVal = get8BitsSet(value[i]);                                                                            // 627
-    return setOrClear(bitsSetOp, bitsSetVal);                                                                          // 629
-  }));                                                                                                                 // 630
-};                                                                                                                     // 632
-                                                                                                                       //
-var allBitCompare = function (operand, value, setOrClear) {                                                            // 634
-  return _.filter(operand, function (op, i) {                                                                          // 635
-    var bitsSetOp = get8BitsSet(op);                                                                                   // 636
-    var bitsSetVal = get8BitsSet(value[i]);                                                                            // 637
-    return !setOrClear(bitsSetOp, bitsSetVal);                                                                         // 639
-  }).length === 0;                                                                                                     // 640
-}; // Each element selector contains:                                                                                  // 641
-//  - compileElementSelector, a function with args:                                                                    // 644
-//    - operand - the "right hand side" of the operator                                                                // 645
-//    - valueSelector - the "context" for the operator (so that $regex can find                                        // 646
-//      $options)                                                                                                      // 647
-//    - matcher - the Matcher this is going into (so that $elemMatch can compile                                       // 648
-//      more things)                                                                                                   // 649
-//    returning a function mapping a single value to bool.                                                             // 650
-//  - dontExpandLeafArrays, a bool which prevents expandArraysInBranches from                                          // 651
-//    being called                                                                                                     // 652
-//  - dontIncludeLeafArrays, a bool which causes an argument to be passed to                                           // 653
-//    expandArraysInBranches if it is called                                                                           // 654
+var pointToArray = function (point) {                                                                                  // 533
+  return _.map(point, _.identity);                                                                                     // 534
+}; // Helper for $lt/$gt/$lte/$gte.                                                                                    // 535
                                                                                                                        //
                                                                                                                        //
-ELEMENT_OPERATORS = {                                                                                                  // 655
-  $lt: makeInequality(function (cmpValue) {                                                                            // 656
-    return cmpValue < 0;                                                                                               // 657
-  }),                                                                                                                  // 658
-  $gt: makeInequality(function (cmpValue) {                                                                            // 659
-    return cmpValue > 0;                                                                                               // 660
-  }),                                                                                                                  // 661
-  $lte: makeInequality(function (cmpValue) {                                                                           // 662
-    return cmpValue <= 0;                                                                                              // 663
-  }),                                                                                                                  // 664
-  $gte: makeInequality(function (cmpValue) {                                                                           // 665
-    return cmpValue >= 0;                                                                                              // 666
-  }),                                                                                                                  // 667
-  $mod: {                                                                                                              // 668
-    compileElementSelector: function (operand) {                                                                       // 669
+var makeInequality = function (cmpValueComparator) {                                                                   // 538
+  return {                                                                                                             // 539
+    compileElementSelector: function (operand) {                                                                       // 540
+      // Arrays never compare false with non-arrays for any inequality.                                                // 541
+      // XXX This was behavior we observed in pre-release MongoDB 2.5, but                                             // 542
+      //     it seems to have been reverted.                                                                           // 543
+      //     See https://jira.mongodb.org/browse/SERVER-11444                                                          // 544
+      if (isArray(operand)) {                                                                                          // 545
+        return function () {                                                                                           // 546
+          return false;                                                                                                // 547
+        };                                                                                                             // 548
+      } // Special case: consider undefined and null the same (so true with                                            // 549
+      // $gte/$lte).                                                                                                   // 552
+                                                                                                                       //
+                                                                                                                       //
+      if (operand === undefined) operand = null;                                                                       // 553
+                                                                                                                       //
+      var operandType = LocalCollection._f._type(operand);                                                             // 556
+                                                                                                                       //
+      return function (value) {                                                                                        // 558
+        if (value === undefined) value = null; // Comparisons are never true among things of different type (except    // 559
+        // null vs undefined).                                                                                         // 562
+                                                                                                                       //
+        if (LocalCollection._f._type(value) !== operandType) return false;                                             // 563
+        return cmpValueComparator(LocalCollection._f._cmp(value, operand));                                            // 565
+      };                                                                                                               // 566
+    }                                                                                                                  // 567
+  };                                                                                                                   // 539
+}; // Helpers for $bitsAllSet/$bitsAnySet/$bitsAllClear/$bitsAnyClear.                                                 // 569
+                                                                                                                       //
+                                                                                                                       //
+var getOperandBitmask = function (operand, selector) {                                                                 // 572
+  // numeric bitmask                                                                                                   // 573
+  // You can provide a numeric bitmask to be matched against the operand field. It must be representable as a non-negative 32-bit signed integer.
+  // Otherwise, $bitsAllSet will return an error.                                                                      // 575
+  if (Number.isInteger(operand) && operand >= 0) {                                                                     // 576
+    return new Uint8Array(new Int32Array([operand]).buffer);                                                           // 577
+  } // bindata bitmask                                                                                                 // 578
+  // You can also use an arbitrarily large BinData instance as a bitmask.                                              // 580
+  else if (EJSON.isBinary(operand)) {                                                                                  // 576
+      return new Uint8Array(operand.buffer);                                                                           // 582
+    } // position list                                                                                                 // 583
+    // If querying a list of bit positions, each <position> must be a non-negative integer. Bit positions start at 0 from the least significant bit.
+    else if (isArray(operand) && operand.every(function (e) {                                                          // 581
+        return Number.isInteger(e) && e >= 0;                                                                          // 587
+      })) {                                                                                                            // 588
+        var buffer = new ArrayBuffer((Math.max.apply(Math, (0, _toConsumableArray3.default)(operand)) >> 3) + 1);      // 589
+        var view = new Uint8Array(buffer);                                                                             // 590
+        operand.forEach(function (x) {                                                                                 // 591
+          view[x >> 3] |= 1 << (x & 0x7);                                                                              // 592
+        });                                                                                                            // 593
+        return view;                                                                                                   // 594
+      } // bad operand                                                                                                 // 595
+      else {                                                                                                           // 586
+          throw Error("operand to " + selector + " must be a numeric bitmask (representable as a non-negative 32-bit signed integer), a bindata bitmask or an array with bit positions (non-negative integers)");
+        }                                                                                                              // 599
+};                                                                                                                     // 600
+                                                                                                                       //
+var getValueBitmask = function (value, length) {                                                                       // 601
+  // The field value must be either numerical or a BinData instance. Otherwise, $bits... will not match the current document.
+  // numerical                                                                                                         // 603
+  if (Number.isSafeInteger(value)) {                                                                                   // 604
+    // $bits... will not match numerical values that cannot be represented as a signed 64-bit integer                  // 605
+    // This can be the case if a value is either too large or small to fit in a signed 64-bit integer, or if it has a fractional component.
+    var buffer = new ArrayBuffer(Math.max(length, 2 * Uint32Array.BYTES_PER_ELEMENT));                                 // 607
+    var view = new Uint32Array(buffer, 0, 2);                                                                          // 608
+    view[0] = value % ((1 << 16) * (1 << 16)) | 0;                                                                     // 609
+    view[1] = value / ((1 << 16) * (1 << 16)) | 0; // sign extension                                                   // 610
+                                                                                                                       //
+    if (value < 0) {                                                                                                   // 612
+      view = new Uint8Array(buffer, 2);                                                                                // 613
+      view.forEach(function (byte, idx) {                                                                              // 614
+        view[idx] = 0xff;                                                                                              // 615
+      });                                                                                                              // 616
+    }                                                                                                                  // 617
+                                                                                                                       //
+    return new Uint8Array(buffer);                                                                                     // 618
+  } // bindata                                                                                                         // 619
+  else if (EJSON.isBinary(value)) {                                                                                    // 604
+      return new Uint8Array(value.buffer);                                                                             // 622
+    } // no match                                                                                                      // 623
+                                                                                                                       //
+                                                                                                                       //
+  return false;                                                                                                        // 625
+}; // Each element selector contains:                                                                                  // 626
+//  - compileElementSelector, a function with args:                                                                    // 629
+//    - operand - the "right hand side" of the operator                                                                // 630
+//    - valueSelector - the "context" for the operator (so that $regex can find                                        // 631
+//      $options)                                                                                                      // 632
+//    - matcher - the Matcher this is going into (so that $elemMatch can compile                                       // 633
+//      more things)                                                                                                   // 634
+//    returning a function mapping a single value to bool.                                                             // 635
+//  - dontExpandLeafArrays, a bool which prevents expandArraysInBranches from                                          // 636
+//    being called                                                                                                     // 637
+//  - dontIncludeLeafArrays, a bool which causes an argument to be passed to                                           // 638
+//    expandArraysInBranches if it is called                                                                           // 639
+                                                                                                                       //
+                                                                                                                       //
+ELEMENT_OPERATORS = {                                                                                                  // 640
+  $lt: makeInequality(function (cmpValue) {                                                                            // 641
+    return cmpValue < 0;                                                                                               // 642
+  }),                                                                                                                  // 643
+  $gt: makeInequality(function (cmpValue) {                                                                            // 644
+    return cmpValue > 0;                                                                                               // 645
+  }),                                                                                                                  // 646
+  $lte: makeInequality(function (cmpValue) {                                                                           // 647
+    return cmpValue <= 0;                                                                                              // 648
+  }),                                                                                                                  // 649
+  $gte: makeInequality(function (cmpValue) {                                                                           // 650
+    return cmpValue >= 0;                                                                                              // 651
+  }),                                                                                                                  // 652
+  $mod: {                                                                                                              // 653
+    compileElementSelector: function (operand) {                                                                       // 654
       if (!(isArray(operand) && operand.length === 2 && typeof operand[0] === 'number' && typeof operand[1] === 'number')) {
-        throw Error("argument to $mod must be an array of two numbers");                                               // 673
-      } // XXX could require to be ints or round or something                                                          // 674
+        throw Error("argument to $mod must be an array of two numbers");                                               // 658
+      } // XXX could require to be ints or round or something                                                          // 659
                                                                                                                        //
                                                                                                                        //
-      var divisor = operand[0];                                                                                        // 676
-      var remainder = operand[1];                                                                                      // 677
-      return function (value) {                                                                                        // 678
-        return typeof value === 'number' && value % divisor === remainder;                                             // 679
-      };                                                                                                               // 680
-    }                                                                                                                  // 681
-  },                                                                                                                   // 668
-  $in: {                                                                                                               // 683
-    compileElementSelector: function (operand) {                                                                       // 684
-      if (!isArray(operand)) throw Error("$in needs an array");                                                        // 685
-      var elementMatchers = [];                                                                                        // 688
+      var divisor = operand[0];                                                                                        // 661
+      var remainder = operand[1];                                                                                      // 662
+      return function (value) {                                                                                        // 663
+        return typeof value === 'number' && value % divisor === remainder;                                             // 664
+      };                                                                                                               // 665
+    }                                                                                                                  // 666
+  },                                                                                                                   // 653
+  $in: {                                                                                                               // 668
+    compileElementSelector: function (operand) {                                                                       // 669
+      if (!isArray(operand)) throw Error("$in needs an array");                                                        // 670
+      var elementMatchers = [];                                                                                        // 673
                                                                                                                        //
-      _.each(operand, function (option) {                                                                              // 689
+      _.each(operand, function (option) {                                                                              // 674
         if (option instanceof RegExp) elementMatchers.push(regexpElementMatcher(option));else if (isOperatorObject(option)) throw Error("cannot nest $ under $in");else elementMatchers.push(equalityElementMatcher(option));
-      });                                                                                                              // 696
+      });                                                                                                              // 681
                                                                                                                        //
-      return function (value) {                                                                                        // 698
-        // Allow {a: {$in: [null]}} to match when 'a' does not exist.                                                  // 699
-        if (value === undefined) value = null;                                                                         // 700
-        return _.any(elementMatchers, function (e) {                                                                   // 702
-          return e(value);                                                                                             // 703
-        });                                                                                                            // 704
-      };                                                                                                               // 705
-    }                                                                                                                  // 706
-  },                                                                                                                   // 683
-  $size: {                                                                                                             // 708
-    // {a: [[5, 5]]} must match {a: {$size: 1}} but not {a: {$size: 2}}, so we                                         // 709
-    // don't want to consider the element [5,5] in the leaf array [[5,5]] as a                                         // 710
-    // possible value.                                                                                                 // 711
-    dontExpandLeafArrays: true,                                                                                        // 712
-    compileElementSelector: function (operand) {                                                                       // 713
-      if (typeof operand === 'string') {                                                                               // 714
-        // Don't ask me why, but by experimentation, this seems to be what Mongo                                       // 715
-        // does.                                                                                                       // 716
-        operand = 0;                                                                                                   // 717
-      } else if (typeof operand !== 'number') {                                                                        // 718
-        throw Error("$size needs a number");                                                                           // 719
-      }                                                                                                                // 720
+      return function (value) {                                                                                        // 683
+        // Allow {a: {$in: [null]}} to match when 'a' does not exist.                                                  // 684
+        if (value === undefined) value = null;                                                                         // 685
+        return _.any(elementMatchers, function (e) {                                                                   // 687
+          return e(value);                                                                                             // 688
+        });                                                                                                            // 689
+      };                                                                                                               // 690
+    }                                                                                                                  // 691
+  },                                                                                                                   // 668
+  $size: {                                                                                                             // 693
+    // {a: [[5, 5]]} must match {a: {$size: 1}} but not {a: {$size: 2}}, so we                                         // 694
+    // don't want to consider the element [5,5] in the leaf array [[5,5]] as a                                         // 695
+    // possible value.                                                                                                 // 696
+    dontExpandLeafArrays: true,                                                                                        // 697
+    compileElementSelector: function (operand) {                                                                       // 698
+      if (typeof operand === 'string') {                                                                               // 699
+        // Don't ask me why, but by experimentation, this seems to be what Mongo                                       // 700
+        // does.                                                                                                       // 701
+        operand = 0;                                                                                                   // 702
+      } else if (typeof operand !== 'number') {                                                                        // 703
+        throw Error("$size needs a number");                                                                           // 704
+      }                                                                                                                // 705
                                                                                                                        //
-      return function (value) {                                                                                        // 721
-        return isArray(value) && value.length === operand;                                                             // 722
+      return function (value) {                                                                                        // 706
+        return isArray(value) && value.length === operand;                                                             // 707
+      };                                                                                                               // 708
+    }                                                                                                                  // 709
+  },                                                                                                                   // 693
+  $type: {                                                                                                             // 711
+    // {a: [5]} must not match {a: {$type: 4}} (4 means array), but it should                                          // 712
+    // match {a: {$type: 1}} (1 means number), and {a: [[5]]} must match {$a:                                          // 713
+    // {$type: 4}}. Thus, when we see a leaf array, we *should* expand it but                                          // 714
+    // should *not* include it itself.                                                                                 // 715
+    dontIncludeLeafArrays: true,                                                                                       // 716
+    compileElementSelector: function (operand) {                                                                       // 717
+      if (typeof operand !== 'number') throw Error("$type needs a number");                                            // 718
+      return function (value) {                                                                                        // 720
+        return value !== undefined && LocalCollection._f._type(value) === operand;                                     // 721
       };                                                                                                               // 723
     }                                                                                                                  // 724
-  },                                                                                                                   // 708
-  $type: {                                                                                                             // 726
-    // {a: [5]} must not match {a: {$type: 4}} (4 means array), but it should                                          // 727
-    // match {a: {$type: 1}} (1 means number), and {a: [[5]]} must match {$a:                                          // 728
-    // {$type: 4}}. Thus, when we see a leaf array, we *should* expand it but                                          // 729
-    // should *not* include it itself.                                                                                 // 730
-    dontIncludeLeafArrays: true,                                                                                       // 731
-    compileElementSelector: function (operand) {                                                                       // 732
-      if (typeof operand !== 'number') throw Error("$type needs a number");                                            // 733
-      return function (value) {                                                                                        // 735
-        return value !== undefined && LocalCollection._f._type(value) === operand;                                     // 736
-      };                                                                                                               // 738
-    }                                                                                                                  // 739
+  },                                                                                                                   // 711
+  $bitsAllSet: {                                                                                                       // 726
+    compileElementSelector: function (operand) {                                                                       // 727
+      var op = getOperandBitmask(operand, '$bitsAllSet');                                                              // 728
+      return function (value) {                                                                                        // 729
+        var bitmask = getValueBitmask(value, op.length);                                                               // 730
+        return bitmask && op.every(function (byte, idx) {                                                              // 731
+          return (bitmask[idx] & byte) == byte;                                                                        // 732
+        });                                                                                                            // 733
+      };                                                                                                               // 734
+    }                                                                                                                  // 735
   },                                                                                                                   // 726
-  $bitsAnyClear: {                                                                                                     // 741
-    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 742
-      if (!isArray(operand) && !(operand instanceof Uint8Array)) throw Error("$bitsAnyClear has to be an Array");      // 743
-      return function (value) {                                                                                        // 745
-        if (typeof value !== 'number' && !(value instanceof Uint8Array)) return false;                                 // 746
-        if (value === 0) return true;                                                                                  // 749
-        operand = ensureOperandUint8Array(operand);                                                                    // 752
-        value = ensureUint8Array(value);                                                                               // 753
-        return anyBitCompare(operand, value, bitsClear);                                                               // 755
+  $bitsAnySet: {                                                                                                       // 737
+    compileElementSelector: function (operand) {                                                                       // 738
+      var query = getOperandBitmask(operand, '$bitsAnySet');                                                           // 739
+      return function (value) {                                                                                        // 740
+        var bitmask = getValueBitmask(value, query.length);                                                            // 741
+        return bitmask && query.some(function (byte, idx) {                                                            // 742
+          return (~bitmask[idx] & byte) !== byte;                                                                      // 743
+        });                                                                                                            // 744
+      };                                                                                                               // 745
+    }                                                                                                                  // 746
+  },                                                                                                                   // 737
+  $bitsAllClear: {                                                                                                     // 748
+    compileElementSelector: function (operand) {                                                                       // 749
+      var query = getOperandBitmask(operand, '$bitsAllClear');                                                         // 750
+      return function (value) {                                                                                        // 751
+        var bitmask = getValueBitmask(value, query.length);                                                            // 752
+        return bitmask && query.every(function (byte, idx) {                                                           // 753
+          return !(bitmask[idx] & byte);                                                                               // 754
+        });                                                                                                            // 755
       };                                                                                                               // 756
     }                                                                                                                  // 757
-  },                                                                                                                   // 741
-  $bitsAllClear: {                                                                                                     // 759
-    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 760
-      if (!isArray(operand) && !(operand instanceof Uint8Array)) throw Error("$bitsAllClear has to be an Array");      // 761
-      return function (value) {                                                                                        // 763
-        if (typeof value !== 'number' && !(value instanceof Uint8Array)) return false;                                 // 764
-        if (value === 0) return true;                                                                                  // 767
-        operand = ensureOperandUint8Array(operand);                                                                    // 770
-        value = ensureUint8Array(value);                                                                               // 771
-        return allBitCompare(operand, value, bitsSet);                                                                 // 773
-      };                                                                                                               // 774
-    }                                                                                                                  // 775
+  },                                                                                                                   // 748
+  $bitsAnyClear: {                                                                                                     // 759
+    compileElementSelector: function (operand) {                                                                       // 760
+      var query = getOperandBitmask(operand, '$bitsAnyClear');                                                         // 761
+      return function (value) {                                                                                        // 762
+        var bitmask = getValueBitmask(value, query.length);                                                            // 763
+        return bitmask && query.some(function (byte, idx) {                                                            // 764
+          return (bitmask[idx] & byte) !== byte;                                                                       // 765
+        });                                                                                                            // 766
+      };                                                                                                               // 767
+    }                                                                                                                  // 768
   },                                                                                                                   // 759
-  $bitsAllSet: {                                                                                                       // 777
-    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 778
-      if (!isArray(operand) && !(operand instanceof Uint8Array)) throw Error("$bitsAllSet has to be an Array");        // 779
-      return function (value) {                                                                                        // 781
-        if (typeof value !== 'number' && !(value instanceof Uint8Array)) return false;                                 // 782
-        operand = ensureOperandUint8Array(operand);                                                                    // 785
-        value = ensureUint8Array(value);                                                                               // 786
-        return allBitCompare(operand, value, bitsClear);                                                               // 788
-      };                                                                                                               // 789
-    }                                                                                                                  // 790
-  },                                                                                                                   // 777
-  $bitsAnySet: {                                                                                                       // 792
-    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 793
-      if (!isArray(operand) && !(operand instanceof Uint8Array)) throw Error("$bitsAnySet has to be an Array");        // 794
-      return function (value) {                                                                                        // 796
-        if (typeof value !== 'number' && !(value instanceof Uint8Array)) return false;                                 // 797
-        operand = ensureOperandUint8Array(operand);                                                                    // 800
-        value = ensureUint8Array(value);                                                                               // 801
-        return _.isUndefined(_.find(operand, function (op, i) {                                                        // 803
-          var bitsSetOp = get8BitsSet(op);                                                                             // 805
-          var bitsSetVal = get8BitsSet(value[i]);                                                                      // 806
-          return bitsSet(bitsSetOp, bitsSetVal);                                                                       // 808
-        }));                                                                                                           // 809
-      };                                                                                                               // 811
-    }                                                                                                                  // 812
-  },                                                                                                                   // 792
-  $regex: {                                                                                                            // 814
-    compileElementSelector: function (operand, valueSelector) {                                                        // 815
+  $regex: {                                                                                                            // 770
+    compileElementSelector: function (operand, valueSelector) {                                                        // 771
       if (!(typeof operand === 'string' || operand instanceof RegExp)) throw Error("$regex has to be a string or RegExp");
-      var regexp;                                                                                                      // 819
+      var regexp;                                                                                                      // 775
                                                                                                                        //
-      if (valueSelector.$options !== undefined) {                                                                      // 820
-        // Options passed in $options (even the empty string) always overrides                                         // 821
-        // options in the RegExp object itself. (See also                                                              // 822
-        // Mongo.Collection._rewriteSelector.)                                                                         // 823
-        // Be clear that we only support the JS-supported options, not extended                                        // 825
-        // ones (eg, Mongo supports x and s). Ideally we would implement x and s                                       // 826
-        // by transforming the regexp, but not today...                                                                // 827
+      if (valueSelector.$options !== undefined) {                                                                      // 776
+        // Options passed in $options (even the empty string) always overrides                                         // 777
+        // options in the RegExp object itself. (See also                                                              // 778
+        // Mongo.Collection._rewriteSelector.)                                                                         // 779
+        // Be clear that we only support the JS-supported options, not extended                                        // 781
+        // ones (eg, Mongo supports x and s). Ideally we would implement x and s                                       // 782
+        // by transforming the regexp, but not today...                                                                // 783
         if (/[^gim]/.test(valueSelector.$options)) throw new Error("Only the i, m, and g regexp options are supported");
-        var regexSource = operand instanceof RegExp ? operand.source : operand;                                        // 831
-        regexp = new RegExp(regexSource, valueSelector.$options);                                                      // 832
-      } else if (operand instanceof RegExp) {                                                                          // 833
-        regexp = operand;                                                                                              // 834
-      } else {                                                                                                         // 835
-        regexp = new RegExp(operand);                                                                                  // 836
-      }                                                                                                                // 837
+        var regexSource = operand instanceof RegExp ? operand.source : operand;                                        // 787
+        regexp = new RegExp(regexSource, valueSelector.$options);                                                      // 788
+      } else if (operand instanceof RegExp) {                                                                          // 789
+        regexp = operand;                                                                                              // 790
+      } else {                                                                                                         // 791
+        regexp = new RegExp(operand);                                                                                  // 792
+      }                                                                                                                // 793
                                                                                                                        //
-      return regexpElementMatcher(regexp);                                                                             // 838
-    }                                                                                                                  // 839
-  },                                                                                                                   // 814
-  $elemMatch: {                                                                                                        // 841
-    dontExpandLeafArrays: true,                                                                                        // 842
-    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 843
-      if (!isPlainObject(operand)) throw Error("$elemMatch need an object");                                           // 844
-      var subMatcher, isDocMatcher;                                                                                    // 847
+      return regexpElementMatcher(regexp);                                                                             // 794
+    }                                                                                                                  // 795
+  },                                                                                                                   // 770
+  $elemMatch: {                                                                                                        // 797
+    dontExpandLeafArrays: true,                                                                                        // 798
+    compileElementSelector: function (operand, valueSelector, matcher) {                                               // 799
+      if (!isPlainObject(operand)) throw Error("$elemMatch need an object");                                           // 800
+      var subMatcher, isDocMatcher;                                                                                    // 803
                                                                                                                        //
-      if (isOperatorObject(_.omit(operand, _.keys(LOGICAL_OPERATORS)), true)) {                                        // 848
-        subMatcher = compileValueSelector(operand, matcher);                                                           // 849
-        isDocMatcher = false;                                                                                          // 850
-      } else {                                                                                                         // 851
-        // This is NOT the same as compileValueSelector(operand), and not just                                         // 852
-        // because of the slightly different calling convention.                                                       // 853
-        // {$elemMatch: {x: 3}} means "an element has a field x:3", not                                                // 854
-        // "consists only of a field x:3". Also, regexps and sub-$ are allowed.                                        // 855
-        subMatcher = compileDocumentSelector(operand, matcher, {                                                       // 856
-          inElemMatch: true                                                                                            // 857
-        });                                                                                                            // 857
-        isDocMatcher = true;                                                                                           // 858
-      }                                                                                                                // 859
+      if (isOperatorObject(_.omit(operand, _.keys(LOGICAL_OPERATORS)), true)) {                                        // 804
+        subMatcher = compileValueSelector(operand, matcher);                                                           // 805
+        isDocMatcher = false;                                                                                          // 806
+      } else {                                                                                                         // 807
+        // This is NOT the same as compileValueSelector(operand), and not just                                         // 808
+        // because of the slightly different calling convention.                                                       // 809
+        // {$elemMatch: {x: 3}} means "an element has a field x:3", not                                                // 810
+        // "consists only of a field x:3". Also, regexps and sub-$ are allowed.                                        // 811
+        subMatcher = compileDocumentSelector(operand, matcher, {                                                       // 812
+          inElemMatch: true                                                                                            // 813
+        });                                                                                                            // 813
+        isDocMatcher = true;                                                                                           // 814
+      }                                                                                                                // 815
                                                                                                                        //
-      return function (value) {                                                                                        // 861
-        if (!isArray(value)) return false;                                                                             // 862
+      return function (value) {                                                                                        // 817
+        if (!isArray(value)) return false;                                                                             // 818
                                                                                                                        //
-        for (var i = 0; i < value.length; ++i) {                                                                       // 864
-          var arrayElement = value[i];                                                                                 // 865
-          var arg;                                                                                                     // 866
+        for (var i = 0; i < value.length; ++i) {                                                                       // 820
+          var arrayElement = value[i];                                                                                 // 821
+          var arg;                                                                                                     // 822
                                                                                                                        //
-          if (isDocMatcher) {                                                                                          // 867
-            // We can only match {$elemMatch: {b: 3}} against objects.                                                 // 868
-            // (We can also match against arrays, if there's numeric indices,                                          // 869
-            // eg {$elemMatch: {'0.b': 3}} or {$elemMatch: {0: 3}}.)                                                   // 870
-            if (!isPlainObject(arrayElement) && !isArray(arrayElement)) return false;                                  // 871
-            arg = arrayElement;                                                                                        // 873
-          } else {                                                                                                     // 874
-            // dontIterate ensures that {a: {$elemMatch: {$gt: 5}}} matches                                            // 875
-            // {a: [8]} but not {a: [[8]]}                                                                             // 876
-            arg = [{                                                                                                   // 877
-              value: arrayElement,                                                                                     // 877
-              dontIterate: true                                                                                        // 877
-            }];                                                                                                        // 877
-          } // XXX support $near in $elemMatch by propagating $distance?                                               // 878
-                                                                                                                       //
-                                                                                                                       //
-          if (subMatcher(arg).result) return i; // specially understood to mean "use as arrayIndices"                  // 880
-        }                                                                                                              // 882
-                                                                                                                       //
-        return false;                                                                                                  // 883
-      };                                                                                                               // 884
-    }                                                                                                                  // 885
-  }                                                                                                                    // 841
-}; // makeLookupFunction(key) returns a lookup function.                                                               // 655
-//                                                                                                                     // 890
-// A lookup function takes in a document and returns an array of matching                                              // 891
-// branches.  If no arrays are found while looking up the key, this array will                                         // 892
-// have exactly one branches (possibly 'undefined', if some segment of the key                                         // 893
-// was not found).                                                                                                     // 894
-//                                                                                                                     // 895
-// If arrays are found in the middle, this can have more than one element, since                                       // 896
-// we "branch". When we "branch", if there are more key segments to look up,                                           // 897
-// then we only pursue branches that are plain objects (not arrays or scalars).                                        // 898
-// This means we can actually end up with no branches!                                                                 // 899
-//                                                                                                                     // 900
-// We do *NOT* branch on arrays that are found at the end (ie, at the last                                             // 901
-// dotted member of the key). We just return that array; if you want to                                                // 902
-// effectively "branch" over the array's values, post-process the lookup                                               // 903
-// function with expandArraysInBranches.                                                                               // 904
-//                                                                                                                     // 905
-// Each branch is an object with keys:                                                                                 // 906
-//  - value: the value at the branch                                                                                   // 907
-//  - dontIterate: an optional bool; if true, it means that 'value' is an array                                        // 908
-//    that expandArraysInBranches should NOT expand. This specifically happens                                         // 909
-//    when there is a numeric index in the key, and ensures the                                                        // 910
-//    perhaps-surprising MongoDB behavior where {'a.0': 5} does NOT                                                    // 911
-//    match {a: [[5]]}.                                                                                                // 912
-//  - arrayIndices: if any array indexing was done during lookup (either due to                                        // 913
-//    explicit numeric indices or implicit branching), this will be an array of                                        // 914
-//    the array indices used, from outermost to innermost; it is falsey or                                             // 915
-//    absent if no array index is used. If an explicit numeric index is used,                                          // 916
-//    the index will be followed in arrayIndices by the string 'x'.                                                    // 917
-//                                                                                                                     // 918
-//    Note: arrayIndices is used for two purposes. First, it is used to                                                // 919
-//    implement the '$' modifier feature, which only ever looks at its first                                           // 920
-//    element.                                                                                                         // 921
-//                                                                                                                     // 922
-//    Second, it is used for sort key generation, which needs to be able to tell                                       // 923
-//    the difference between different paths. Moreover, it needs to                                                    // 924
-//    differentiate between explicit and implicit branching, which is why                                              // 925
-//    there's the somewhat hacky 'x' entry: this means that explicit and                                               // 926
-//    implicit array lookups will have different full arrayIndices paths. (That                                        // 927
-//    code only requires that different paths have different arrayIndices; it                                          // 928
-//    doesn't actually "parse" arrayIndices. As an alternative, arrayIndices                                           // 929
-//    could contain objects with flags like "implicit", but I think that only                                          // 930
-//    makes the code surrounding them more complex.)                                                                   // 931
-//                                                                                                                     // 932
-//    (By the way, this field ends up getting passed around a lot without                                              // 933
-//    cloning, so never mutate any arrayIndices field/var in this package!)                                            // 934
-//                                                                                                                     // 935
-//                                                                                                                     // 936
-// At the top level, you may only pass in a plain object or array.                                                     // 937
-//                                                                                                                     // 938
-// See the test 'minimongo - lookup' for some examples of what lookup functions                                        // 939
-// return.                                                                                                             // 940
-                                                                                                                       //
-makeLookupFunction = function (key, options) {                                                                         // 941
-  options = options || {};                                                                                             // 942
-  var parts = key.split('.');                                                                                          // 943
-  var firstPart = parts.length ? parts[0] : '';                                                                        // 944
-  var firstPartIsNumeric = isNumericKey(firstPart);                                                                    // 945
-  var nextPartIsNumeric = parts.length >= 2 && isNumericKey(parts[1]);                                                 // 946
-  var lookupRest;                                                                                                      // 947
-                                                                                                                       //
-  if (parts.length > 1) {                                                                                              // 948
-    lookupRest = makeLookupFunction(parts.slice(1).join('.'));                                                         // 949
-  }                                                                                                                    // 950
-                                                                                                                       //
-  var omitUnnecessaryFields = function (retVal) {                                                                      // 952
-    if (!retVal.dontIterate) delete retVal.dontIterate;                                                                // 953
-    if (retVal.arrayIndices && !retVal.arrayIndices.length) delete retVal.arrayIndices;                                // 955
-    return retVal;                                                                                                     // 957
-  }; // Doc will always be a plain object or an array.                                                                 // 958
-  // apply an explicit numeric index, an array.                                                                        // 961
+          if (isDocMatcher) {                                                                                          // 823
+            // We can only match {$elemMatch: {b: 3}} against objects.                                                 // 824
+            // (We can also match against arrays, if there's numeric indices,                                          // 825
+            // eg {$elemMatch: {'0.b': 3}} or {$elemMatch: {0: 3}}.)                                                   // 826
+            if (!isPlainObject(arrayElement) && !isArray(arrayElement)) return false;                                  // 827
+            arg = arrayElement;                                                                                        // 829
+          } else {                                                                                                     // 830
+            // dontIterate ensures that {a: {$elemMatch: {$gt: 5}}} matches                                            // 831
+            // {a: [8]} but not {a: [[8]]}                                                                             // 832
+            arg = [{                                                                                                   // 833
+              value: arrayElement,                                                                                     // 833
+              dontIterate: true                                                                                        // 833
+            }];                                                                                                        // 833
+          } // XXX support $near in $elemMatch by propagating $distance?                                               // 834
                                                                                                                        //
                                                                                                                        //
-  return function (doc, arrayIndices) {                                                                                // 962
-    if (!arrayIndices) arrayIndices = [];                                                                              // 963
+          if (subMatcher(arg).result) return i; // specially understood to mean "use as arrayIndices"                  // 836
+        }                                                                                                              // 838
                                                                                                                        //
-    if (isArray(doc)) {                                                                                                // 966
-      // If we're being asked to do an invalid lookup into an array (non-integer                                       // 967
-      // or out-of-bounds), return no results (which is different from returning                                       // 968
-      // a single undefined result, in that `null` equality checks won't match).                                       // 969
+        return false;                                                                                                  // 839
+      };                                                                                                               // 840
+    }                                                                                                                  // 841
+  }                                                                                                                    // 797
+}; // makeLookupFunction(key) returns a lookup function.                                                               // 640
+//                                                                                                                     // 846
+// A lookup function takes in a document and returns an array of matching                                              // 847
+// branches.  If no arrays are found while looking up the key, this array will                                         // 848
+// have exactly one branches (possibly 'undefined', if some segment of the key                                         // 849
+// was not found).                                                                                                     // 850
+//                                                                                                                     // 851
+// If arrays are found in the middle, this can have more than one element, since                                       // 852
+// we "branch". When we "branch", if there are more key segments to look up,                                           // 853
+// then we only pursue branches that are plain objects (not arrays or scalars).                                        // 854
+// This means we can actually end up with no branches!                                                                 // 855
+//                                                                                                                     // 856
+// We do *NOT* branch on arrays that are found at the end (ie, at the last                                             // 857
+// dotted member of the key). We just return that array; if you want to                                                // 858
+// effectively "branch" over the array's values, post-process the lookup                                               // 859
+// function with expandArraysInBranches.                                                                               // 860
+//                                                                                                                     // 861
+// Each branch is an object with keys:                                                                                 // 862
+//  - value: the value at the branch                                                                                   // 863
+//  - dontIterate: an optional bool; if true, it means that 'value' is an array                                        // 864
+//    that expandArraysInBranches should NOT expand. This specifically happens                                         // 865
+//    when there is a numeric index in the key, and ensures the                                                        // 866
+//    perhaps-surprising MongoDB behavior where {'a.0': 5} does NOT                                                    // 867
+//    match {a: [[5]]}.                                                                                                // 868
+//  - arrayIndices: if any array indexing was done during lookup (either due to                                        // 869
+//    explicit numeric indices or implicit branching), this will be an array of                                        // 870
+//    the array indices used, from outermost to innermost; it is falsey or                                             // 871
+//    absent if no array index is used. If an explicit numeric index is used,                                          // 872
+//    the index will be followed in arrayIndices by the string 'x'.                                                    // 873
+//                                                                                                                     // 874
+//    Note: arrayIndices is used for two purposes. First, it is used to                                                // 875
+//    implement the '$' modifier feature, which only ever looks at its first                                           // 876
+//    element.                                                                                                         // 877
+//                                                                                                                     // 878
+//    Second, it is used for sort key generation, which needs to be able to tell                                       // 879
+//    the difference between different paths. Moreover, it needs to                                                    // 880
+//    differentiate between explicit and implicit branching, which is why                                              // 881
+//    there's the somewhat hacky 'x' entry: this means that explicit and                                               // 882
+//    implicit array lookups will have different full arrayIndices paths. (That                                        // 883
+//    code only requires that different paths have different arrayIndices; it                                          // 884
+//    doesn't actually "parse" arrayIndices. As an alternative, arrayIndices                                           // 885
+//    could contain objects with flags like "implicit", but I think that only                                          // 886
+//    makes the code surrounding them more complex.)                                                                   // 887
+//                                                                                                                     // 888
+//    (By the way, this field ends up getting passed around a lot without                                              // 889
+//    cloning, so never mutate any arrayIndices field/var in this package!)                                            // 890
+//                                                                                                                     // 891
+//                                                                                                                     // 892
+// At the top level, you may only pass in a plain object or array.                                                     // 893
+//                                                                                                                     // 894
+// See the test 'minimongo - lookup' for some examples of what lookup functions                                        // 895
+// return.                                                                                                             // 896
+                                                                                                                       //
+makeLookupFunction = function (key, options) {                                                                         // 897
+  options = options || {};                                                                                             // 898
+  var parts = key.split('.');                                                                                          // 899
+  var firstPart = parts.length ? parts[0] : '';                                                                        // 900
+  var firstPartIsNumeric = isNumericKey(firstPart);                                                                    // 901
+  var nextPartIsNumeric = parts.length >= 2 && isNumericKey(parts[1]);                                                 // 902
+  var lookupRest;                                                                                                      // 903
+                                                                                                                       //
+  if (parts.length > 1) {                                                                                              // 904
+    lookupRest = makeLookupFunction(parts.slice(1).join('.'));                                                         // 905
+  }                                                                                                                    // 906
+                                                                                                                       //
+  var omitUnnecessaryFields = function (retVal) {                                                                      // 908
+    if (!retVal.dontIterate) delete retVal.dontIterate;                                                                // 909
+    if (retVal.arrayIndices && !retVal.arrayIndices.length) delete retVal.arrayIndices;                                // 911
+    return retVal;                                                                                                     // 913
+  }; // Doc will always be a plain object or an array.                                                                 // 914
+  // apply an explicit numeric index, an array.                                                                        // 917
+                                                                                                                       //
+                                                                                                                       //
+  return function (doc, arrayIndices) {                                                                                // 918
+    if (!arrayIndices) arrayIndices = [];                                                                              // 919
+                                                                                                                       //
+    if (isArray(doc)) {                                                                                                // 922
+      // If we're being asked to do an invalid lookup into an array (non-integer                                       // 923
+      // or out-of-bounds), return no results (which is different from returning                                       // 924
+      // a single undefined result, in that `null` equality checks won't match).                                       // 925
       if (!(firstPartIsNumeric && firstPart < doc.length)) return []; // Remember that we used this array index. Include an 'x' to indicate that
-      // the previous index came from being considered as an explicit array                                            // 974
-      // index (not branching).                                                                                        // 975
+      // the previous index came from being considered as an explicit array                                            // 930
+      // index (not branching).                                                                                        // 931
                                                                                                                        //
-      arrayIndices = arrayIndices.concat(+firstPart, 'x');                                                             // 976
-    } // Do our first lookup.                                                                                          // 977
-                                                                                                                       //
-                                                                                                                       //
-    var firstLevel = doc[firstPart]; // If there is no deeper to dig, return what we found.                            // 980
-    //                                                                                                                 // 983
-    // If what we found is an array, most value selectors will choose to treat                                         // 984
-    // the elements of the array as matchable values in their own right, but                                           // 985
-    // that's done outside of the lookup function. (Exceptions to this are $size                                       // 986
-    // and stuff relating to $elemMatch.  eg, {a: {$size: 2}} does not match {a:                                       // 987
-    // [[1, 2]]}.)                                                                                                     // 988
-    //                                                                                                                 // 989
-    // That said, if we just did an *explicit* array lookup (on doc) to find                                           // 990
-    // firstLevel, and firstLevel is an array too, we do NOT want value                                                // 991
-    // selectors to iterate over it.  eg, {'a.0': 5} does not match {a: [[5]]}.                                        // 992
-    // So in that case, we mark the return value as "don't iterate".                                                   // 993
-                                                                                                                       //
-    if (!lookupRest) {                                                                                                 // 994
-      return [omitUnnecessaryFields({                                                                                  // 995
-        value: firstLevel,                                                                                             // 996
-        dontIterate: isArray(doc) && isArray(firstLevel),                                                              // 997
-        arrayIndices: arrayIndices                                                                                     // 998
-      })];                                                                                                             // 995
-    } // We need to dig deeper.  But if we can't, because what we've found is not                                      // 999
-    // an array or plain object, we're done. If we just did a numeric index into                                       // 1002
-    // an array, we return nothing here (this is a change in Mongo 2.5 from                                            // 1003
-    // Mongo 2.4, where {'a.0.b': null} stopped matching {a: [5]}). Otherwise,                                         // 1004
-    // return a single `undefined` (which can, for example, match via equality                                         // 1005
-    // with `null`).                                                                                                   // 1006
+      arrayIndices = arrayIndices.concat(+firstPart, 'x');                                                             // 932
+    } // Do our first lookup.                                                                                          // 933
                                                                                                                        //
                                                                                                                        //
-    if (!isIndexable(firstLevel)) {                                                                                    // 1007
-      if (isArray(doc)) return [];                                                                                     // 1008
-      return [omitUnnecessaryFields({                                                                                  // 1010
-        value: undefined,                                                                                              // 1010
-        arrayIndices: arrayIndices                                                                                     // 1011
-      })];                                                                                                             // 1010
-    }                                                                                                                  // 1012
+    var firstLevel = doc[firstPart]; // If there is no deeper to dig, return what we found.                            // 936
+    //                                                                                                                 // 939
+    // If what we found is an array, most value selectors will choose to treat                                         // 940
+    // the elements of the array as matchable values in their own right, but                                           // 941
+    // that's done outside of the lookup function. (Exceptions to this are $size                                       // 942
+    // and stuff relating to $elemMatch.  eg, {a: {$size: 2}} does not match {a:                                       // 943
+    // [[1, 2]]}.)                                                                                                     // 944
+    //                                                                                                                 // 945
+    // That said, if we just did an *explicit* array lookup (on doc) to find                                           // 946
+    // firstLevel, and firstLevel is an array too, we do NOT want value                                                // 947
+    // selectors to iterate over it.  eg, {'a.0': 5} does not match {a: [[5]]}.                                        // 948
+    // So in that case, we mark the return value as "don't iterate".                                                   // 949
                                                                                                                        //
-    var result = [];                                                                                                   // 1014
+    if (!lookupRest) {                                                                                                 // 950
+      return [omitUnnecessaryFields({                                                                                  // 951
+        value: firstLevel,                                                                                             // 952
+        dontIterate: isArray(doc) && isArray(firstLevel),                                                              // 953
+        arrayIndices: arrayIndices                                                                                     // 954
+      })];                                                                                                             // 951
+    } // We need to dig deeper.  But if we can't, because what we've found is not                                      // 955
+    // an array or plain object, we're done. If we just did a numeric index into                                       // 958
+    // an array, we return nothing here (this is a change in Mongo 2.5 from                                            // 959
+    // Mongo 2.4, where {'a.0.b': null} stopped matching {a: [5]}). Otherwise,                                         // 960
+    // return a single `undefined` (which can, for example, match via equality                                         // 961
+    // with `null`).                                                                                                   // 962
                                                                                                                        //
-    var appendToResult = function (more) {                                                                             // 1015
-      Array.prototype.push.apply(result, more);                                                                        // 1016
-    }; // Dig deeper: look up the rest of the parts on whatever we've found.                                           // 1017
-    // (lookupRest is smart enough to not try to do invalid lookups into                                               // 1020
-    // firstLevel if it's an array.)                                                                                   // 1021
+                                                                                                                       //
+    if (!isIndexable(firstLevel)) {                                                                                    // 963
+      if (isArray(doc)) return [];                                                                                     // 964
+      return [omitUnnecessaryFields({                                                                                  // 966
+        value: undefined,                                                                                              // 966
+        arrayIndices: arrayIndices                                                                                     // 967
+      })];                                                                                                             // 966
+    }                                                                                                                  // 968
+                                                                                                                       //
+    var result = [];                                                                                                   // 970
+                                                                                                                       //
+    var appendToResult = function (more) {                                                                             // 971
+      Array.prototype.push.apply(result, more);                                                                        // 972
+    }; // Dig deeper: look up the rest of the parts on whatever we've found.                                           // 973
+    // (lookupRest is smart enough to not try to do invalid lookups into                                               // 976
+    // firstLevel if it's an array.)                                                                                   // 977
                                                                                                                        //
                                                                                                                        //
     appendToResult(lookupRest(firstLevel, arrayIndices)); // If we found an array, then in *addition* to potentially treating the next
-    // part as a literal integer lookup, we should also "branch": try to look up                                       // 1025
-    // the rest of the parts on each array element in parallel.                                                        // 1026
-    //                                                                                                                 // 1027
-    // In this case, we *only* dig deeper into array elements that are plain                                           // 1028
-    // objects. (Recall that we only got this far if we have further to dig.)                                          // 1029
-    // This makes sense: we certainly don't dig deeper into non-indexable                                              // 1030
-    // objects. And it would be weird to dig into an array: it's simpler to have                                       // 1031
-    // a rule that explicit integer indexes only apply to an outer array, not to                                       // 1032
-    // an array you find after a branching search.                                                                     // 1033
-    //                                                                                                                 // 1034
-    // In the special case of a numeric part in a *sort selector* (not a query                                         // 1035
-    // selector), we skip the branching: we ONLY allow the numeric part to mean                                        // 1036
-    // "look up this index" in that case, not "also look up this index in all                                          // 1037
-    // the elements of the array".                                                                                     // 1038
+    // part as a literal integer lookup, we should also "branch": try to look up                                       // 981
+    // the rest of the parts on each array element in parallel.                                                        // 982
+    //                                                                                                                 // 983
+    // In this case, we *only* dig deeper into array elements that are plain                                           // 984
+    // objects. (Recall that we only got this far if we have further to dig.)                                          // 985
+    // This makes sense: we certainly don't dig deeper into non-indexable                                              // 986
+    // objects. And it would be weird to dig into an array: it's simpler to have                                       // 987
+    // a rule that explicit integer indexes only apply to an outer array, not to                                       // 988
+    // an array you find after a branching search.                                                                     // 989
+    //                                                                                                                 // 990
+    // In the special case of a numeric part in a *sort selector* (not a query                                         // 991
+    // selector), we skip the branching: we ONLY allow the numeric part to mean                                        // 992
+    // "look up this index" in that case, not "also look up this index in all                                          // 993
+    // the elements of the array".                                                                                     // 994
                                                                                                                        //
-    if (isArray(firstLevel) && !(nextPartIsNumeric && options.forSort)) {                                              // 1039
-      _.each(firstLevel, function (branch, arrayIndex) {                                                               // 1040
-        if (isPlainObject(branch)) {                                                                                   // 1041
-          appendToResult(lookupRest(branch, arrayIndices.concat(arrayIndex)));                                         // 1042
-        }                                                                                                              // 1045
-      });                                                                                                              // 1046
-    }                                                                                                                  // 1047
+    if (isArray(firstLevel) && !(nextPartIsNumeric && options.forSort)) {                                              // 995
+      _.each(firstLevel, function (branch, arrayIndex) {                                                               // 996
+        if (isPlainObject(branch)) {                                                                                   // 997
+          appendToResult(lookupRest(branch, arrayIndices.concat(arrayIndex)));                                         // 998
+        }                                                                                                              // 1001
+      });                                                                                                              // 1002
+    }                                                                                                                  // 1003
                                                                                                                        //
-    return result;                                                                                                     // 1049
-  };                                                                                                                   // 1050
-};                                                                                                                     // 1051
+    return result;                                                                                                     // 1005
+  };                                                                                                                   // 1006
+};                                                                                                                     // 1007
                                                                                                                        //
-MinimongoTest.makeLookupFunction = makeLookupFunction;                                                                 // 1052
+MinimongoTest.makeLookupFunction = makeLookupFunction;                                                                 // 1008
                                                                                                                        //
-expandArraysInBranches = function (branches, skipTheArrays) {                                                          // 1054
-  var branchesOut = [];                                                                                                // 1055
+expandArraysInBranches = function (branches, skipTheArrays) {                                                          // 1010
+  var branchesOut = [];                                                                                                // 1011
                                                                                                                        //
-  _.each(branches, function (branch) {                                                                                 // 1056
+  _.each(branches, function (branch) {                                                                                 // 1012
     var thisIsArray = isArray(branch.value); // We include the branch itself, *UNLESS* we it's an array that we're going
-    // to iterate and we're told to skip arrays.  (That's right, we include some                                       // 1059
-    // arrays even skipTheArrays is true: these are arrays that were found via                                         // 1060
-    // explicit numerical indices.)                                                                                    // 1061
+    // to iterate and we're told to skip arrays.  (That's right, we include some                                       // 1015
+    // arrays even skipTheArrays is true: these are arrays that were found via                                         // 1016
+    // explicit numerical indices.)                                                                                    // 1017
                                                                                                                        //
-    if (!(skipTheArrays && thisIsArray && !branch.dontIterate)) {                                                      // 1062
-      branchesOut.push({                                                                                               // 1063
-        value: branch.value,                                                                                           // 1064
-        arrayIndices: branch.arrayIndices                                                                              // 1065
-      });                                                                                                              // 1063
-    }                                                                                                                  // 1067
+    if (!(skipTheArrays && thisIsArray && !branch.dontIterate)) {                                                      // 1018
+      branchesOut.push({                                                                                               // 1019
+        value: branch.value,                                                                                           // 1020
+        arrayIndices: branch.arrayIndices                                                                              // 1021
+      });                                                                                                              // 1019
+    }                                                                                                                  // 1023
                                                                                                                        //
-    if (thisIsArray && !branch.dontIterate) {                                                                          // 1068
-      _.each(branch.value, function (leaf, i) {                                                                        // 1069
-        branchesOut.push({                                                                                             // 1070
-          value: leaf,                                                                                                 // 1071
-          arrayIndices: (branch.arrayIndices || []).concat(i)                                                          // 1072
-        });                                                                                                            // 1070
-      });                                                                                                              // 1074
-    }                                                                                                                  // 1075
-  });                                                                                                                  // 1076
+    if (thisIsArray && !branch.dontIterate) {                                                                          // 1024
+      _.each(branch.value, function (leaf, i) {                                                                        // 1025
+        branchesOut.push({                                                                                             // 1026
+          value: leaf,                                                                                                 // 1027
+          arrayIndices: (branch.arrayIndices || []).concat(i)                                                          // 1028
+        });                                                                                                            // 1026
+      });                                                                                                              // 1030
+    }                                                                                                                  // 1031
+  });                                                                                                                  // 1032
                                                                                                                        //
-  return branchesOut;                                                                                                  // 1077
-};                                                                                                                     // 1078
+  return branchesOut;                                                                                                  // 1033
+};                                                                                                                     // 1034
                                                                                                                        //
-var nothingMatcher = function (docOrBranchedValues) {                                                                  // 1080
-  return {                                                                                                             // 1081
-    result: false                                                                                                      // 1081
-  };                                                                                                                   // 1081
-};                                                                                                                     // 1082
+var nothingMatcher = function (docOrBranchedValues) {                                                                  // 1036
+  return {                                                                                                             // 1037
+    result: false                                                                                                      // 1037
+  };                                                                                                                   // 1037
+};                                                                                                                     // 1038
                                                                                                                        //
-var everythingMatcher = function (docOrBranchedValues) {                                                               // 1084
-  return {                                                                                                             // 1085
-    result: true                                                                                                       // 1085
-  };                                                                                                                   // 1085
-}; // NB: We are cheating and using this function to implement "AND" for both                                          // 1086
-// "document matchers" and "branched matchers". They both return result objects                                        // 1090
-// but the argument is different: for the former it's a whole doc, whereas for                                         // 1091
-// the latter it's an array of "branched values".                                                                      // 1092
-                                                                                                                       //
-                                                                                                                       //
-var andSomeMatchers = function (subMatchers) {                                                                         // 1093
-  if (subMatchers.length === 0) return everythingMatcher;                                                              // 1094
-  if (subMatchers.length === 1) return subMatchers[0];                                                                 // 1096
-  return function (docOrBranches) {                                                                                    // 1099
-    var ret = {};                                                                                                      // 1100
-    ret.result = _.all(subMatchers, function (f) {                                                                     // 1101
-      var subResult = f(docOrBranches); // Copy a 'distance' number out of the first sub-matcher that has              // 1102
-      // one. Yes, this means that if there are multiple $near fields in a                                             // 1104
-      // query, something arbitrary happens; this appears to be consistent with                                        // 1105
-      // Mongo.                                                                                                        // 1106
-                                                                                                                       //
-      if (subResult.result && subResult.distance !== undefined && ret.distance === undefined) {                        // 1107
-        ret.distance = subResult.distance;                                                                             // 1109
-      } // Similarly, propagate arrayIndices from sub-matchers... but to match                                         // 1110
-      // MongoDB behavior, this time the *last* sub-matcher with arrayIndices                                          // 1112
-      // wins.                                                                                                         // 1113
+var everythingMatcher = function (docOrBranchedValues) {                                                               // 1040
+  return {                                                                                                             // 1041
+    result: true                                                                                                       // 1041
+  };                                                                                                                   // 1041
+}; // NB: We are cheating and using this function to implement "AND" for both                                          // 1042
+// "document matchers" and "branched matchers". They both return result objects                                        // 1046
+// but the argument is different: for the former it's a whole doc, whereas for                                         // 1047
+// the latter it's an array of "branched values".                                                                      // 1048
                                                                                                                        //
                                                                                                                        //
-      if (subResult.result && subResult.arrayIndices) {                                                                // 1114
-        ret.arrayIndices = subResult.arrayIndices;                                                                     // 1115
-      }                                                                                                                // 1116
+var andSomeMatchers = function (subMatchers) {                                                                         // 1049
+  if (subMatchers.length === 0) return everythingMatcher;                                                              // 1050
+  if (subMatchers.length === 1) return subMatchers[0];                                                                 // 1052
+  return function (docOrBranches) {                                                                                    // 1055
+    var ret = {};                                                                                                      // 1056
+    ret.result = _.all(subMatchers, function (f) {                                                                     // 1057
+      var subResult = f(docOrBranches); // Copy a 'distance' number out of the first sub-matcher that has              // 1058
+      // one. Yes, this means that if there are multiple $near fields in a                                             // 1060
+      // query, something arbitrary happens; this appears to be consistent with                                        // 1061
+      // Mongo.                                                                                                        // 1062
                                                                                                                        //
-      return subResult.result;                                                                                         // 1117
-    }); // If we didn't actually match, forget any extra metadata we came up with.                                     // 1118
+      if (subResult.result && subResult.distance !== undefined && ret.distance === undefined) {                        // 1063
+        ret.distance = subResult.distance;                                                                             // 1065
+      } // Similarly, propagate arrayIndices from sub-matchers... but to match                                         // 1066
+      // MongoDB behavior, this time the *last* sub-matcher with arrayIndices                                          // 1068
+      // wins.                                                                                                         // 1069
                                                                                                                        //
-    if (!ret.result) {                                                                                                 // 1121
-      delete ret.distance;                                                                                             // 1122
-      delete ret.arrayIndices;                                                                                         // 1123
-    }                                                                                                                  // 1124
                                                                                                                        //
-    return ret;                                                                                                        // 1125
-  };                                                                                                                   // 1126
-};                                                                                                                     // 1127
+      if (subResult.result && subResult.arrayIndices) {                                                                // 1070
+        ret.arrayIndices = subResult.arrayIndices;                                                                     // 1071
+      }                                                                                                                // 1072
                                                                                                                        //
-var andDocumentMatchers = andSomeMatchers;                                                                             // 1129
-var andBranchedMatchers = andSomeMatchers; // helpers used by compiled selector code                                   // 1130
+      return subResult.result;                                                                                         // 1073
+    }); // If we didn't actually match, forget any extra metadata we came up with.                                     // 1074
                                                                                                                        //
-LocalCollection._f = {                                                                                                 // 1134
-  // XXX for _all and _in, consider building 'inquery' at compile time..                                               // 1135
-  _type: function (v) {                                                                                                // 1137
-    if (typeof v === "number") return 1;                                                                               // 1138
-    if (typeof v === "string") return 2;                                                                               // 1140
-    if (typeof v === "boolean") return 8;                                                                              // 1142
-    if (isArray(v)) return 4;                                                                                          // 1144
-    if (v === null) return 10;                                                                                         // 1146
-    if (v instanceof RegExp) // note that typeof(/x/) === "object"                                                     // 1148
-      return 11;                                                                                                       // 1150
-    if (typeof v === "function") return 13;                                                                            // 1151
-    if (v instanceof Date) return 9;                                                                                   // 1153
-    if (EJSON.isBinary(v)) return 5;                                                                                   // 1155
-    if (v instanceof MongoID.ObjectID) return 7;                                                                       // 1157
-    return 3; // object                                                                                                // 1159
-    // XXX support some/all of these:                                                                                  // 1161
-    // 14, symbol                                                                                                      // 1162
-    // 15, javascript code with scope                                                                                  // 1163
-    // 16, 18: 32-bit/64-bit integer                                                                                   // 1164
-    // 17, timestamp                                                                                                   // 1165
-    // 255, minkey                                                                                                     // 1166
-    // 127, maxkey                                                                                                     // 1167
-  },                                                                                                                   // 1168
-  // deep equality test: use for literal document and array matches                                                    // 1170
-  _equal: function (a, b) {                                                                                            // 1171
-    return EJSON.equals(a, b, {                                                                                        // 1172
-      keyOrderSensitive: true                                                                                          // 1172
-    });                                                                                                                // 1172
-  },                                                                                                                   // 1173
-  // maps a type code to a value that can be used to sort values of                                                    // 1175
-  // different types                                                                                                   // 1176
-  _typeorder: function (t) {                                                                                           // 1177
-    // http://www.mongodb.org/display/DOCS/What+is+the+Compare+Order+for+BSON+Types                                    // 1178
-    // XXX what is the correct sort position for Javascript code?                                                      // 1179
-    // ('100' in the matrix below)                                                                                     // 1180
-    // XXX minkey/maxkey                                                                                               // 1181
-    return [-1, // (not a type)                                                                                        // 1182
-    1, // number                                                                                                       // 1183
-    2, // string                                                                                                       // 1184
-    3, // object                                                                                                       // 1185
-    4, // array                                                                                                        // 1186
-    5, // binary                                                                                                       // 1187
-    -1, // deprecated                                                                                                  // 1188
-    6, // ObjectID                                                                                                     // 1189
-    7, // bool                                                                                                         // 1190
-    8, // Date                                                                                                         // 1191
-    0, // null                                                                                                         // 1192
-    9, // RegExp                                                                                                       // 1193
-    -1, // deprecated                                                                                                  // 1194
-    100, // JS code                                                                                                    // 1195
-    2, // deprecated (symbol)                                                                                          // 1196
-    100, // JS code                                                                                                    // 1197
-    1, // 32-bit int                                                                                                   // 1198
-    8, // Mongo timestamp                                                                                              // 1199
-    1 // 64-bit int                                                                                                    // 1200
-    ][t];                                                                                                              // 1182
-  },                                                                                                                   // 1202
-  // compare two values of unknown type according to BSON ordering                                                     // 1204
-  // semantics. (as an extension, consider 'undefined' to be less than                                                 // 1205
-  // any other value.) return negative if a is less, positive if b is                                                  // 1206
-  // less, or 0 if equal                                                                                               // 1207
-  _cmp: function (a, b) {                                                                                              // 1208
-    if (a === undefined) return b === undefined ? 0 : -1;                                                              // 1209
-    if (b === undefined) return 1;                                                                                     // 1211
+    if (!ret.result) {                                                                                                 // 1077
+      delete ret.distance;                                                                                             // 1078
+      delete ret.arrayIndices;                                                                                         // 1079
+    }                                                                                                                  // 1080
                                                                                                                        //
-    var ta = LocalCollection._f._type(a);                                                                              // 1213
+    return ret;                                                                                                        // 1081
+  };                                                                                                                   // 1082
+};                                                                                                                     // 1083
                                                                                                                        //
-    var tb = LocalCollection._f._type(b);                                                                              // 1214
+var andDocumentMatchers = andSomeMatchers;                                                                             // 1085
+var andBranchedMatchers = andSomeMatchers; // helpers used by compiled selector code                                   // 1086
                                                                                                                        //
-    var oa = LocalCollection._f._typeorder(ta);                                                                        // 1215
+LocalCollection._f = {                                                                                                 // 1090
+  // XXX for _all and _in, consider building 'inquery' at compile time..                                               // 1091
+  _type: function (v) {                                                                                                // 1093
+    if (typeof v === "number") return 1;                                                                               // 1094
+    if (typeof v === "string") return 2;                                                                               // 1096
+    if (typeof v === "boolean") return 8;                                                                              // 1098
+    if (isArray(v)) return 4;                                                                                          // 1100
+    if (v === null) return 10;                                                                                         // 1102
+    if (v instanceof RegExp) // note that typeof(/x/) === "object"                                                     // 1104
+      return 11;                                                                                                       // 1106
+    if (typeof v === "function") return 13;                                                                            // 1107
+    if (v instanceof Date) return 9;                                                                                   // 1109
+    if (EJSON.isBinary(v)) return 5;                                                                                   // 1111
+    if (v instanceof MongoID.ObjectID) return 7;                                                                       // 1113
+    return 3; // object                                                                                                // 1115
+    // XXX support some/all of these:                                                                                  // 1117
+    // 14, symbol                                                                                                      // 1118
+    // 15, javascript code with scope                                                                                  // 1119
+    // 16, 18: 32-bit/64-bit integer                                                                                   // 1120
+    // 17, timestamp                                                                                                   // 1121
+    // 255, minkey                                                                                                     // 1122
+    // 127, maxkey                                                                                                     // 1123
+  },                                                                                                                   // 1124
+  // deep equality test: use for literal document and array matches                                                    // 1126
+  _equal: function (a, b) {                                                                                            // 1127
+    return EJSON.equals(a, b, {                                                                                        // 1128
+      keyOrderSensitive: true                                                                                          // 1128
+    });                                                                                                                // 1128
+  },                                                                                                                   // 1129
+  // maps a type code to a value that can be used to sort values of                                                    // 1131
+  // different types                                                                                                   // 1132
+  _typeorder: function (t) {                                                                                           // 1133
+    // http://www.mongodb.org/display/DOCS/What+is+the+Compare+Order+for+BSON+Types                                    // 1134
+    // XXX what is the correct sort position for Javascript code?                                                      // 1135
+    // ('100' in the matrix below)                                                                                     // 1136
+    // XXX minkey/maxkey                                                                                               // 1137
+    return [-1, // (not a type)                                                                                        // 1138
+    1, // number                                                                                                       // 1139
+    2, // string                                                                                                       // 1140
+    3, // object                                                                                                       // 1141
+    4, // array                                                                                                        // 1142
+    5, // binary                                                                                                       // 1143
+    -1, // deprecated                                                                                                  // 1144
+    6, // ObjectID                                                                                                     // 1145
+    7, // bool                                                                                                         // 1146
+    8, // Date                                                                                                         // 1147
+    0, // null                                                                                                         // 1148
+    9, // RegExp                                                                                                       // 1149
+    -1, // deprecated                                                                                                  // 1150
+    100, // JS code                                                                                                    // 1151
+    2, // deprecated (symbol)                                                                                          // 1152
+    100, // JS code                                                                                                    // 1153
+    1, // 32-bit int                                                                                                   // 1154
+    8, // Mongo timestamp                                                                                              // 1155
+    1 // 64-bit int                                                                                                    // 1156
+    ][t];                                                                                                              // 1138
+  },                                                                                                                   // 1158
+  // compare two values of unknown type according to BSON ordering                                                     // 1160
+  // semantics. (as an extension, consider 'undefined' to be less than                                                 // 1161
+  // any other value.) return negative if a is less, positive if b is                                                  // 1162
+  // less, or 0 if equal                                                                                               // 1163
+  _cmp: function (a, b) {                                                                                              // 1164
+    if (a === undefined) return b === undefined ? 0 : -1;                                                              // 1165
+    if (b === undefined) return 1;                                                                                     // 1167
                                                                                                                        //
-    var ob = LocalCollection._f._typeorder(tb);                                                                        // 1216
+    var ta = LocalCollection._f._type(a);                                                                              // 1169
                                                                                                                        //
-    if (oa !== ob) return oa < ob ? -1 : 1;                                                                            // 1217
-    if (ta !== tb) // XXX need to implement this if we implement Symbol or integers, or                                // 1219
-      // Timestamp                                                                                                     // 1221
-      throw Error("Missing type coercion logic in _cmp");                                                              // 1222
+    var tb = LocalCollection._f._type(b);                                                                              // 1170
                                                                                                                        //
-    if (ta === 7) {                                                                                                    // 1223
-      // ObjectID                                                                                                      // 1223
-      // Convert to string.                                                                                            // 1224
-      ta = tb = 2;                                                                                                     // 1225
-      a = a.toHexString();                                                                                             // 1226
-      b = b.toHexString();                                                                                             // 1227
-    }                                                                                                                  // 1228
+    var oa = LocalCollection._f._typeorder(ta);                                                                        // 1171
                                                                                                                        //
-    if (ta === 9) {                                                                                                    // 1229
-      // Date                                                                                                          // 1229
-      // Convert to millis.                                                                                            // 1230
-      ta = tb = 1;                                                                                                     // 1231
-      a = a.getTime();                                                                                                 // 1232
-      b = b.getTime();                                                                                                 // 1233
-    }                                                                                                                  // 1234
+    var ob = LocalCollection._f._typeorder(tb);                                                                        // 1172
                                                                                                                        //
-    if (ta === 1) // double                                                                                            // 1236
-      return a - b;                                                                                                    // 1237
-    if (tb === 2) // string                                                                                            // 1238
-      return a < b ? -1 : a === b ? 0 : 1;                                                                             // 1239
+    if (oa !== ob) return oa < ob ? -1 : 1;                                                                            // 1173
+    if (ta !== tb) // XXX need to implement this if we implement Symbol or integers, or                                // 1175
+      // Timestamp                                                                                                     // 1177
+      throw Error("Missing type coercion logic in _cmp");                                                              // 1178
                                                                                                                        //
-    if (ta === 3) {                                                                                                    // 1240
-      // Object                                                                                                        // 1240
-      // this could be much more efficient in the expected case ...                                                    // 1241
-      var to_array = function (obj) {                                                                                  // 1242
-        var ret = [];                                                                                                  // 1243
+    if (ta === 7) {                                                                                                    // 1179
+      // ObjectID                                                                                                      // 1179
+      // Convert to string.                                                                                            // 1180
+      ta = tb = 2;                                                                                                     // 1181
+      a = a.toHexString();                                                                                             // 1182
+      b = b.toHexString();                                                                                             // 1183
+    }                                                                                                                  // 1184
                                                                                                                        //
-        for (var key in meteorBabelHelpers.sanitizeForInObject(obj)) {                                                 // 1244
-          ret.push(key);                                                                                               // 1245
-          ret.push(obj[key]);                                                                                          // 1246
-        }                                                                                                              // 1247
+    if (ta === 9) {                                                                                                    // 1185
+      // Date                                                                                                          // 1185
+      // Convert to millis.                                                                                            // 1186
+      ta = tb = 1;                                                                                                     // 1187
+      a = a.getTime();                                                                                                 // 1188
+      b = b.getTime();                                                                                                 // 1189
+    }                                                                                                                  // 1190
                                                                                                                        //
-        return ret;                                                                                                    // 1248
-      };                                                                                                               // 1249
+    if (ta === 1) // double                                                                                            // 1192
+      return a - b;                                                                                                    // 1193
+    if (tb === 2) // string                                                                                            // 1194
+      return a < b ? -1 : a === b ? 0 : 1;                                                                             // 1195
                                                                                                                        //
-      return LocalCollection._f._cmp(to_array(a), to_array(b));                                                        // 1250
-    }                                                                                                                  // 1251
+    if (ta === 3) {                                                                                                    // 1196
+      // Object                                                                                                        // 1196
+      // this could be much more efficient in the expected case ...                                                    // 1197
+      var to_array = function (obj) {                                                                                  // 1198
+        var ret = [];                                                                                                  // 1199
                                                                                                                        //
-    if (ta === 4) {                                                                                                    // 1252
-      // Array                                                                                                         // 1252
-      for (var i = 0;; i++) {                                                                                          // 1253
-        if (i === a.length) return i === b.length ? 0 : -1;                                                            // 1254
-        if (i === b.length) return 1;                                                                                  // 1256
+        for (var key in meteorBabelHelpers.sanitizeForInObject(obj)) {                                                 // 1200
+          ret.push(key);                                                                                               // 1201
+          ret.push(obj[key]);                                                                                          // 1202
+        }                                                                                                              // 1203
                                                                                                                        //
-        var s = LocalCollection._f._cmp(a[i], b[i]);                                                                   // 1258
+        return ret;                                                                                                    // 1204
+      };                                                                                                               // 1205
                                                                                                                        //
-        if (s !== 0) return s;                                                                                         // 1259
-      }                                                                                                                // 1261
-    }                                                                                                                  // 1262
+      return LocalCollection._f._cmp(to_array(a), to_array(b));                                                        // 1206
+    }                                                                                                                  // 1207
                                                                                                                        //
-    if (ta === 5) {                                                                                                    // 1263
-      // binary                                                                                                        // 1263
-      // Surprisingly, a small binary blob is always less than a large one in                                          // 1264
-      // Mongo.                                                                                                        // 1265
-      if (a.length !== b.length) return a.length - b.length;                                                           // 1266
+    if (ta === 4) {                                                                                                    // 1208
+      // Array                                                                                                         // 1208
+      for (var i = 0;; i++) {                                                                                          // 1209
+        if (i === a.length) return i === b.length ? 0 : -1;                                                            // 1210
+        if (i === b.length) return 1;                                                                                  // 1212
                                                                                                                        //
-      for (i = 0; i < a.length; i++) {                                                                                 // 1268
-        if (a[i] < b[i]) return -1;                                                                                    // 1269
-        if (a[i] > b[i]) return 1;                                                                                     // 1271
-      }                                                                                                                // 1273
+        var s = LocalCollection._f._cmp(a[i], b[i]);                                                                   // 1214
                                                                                                                        //
-      return 0;                                                                                                        // 1274
-    }                                                                                                                  // 1275
+        if (s !== 0) return s;                                                                                         // 1215
+      }                                                                                                                // 1217
+    }                                                                                                                  // 1218
                                                                                                                        //
-    if (ta === 8) {                                                                                                    // 1276
-      // boolean                                                                                                       // 1276
-      if (a) return b ? 0 : 1;                                                                                         // 1277
-      return b ? -1 : 0;                                                                                               // 1278
-    }                                                                                                                  // 1279
+    if (ta === 5) {                                                                                                    // 1219
+      // binary                                                                                                        // 1219
+      // Surprisingly, a small binary blob is always less than a large one in                                          // 1220
+      // Mongo.                                                                                                        // 1221
+      if (a.length !== b.length) return a.length - b.length;                                                           // 1222
                                                                                                                        //
-    if (ta === 10) // null                                                                                             // 1280
-      return 0;                                                                                                        // 1281
-    if (ta === 11) // regexp                                                                                           // 1282
-      throw Error("Sorting not supported on regular expression"); // XXX                                               // 1283
-    // 13: javascript code                                                                                             // 1284
-    // 14: symbol                                                                                                      // 1285
-    // 15: javascript code with scope                                                                                  // 1286
-    // 16: 32-bit integer                                                                                              // 1287
-    // 17: timestamp                                                                                                   // 1288
-    // 18: 64-bit integer                                                                                              // 1289
-    // 255: minkey                                                                                                     // 1290
-    // 127: maxkey                                                                                                     // 1291
+      for (i = 0; i < a.length; i++) {                                                                                 // 1224
+        if (a[i] < b[i]) return -1;                                                                                    // 1225
+        if (a[i] > b[i]) return 1;                                                                                     // 1227
+      }                                                                                                                // 1229
                                                                                                                        //
-    if (ta === 13) // javascript code                                                                                  // 1292
-      throw Error("Sorting not supported on Javascript code"); // XXX                                                  // 1293
+      return 0;                                                                                                        // 1230
+    }                                                                                                                  // 1231
                                                                                                                        //
-    throw Error("Unknown type to sort");                                                                               // 1294
-  }                                                                                                                    // 1295
-}; // Oddball function used by upsert.                                                                                 // 1134
+    if (ta === 8) {                                                                                                    // 1232
+      // boolean                                                                                                       // 1232
+      if (a) return b ? 0 : 1;                                                                                         // 1233
+      return b ? -1 : 0;                                                                                               // 1234
+    }                                                                                                                  // 1235
                                                                                                                        //
-LocalCollection._removeDollarOperators = function (selector) {                                                         // 1299
-  var selectorDoc = {};                                                                                                // 1300
+    if (ta === 10) // null                                                                                             // 1236
+      return 0;                                                                                                        // 1237
+    if (ta === 11) // regexp                                                                                           // 1238
+      throw Error("Sorting not supported on regular expression"); // XXX                                               // 1239
+    // 13: javascript code                                                                                             // 1240
+    // 14: symbol                                                                                                      // 1241
+    // 15: javascript code with scope                                                                                  // 1242
+    // 16: 32-bit integer                                                                                              // 1243
+    // 17: timestamp                                                                                                   // 1244
+    // 18: 64-bit integer                                                                                              // 1245
+    // 255: minkey                                                                                                     // 1246
+    // 127: maxkey                                                                                                     // 1247
                                                                                                                        //
-  for (var k in meteorBabelHelpers.sanitizeForInObject(selector)) {                                                    // 1301
-    if (k.substr(0, 1) !== '$') selectorDoc[k] = selector[k];                                                          // 1302
-  }                                                                                                                    // 1301
+    if (ta === 13) // javascript code                                                                                  // 1248
+      throw Error("Sorting not supported on Javascript code"); // XXX                                                  // 1249
                                                                                                                        //
-  return selectorDoc;                                                                                                  // 1304
-};                                                                                                                     // 1305
+    throw Error("Unknown type to sort");                                                                               // 1250
+  }                                                                                                                    // 1251
+}; // Oddball function used by upsert.                                                                                 // 1090
+                                                                                                                       //
+LocalCollection._removeDollarOperators = function (selector) {                                                         // 1255
+  var selectorDoc = {};                                                                                                // 1256
+                                                                                                                       //
+  for (var k in meteorBabelHelpers.sanitizeForInObject(selector)) {                                                    // 1257
+    if (k.substr(0, 1) !== '$') selectorDoc[k] = selector[k];                                                          // 1258
+  }                                                                                                                    // 1257
+                                                                                                                       //
+  return selectorDoc;                                                                                                  // 1260
+};                                                                                                                     // 1261
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"sort.js":["babel-runtime/helpers/typeof",function(require){
+},"sort.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -2584,309 +2592,311 @@ Minimongo.Sorter = function (spec, options) {                                   
                                                                                                                        //
 _.extend(Minimongo.Sorter.prototype, {                                                                                 // 80
   getComparator: function (options) {                                                                                  // 81
-    var self = this; // If we have no distances, just use the comparator from the source                               // 82
-    // specification (which defaults to "everything is equal".                                                         // 85
+    var self = this; // If sort is specified or have no distances, just use the comparator from                        // 82
+    // the source specification (which defaults to "everything is equal".                                              // 85
+    // issue #3599                                                                                                     // 86
+    // https://docs.mongodb.com/manual/reference/operator/query/near/#sort-operation                                   // 87
+    // sort effectively overrides $near                                                                                // 88
                                                                                                                        //
-    if (!options || !options.distances) {                                                                              // 86
-      return self._getBaseComparator();                                                                                // 87
-    }                                                                                                                  // 88
+    if (self._sortSpecParts.length || !options || !options.distances) {                                                // 89
+      return self._getBaseComparator();                                                                                // 90
+    }                                                                                                                  // 91
                                                                                                                        //
-    var distances = options.distances; // Return a comparator which first tries the sort specification, and if that    // 90
-    // says "it's equal", breaks ties using $near distances.                                                           // 93
+    var distances = options.distances; // Return a comparator which compares using $near distances.                    // 93
                                                                                                                        //
-    return composeComparators([self._getBaseComparator(), function (a, b) {                                            // 94
-      if (!distances.has(a._id)) throw Error("Missing distance for " + a._id);                                         // 95
-      if (!distances.has(b._id)) throw Error("Missing distance for " + b._id);                                         // 97
-      return distances.get(a._id) - distances.get(b._id);                                                              // 99
-    }]);                                                                                                               // 100
-  },                                                                                                                   // 101
-  _getPaths: function () {                                                                                             // 103
-    var self = this;                                                                                                   // 104
-    return _.pluck(self._sortSpecParts, 'path');                                                                       // 105
-  },                                                                                                                   // 106
-  // Finds the minimum key from the doc, according to the sort specs.  (We say                                         // 108
-  // "minimum" here but this is with respect to the sort spec, so "descending"                                         // 109
-  // sort fields mean we're finding the max for that field.)                                                           // 110
-  //                                                                                                                   // 111
-  // Note that this is NOT "find the minimum value of the first field, the                                             // 112
-  // minimum value of the second field, etc"... it's "choose the                                                       // 113
-  // lexicographically minimum value of the key vector, allowing only keys which                                       // 114
-  // you can find along the same paths".  ie, for a doc {a: [{x: 0, y: 5}, {x:                                         // 115
-  // 1, y: 3}]} with sort spec {'a.x': 1, 'a.y': 1}, the only keys are [0,5] and                                       // 116
-  // [1,3], and the minimum key is [0,5]; notably, [0,3] is NOT a key.                                                 // 117
-  _getMinKeyFromDoc: function (doc) {                                                                                  // 118
-    var self = this;                                                                                                   // 119
-    var minKey = null;                                                                                                 // 120
+    return function (a, b) {                                                                                           // 96
+      if (!distances.has(a._id)) throw Error("Missing distance for " + a._id);                                         // 97
+      if (!distances.has(b._id)) throw Error("Missing distance for " + b._id);                                         // 99
+      return distances.get(a._id) - distances.get(b._id);                                                              // 101
+    };                                                                                                                 // 102
+  },                                                                                                                   // 103
+  _getPaths: function () {                                                                                             // 105
+    var self = this;                                                                                                   // 106
+    return _.pluck(self._sortSpecParts, 'path');                                                                       // 107
+  },                                                                                                                   // 108
+  // Finds the minimum key from the doc, according to the sort specs.  (We say                                         // 110
+  // "minimum" here but this is with respect to the sort spec, so "descending"                                         // 111
+  // sort fields mean we're finding the max for that field.)                                                           // 112
+  //                                                                                                                   // 113
+  // Note that this is NOT "find the minimum value of the first field, the                                             // 114
+  // minimum value of the second field, etc"... it's "choose the                                                       // 115
+  // lexicographically minimum value of the key vector, allowing only keys which                                       // 116
+  // you can find along the same paths".  ie, for a doc {a: [{x: 0, y: 5}, {x:                                         // 117
+  // 1, y: 3}]} with sort spec {'a.x': 1, 'a.y': 1}, the only keys are [0,5] and                                       // 118
+  // [1,3], and the minimum key is [0,5]; notably, [0,3] is NOT a key.                                                 // 119
+  _getMinKeyFromDoc: function (doc) {                                                                                  // 120
+    var self = this;                                                                                                   // 121
+    var minKey = null;                                                                                                 // 122
                                                                                                                        //
-    self._generateKeysFromDoc(doc, function (key) {                                                                    // 122
-      if (!self._keyCompatibleWithSelector(key)) return;                                                               // 123
+    self._generateKeysFromDoc(doc, function (key) {                                                                    // 124
+      if (!self._keyCompatibleWithSelector(key)) return;                                                               // 125
                                                                                                                        //
-      if (minKey === null) {                                                                                           // 126
-        minKey = key;                                                                                                  // 127
-        return;                                                                                                        // 128
-      }                                                                                                                // 129
+      if (minKey === null) {                                                                                           // 128
+        minKey = key;                                                                                                  // 129
+        return;                                                                                                        // 130
+      }                                                                                                                // 131
                                                                                                                        //
-      if (self._compareKeys(key, minKey) < 0) {                                                                        // 130
-        minKey = key;                                                                                                  // 131
-      }                                                                                                                // 132
-    }); // This could happen if our key filter somehow filters out all the keys even                                   // 133
-    // though somehow the selector matches.                                                                            // 136
+      if (self._compareKeys(key, minKey) < 0) {                                                                        // 132
+        minKey = key;                                                                                                  // 133
+      }                                                                                                                // 134
+    }); // This could happen if our key filter somehow filters out all the keys even                                   // 135
+    // though somehow the selector matches.                                                                            // 138
                                                                                                                        //
                                                                                                                        //
-    if (minKey === null) throw Error("sort selector found no keys in doc?");                                           // 137
-    return minKey;                                                                                                     // 139
-  },                                                                                                                   // 140
-  _keyCompatibleWithSelector: function (key) {                                                                         // 142
-    var self = this;                                                                                                   // 143
-    return !self._keyFilter || self._keyFilter(key);                                                                   // 144
-  },                                                                                                                   // 145
-  // Iterates over each possible "key" from doc (ie, over each branch), calling                                        // 147
-  // 'cb' with the key.                                                                                                // 148
-  _generateKeysFromDoc: function (doc, cb) {                                                                           // 149
-    var self = this;                                                                                                   // 150
+    if (minKey === null) throw Error("sort selector found no keys in doc?");                                           // 139
+    return minKey;                                                                                                     // 141
+  },                                                                                                                   // 142
+  _keyCompatibleWithSelector: function (key) {                                                                         // 144
+    var self = this;                                                                                                   // 145
+    return !self._keyFilter || self._keyFilter(key);                                                                   // 146
+  },                                                                                                                   // 147
+  // Iterates over each possible "key" from doc (ie, over each branch), calling                                        // 149
+  // 'cb' with the key.                                                                                                // 150
+  _generateKeysFromDoc: function (doc, cb) {                                                                           // 151
+    var self = this;                                                                                                   // 152
     if (self._sortSpecParts.length === 0) throw new Error("can't generate keys without a spec"); // maps index -> ({'' -> value} or {path -> value})
                                                                                                                        //
-    var valuesByIndexAndPath = [];                                                                                     // 156
+    var valuesByIndexAndPath = [];                                                                                     // 158
                                                                                                                        //
-    var pathFromIndices = function (indices) {                                                                         // 158
-      return indices.join(',') + ',';                                                                                  // 159
-    };                                                                                                                 // 160
+    var pathFromIndices = function (indices) {                                                                         // 160
+      return indices.join(',') + ',';                                                                                  // 161
+    };                                                                                                                 // 162
                                                                                                                        //
-    var knownPaths = null;                                                                                             // 162
+    var knownPaths = null;                                                                                             // 164
                                                                                                                        //
-    _.each(self._sortSpecParts, function (spec, whichField) {                                                          // 164
-      // Expand any leaf arrays that we find, and ignore those arrays                                                  // 165
-      // themselves.  (We never sort based on an array itself.)                                                        // 166
+    _.each(self._sortSpecParts, function (spec, whichField) {                                                          // 166
+      // Expand any leaf arrays that we find, and ignore those arrays                                                  // 167
+      // themselves.  (We never sort based on an array itself.)                                                        // 168
       var branches = expandArraysInBranches(spec.lookup(doc), true); // If there are no values for a key (eg, key goes to an empty array),
-      // pretend we found one null value.                                                                              // 170
+      // pretend we found one null value.                                                                              // 172
                                                                                                                        //
-      if (!branches.length) branches = [{                                                                              // 171
-        value: null                                                                                                    // 172
-      }];                                                                                                              // 172
-      var usedPaths = false;                                                                                           // 174
-      valuesByIndexAndPath[whichField] = {};                                                                           // 175
+      if (!branches.length) branches = [{                                                                              // 173
+        value: null                                                                                                    // 174
+      }];                                                                                                              // 174
+      var usedPaths = false;                                                                                           // 176
+      valuesByIndexAndPath[whichField] = {};                                                                           // 177
                                                                                                                        //
-      _.each(branches, function (branch) {                                                                             // 176
-        if (!branch.arrayIndices) {                                                                                    // 177
-          // If there are no array indices for a branch, then it must be the                                           // 178
-          // only branch, because the only thing that produces multiple branches                                       // 179
-          // is the use of arrays.                                                                                     // 180
-          if (branches.length > 1) throw Error("multiple branches but no array used?");                                // 181
-          valuesByIndexAndPath[whichField][''] = branch.value;                                                         // 183
-          return;                                                                                                      // 184
-        }                                                                                                              // 185
+      _.each(branches, function (branch) {                                                                             // 178
+        if (!branch.arrayIndices) {                                                                                    // 179
+          // If there are no array indices for a branch, then it must be the                                           // 180
+          // only branch, because the only thing that produces multiple branches                                       // 181
+          // is the use of arrays.                                                                                     // 182
+          if (branches.length > 1) throw Error("multiple branches but no array used?");                                // 183
+          valuesByIndexAndPath[whichField][''] = branch.value;                                                         // 185
+          return;                                                                                                      // 186
+        }                                                                                                              // 187
                                                                                                                        //
-        usedPaths = true;                                                                                              // 187
-        var path = pathFromIndices(branch.arrayIndices);                                                               // 188
-        if (_.has(valuesByIndexAndPath[whichField], path)) throw Error("duplicate path: " + path);                     // 189
+        usedPaths = true;                                                                                              // 189
+        var path = pathFromIndices(branch.arrayIndices);                                                               // 190
+        if (_.has(valuesByIndexAndPath[whichField], path)) throw Error("duplicate path: " + path);                     // 191
         valuesByIndexAndPath[whichField][path] = branch.value; // If two sort fields both go into arrays, they have to go into the
-        // exact same arrays and we have to find the same paths.  This is                                              // 194
-        // roughly the same condition that makes MongoDB throw this strange                                            // 195
-        // error message.  eg, the main thing is that if sort spec is {a: 1,                                           // 196
-        // b:1} then a and b cannot both be arrays.                                                                    // 197
-        //                                                                                                             // 198
-        // (In MongoDB it seems to be OK to have {a: 1, 'a.x.y': 1} where 'a'                                          // 199
-        // and 'a.x.y' are both arrays, but we don't allow this for now.                                               // 200
-        // #NestedArraySort                                                                                            // 201
-        // XXX achieve full compatibility here                                                                         // 202
+        // exact same arrays and we have to find the same paths.  This is                                              // 196
+        // roughly the same condition that makes MongoDB throw this strange                                            // 197
+        // error message.  eg, the main thing is that if sort spec is {a: 1,                                           // 198
+        // b:1} then a and b cannot both be arrays.                                                                    // 199
+        //                                                                                                             // 200
+        // (In MongoDB it seems to be OK to have {a: 1, 'a.x.y': 1} where 'a'                                          // 201
+        // and 'a.x.y' are both arrays, but we don't allow this for now.                                               // 202
+        // #NestedArraySort                                                                                            // 203
+        // XXX achieve full compatibility here                                                                         // 204
                                                                                                                        //
-        if (knownPaths && !_.has(knownPaths, path)) {                                                                  // 203
-          throw Error("cannot index parallel arrays");                                                                 // 204
-        }                                                                                                              // 205
-      });                                                                                                              // 206
+        if (knownPaths && !_.has(knownPaths, path)) {                                                                  // 205
+          throw Error("cannot index parallel arrays");                                                                 // 206
+        }                                                                                                              // 207
+      });                                                                                                              // 208
                                                                                                                        //
-      if (knownPaths) {                                                                                                // 208
-        // Similarly to above, paths must match everywhere, unless this is a                                           // 209
-        // non-array field.                                                                                            // 210
+      if (knownPaths) {                                                                                                // 210
+        // Similarly to above, paths must match everywhere, unless this is a                                           // 211
+        // non-array field.                                                                                            // 212
         if (!_.has(valuesByIndexAndPath[whichField], '') && _.size(knownPaths) !== _.size(valuesByIndexAndPath[whichField])) {
-          throw Error("cannot index parallel arrays!");                                                                // 213
-        }                                                                                                              // 214
-      } else if (usedPaths) {                                                                                          // 215
-        knownPaths = {};                                                                                               // 216
+          throw Error("cannot index parallel arrays!");                                                                // 215
+        }                                                                                                              // 216
+      } else if (usedPaths) {                                                                                          // 217
+        knownPaths = {};                                                                                               // 218
                                                                                                                        //
-        _.each(valuesByIndexAndPath[whichField], function (x, path) {                                                  // 217
-          knownPaths[path] = true;                                                                                     // 218
-        });                                                                                                            // 219
-      }                                                                                                                // 220
-    });                                                                                                                // 221
+        _.each(valuesByIndexAndPath[whichField], function (x, path) {                                                  // 219
+          knownPaths[path] = true;                                                                                     // 220
+        });                                                                                                            // 221
+      }                                                                                                                // 222
+    });                                                                                                                // 223
                                                                                                                        //
-    if (!knownPaths) {                                                                                                 // 223
-      // Easy case: no use of arrays.                                                                                  // 224
-      var soleKey = _.map(valuesByIndexAndPath, function (values) {                                                    // 225
-        if (!_.has(values, '')) throw Error("no value in sole key case?");                                             // 226
-        return values[''];                                                                                             // 228
-      });                                                                                                              // 229
+    if (!knownPaths) {                                                                                                 // 225
+      // Easy case: no use of arrays.                                                                                  // 226
+      var soleKey = _.map(valuesByIndexAndPath, function (values) {                                                    // 227
+        if (!_.has(values, '')) throw Error("no value in sole key case?");                                             // 228
+        return values[''];                                                                                             // 230
+      });                                                                                                              // 231
                                                                                                                        //
-      cb(soleKey);                                                                                                     // 230
-      return;                                                                                                          // 231
-    }                                                                                                                  // 232
+      cb(soleKey);                                                                                                     // 232
+      return;                                                                                                          // 233
+    }                                                                                                                  // 234
                                                                                                                        //
-    _.each(knownPaths, function (x, path) {                                                                            // 234
-      var key = _.map(valuesByIndexAndPath, function (values) {                                                        // 235
-        if (_.has(values, '')) return values[''];                                                                      // 236
-        if (!_.has(values, path)) throw Error("missing path?");                                                        // 238
-        return values[path];                                                                                           // 240
-      });                                                                                                              // 241
+    _.each(knownPaths, function (x, path) {                                                                            // 236
+      var key = _.map(valuesByIndexAndPath, function (values) {                                                        // 237
+        if (_.has(values, '')) return values[''];                                                                      // 238
+        if (!_.has(values, path)) throw Error("missing path?");                                                        // 240
+        return values[path];                                                                                           // 242
+      });                                                                                                              // 243
                                                                                                                        //
-      cb(key);                                                                                                         // 242
-    });                                                                                                                // 243
-  },                                                                                                                   // 244
-  // Takes in two keys: arrays whose lengths match the number of spec                                                  // 246
-  // parts. Returns negative, 0, or positive based on using the sort spec to                                           // 247
-  // compare fields.                                                                                                   // 248
-  _compareKeys: function (key1, key2) {                                                                                // 249
-    var self = this;                                                                                                   // 250
+      cb(key);                                                                                                         // 244
+    });                                                                                                                // 245
+  },                                                                                                                   // 246
+  // Takes in two keys: arrays whose lengths match the number of spec                                                  // 248
+  // parts. Returns negative, 0, or positive based on using the sort spec to                                           // 249
+  // compare fields.                                                                                                   // 250
+  _compareKeys: function (key1, key2) {                                                                                // 251
+    var self = this;                                                                                                   // 252
                                                                                                                        //
-    if (key1.length !== self._sortSpecParts.length || key2.length !== self._sortSpecParts.length) {                    // 251
-      throw Error("Key has wrong length");                                                                             // 253
-    }                                                                                                                  // 254
+    if (key1.length !== self._sortSpecParts.length || key2.length !== self._sortSpecParts.length) {                    // 253
+      throw Error("Key has wrong length");                                                                             // 255
+    }                                                                                                                  // 256
                                                                                                                        //
-    return self._keyComparator(key1, key2);                                                                            // 256
-  },                                                                                                                   // 257
-  // Given an index 'i', returns a comparator that compares two key arrays based                                       // 259
-  // on field 'i'.                                                                                                     // 260
-  _keyFieldComparator: function (i) {                                                                                  // 261
-    var self = this;                                                                                                   // 262
-    var invert = !self._sortSpecParts[i].ascending;                                                                    // 263
-    return function (key1, key2) {                                                                                     // 264
-      var compare = LocalCollection._f._cmp(key1[i], key2[i]);                                                         // 265
+    return self._keyComparator(key1, key2);                                                                            // 258
+  },                                                                                                                   // 259
+  // Given an index 'i', returns a comparator that compares two key arrays based                                       // 261
+  // on field 'i'.                                                                                                     // 262
+  _keyFieldComparator: function (i) {                                                                                  // 263
+    var self = this;                                                                                                   // 264
+    var invert = !self._sortSpecParts[i].ascending;                                                                    // 265
+    return function (key1, key2) {                                                                                     // 266
+      var compare = LocalCollection._f._cmp(key1[i], key2[i]);                                                         // 267
                                                                                                                        //
-      if (invert) compare = -compare;                                                                                  // 266
-      return compare;                                                                                                  // 268
-    };                                                                                                                 // 269
-  },                                                                                                                   // 270
-  // Returns a comparator that represents the sort specification (but not                                              // 272
-  // including a possible geoquery distance tie-breaker).                                                              // 273
-  _getBaseComparator: function () {                                                                                    // 274
-    var self = this;                                                                                                   // 275
+      if (invert) compare = -compare;                                                                                  // 268
+      return compare;                                                                                                  // 270
+    };                                                                                                                 // 271
+  },                                                                                                                   // 272
+  // Returns a comparator that represents the sort specification (but not                                              // 274
+  // including a possible geoquery distance tie-breaker).                                                              // 275
+  _getBaseComparator: function () {                                                                                    // 276
+    var self = this;                                                                                                   // 277
     if (self._sortFunction) return self._sortFunction; // If we're only sorting on geoquery distance and no specs, just say
-    // everything is equal.                                                                                            // 281
+    // everything is equal.                                                                                            // 283
                                                                                                                        //
-    if (!self._sortSpecParts.length) {                                                                                 // 282
-      return function (doc1, doc2) {                                                                                   // 283
-        return 0;                                                                                                      // 284
-      };                                                                                                               // 285
-    }                                                                                                                  // 286
+    if (!self._sortSpecParts.length) {                                                                                 // 284
+      return function (doc1, doc2) {                                                                                   // 285
+        return 0;                                                                                                      // 286
+      };                                                                                                               // 287
+    }                                                                                                                  // 288
                                                                                                                        //
-    return function (doc1, doc2) {                                                                                     // 288
-      var key1 = self._getMinKeyFromDoc(doc1);                                                                         // 289
+    return function (doc1, doc2) {                                                                                     // 290
+      var key1 = self._getMinKeyFromDoc(doc1);                                                                         // 291
                                                                                                                        //
-      var key2 = self._getMinKeyFromDoc(doc2);                                                                         // 290
+      var key2 = self._getMinKeyFromDoc(doc2);                                                                         // 292
                                                                                                                        //
-      return self._compareKeys(key1, key2);                                                                            // 291
-    };                                                                                                                 // 292
-  },                                                                                                                   // 293
-  // In MongoDB, if you have documents                                                                                 // 295
-  //    {_id: 'x', a: [1, 10]} and                                                                                     // 296
-  //    {_id: 'y', a: [5, 15]},                                                                                        // 297
-  // then C.find({}, {sort: {a: 1}}) puts x before y (1 comes before 5).                                               // 298
-  // But  C.find({a: {$gt: 3}}, {sort: {a: 1}}) puts y before x (1 does not                                            // 299
-  // match the selector, and 5 comes before 10).                                                                       // 300
-  //                                                                                                                   // 301
-  // The way this works is pretty subtle!  For example, if the documents                                               // 302
-  // are instead {_id: 'x', a: [{x: 1}, {x: 10}]}) and                                                                 // 303
-  //             {_id: 'y', a: [{x: 5}, {x: 15}]}),                                                                    // 304
-  // then C.find({'a.x': {$gt: 3}}, {sort: {'a.x': 1}}) and                                                            // 305
-  //      C.find({a: {$elemMatch: {x: {$gt: 3}}}}, {sort: {'a.x': 1}})                                                 // 306
-  // both follow this rule (y before x).  (ie, you do have to apply this                                               // 307
-  // through $elemMatch.)                                                                                              // 308
-  //                                                                                                                   // 309
-  // So if you pass a matcher to this sorter's constructor, we will attempt to                                         // 310
-  // skip sort keys that don't match the selector. The logic here is pretty                                            // 311
-  // subtle and undocumented; we've gotten as close as we can figure out based                                         // 312
-  // on our understanding of Mongo's behavior.                                                                         // 313
-  _useWithMatcher: function (matcher) {                                                                                // 314
-    var self = this;                                                                                                   // 315
+      return self._compareKeys(key1, key2);                                                                            // 293
+    };                                                                                                                 // 294
+  },                                                                                                                   // 295
+  // In MongoDB, if you have documents                                                                                 // 297
+  //    {_id: 'x', a: [1, 10]} and                                                                                     // 298
+  //    {_id: 'y', a: [5, 15]},                                                                                        // 299
+  // then C.find({}, {sort: {a: 1}}) puts x before y (1 comes before 5).                                               // 300
+  // But  C.find({a: {$gt: 3}}, {sort: {a: 1}}) puts y before x (1 does not                                            // 301
+  // match the selector, and 5 comes before 10).                                                                       // 302
+  //                                                                                                                   // 303
+  // The way this works is pretty subtle!  For example, if the documents                                               // 304
+  // are instead {_id: 'x', a: [{x: 1}, {x: 10}]}) and                                                                 // 305
+  //             {_id: 'y', a: [{x: 5}, {x: 15}]}),                                                                    // 306
+  // then C.find({'a.x': {$gt: 3}}, {sort: {'a.x': 1}}) and                                                            // 307
+  //      C.find({a: {$elemMatch: {x: {$gt: 3}}}}, {sort: {'a.x': 1}})                                                 // 308
+  // both follow this rule (y before x).  (ie, you do have to apply this                                               // 309
+  // through $elemMatch.)                                                                                              // 310
+  //                                                                                                                   // 311
+  // So if you pass a matcher to this sorter's constructor, we will attempt to                                         // 312
+  // skip sort keys that don't match the selector. The logic here is pretty                                            // 313
+  // subtle and undocumented; we've gotten as close as we can figure out based                                         // 314
+  // on our understanding of Mongo's behavior.                                                                         // 315
+  _useWithMatcher: function (matcher) {                                                                                // 316
+    var self = this;                                                                                                   // 317
     if (self._keyFilter) throw Error("called _useWithMatcher twice?"); // If we are only sorting by distance, then we're not going to bother to
-    // build a key filter.                                                                                             // 321
-    // XXX figure out how geoqueries interact with this stuff                                                          // 322
+    // build a key filter.                                                                                             // 323
+    // XXX figure out how geoqueries interact with this stuff                                                          // 324
                                                                                                                        //
-    if (_.isEmpty(self._sortSpecParts)) return;                                                                        // 323
-    var selector = matcher._selector; // If the user just passed a literal function to find(), then we can't get a     // 326
-    // key filter from it.                                                                                             // 329
+    if (_.isEmpty(self._sortSpecParts)) return;                                                                        // 325
+    var selector = matcher._selector; // If the user just passed a literal function to find(), then we can't get a     // 328
+    // key filter from it.                                                                                             // 331
                                                                                                                        //
-    if (selector instanceof Function) return;                                                                          // 330
-    var constraintsByPath = {};                                                                                        // 333
+    if (selector instanceof Function) return;                                                                          // 332
+    var constraintsByPath = {};                                                                                        // 335
                                                                                                                        //
-    _.each(self._sortSpecParts, function (spec, i) {                                                                   // 334
-      constraintsByPath[spec.path] = [];                                                                               // 335
-    });                                                                                                                // 336
+    _.each(self._sortSpecParts, function (spec, i) {                                                                   // 336
+      constraintsByPath[spec.path] = [];                                                                               // 337
+    });                                                                                                                // 338
                                                                                                                        //
-    _.each(selector, function (subSelector, key) {                                                                     // 338
-      // XXX support $and and $or                                                                                      // 339
-      var constraints = constraintsByPath[key];                                                                        // 341
-      if (!constraints) return; // XXX it looks like the real MongoDB implementation isn't "does the                   // 342
-      // regexp match" but "does the value fall into a range named by the                                              // 346
-      // literal prefix of the regexp", ie "foo" in /^foo(bar|baz)+/  But                                              // 347
-      // "does the regexp match" is a good approximation.                                                              // 348
+    _.each(selector, function (subSelector, key) {                                                                     // 340
+      // XXX support $and and $or                                                                                      // 341
+      var constraints = constraintsByPath[key];                                                                        // 343
+      if (!constraints) return; // XXX it looks like the real MongoDB implementation isn't "does the                   // 344
+      // regexp match" but "does the value fall into a range named by the                                              // 348
+      // literal prefix of the regexp", ie "foo" in /^foo(bar|baz)+/  But                                              // 349
+      // "does the regexp match" is a good approximation.                                                              // 350
                                                                                                                        //
-      if (subSelector instanceof RegExp) {                                                                             // 349
-        // As far as we can tell, using either of the options that both we and                                         // 350
-        // MongoDB support ('i' and 'm') disables use of the key filter. This                                          // 351
-        // makes sense: MongoDB mostly appears to be calculating ranges of an                                          // 352
-        // index to use, which means it only cares about regexps that match                                            // 353
-        // one range (with a literal prefix), and both 'i' and 'm' prevent the                                         // 354
-        // literal prefix of the regexp from actually meaning one range.                                               // 355
-        if (subSelector.ignoreCase || subSelector.multiline) return;                                                   // 356
-        constraints.push(regexpElementMatcher(subSelector));                                                           // 358
-        return;                                                                                                        // 359
-      }                                                                                                                // 360
+      if (subSelector instanceof RegExp) {                                                                             // 351
+        // As far as we can tell, using either of the options that both we and                                         // 352
+        // MongoDB support ('i' and 'm') disables use of the key filter. This                                          // 353
+        // makes sense: MongoDB mostly appears to be calculating ranges of an                                          // 354
+        // index to use, which means it only cares about regexps that match                                            // 355
+        // one range (with a literal prefix), and both 'i' and 'm' prevent the                                         // 356
+        // literal prefix of the regexp from actually meaning one range.                                               // 357
+        if (subSelector.ignoreCase || subSelector.multiline) return;                                                   // 358
+        constraints.push(regexpElementMatcher(subSelector));                                                           // 360
+        return;                                                                                                        // 361
+      }                                                                                                                // 362
                                                                                                                        //
-      if (isOperatorObject(subSelector)) {                                                                             // 362
-        _.each(subSelector, function (operand, operator) {                                                             // 363
-          if (_.contains(['$lt', '$lte', '$gt', '$gte'], operator)) {                                                  // 364
-            // XXX this depends on us knowing that these operators don't use any                                       // 365
-            // of the arguments to compileElementSelector other than operand.                                          // 366
-            constraints.push(ELEMENT_OPERATORS[operator].compileElementSelector(operand));                             // 367
-          } // See comments in the RegExp block above.                                                                 // 369
-                                                                                                                       //
-                                                                                                                       //
-          if (operator === '$regex' && !subSelector.$options) {                                                        // 372
-            constraints.push(ELEMENT_OPERATORS.$regex.compileElementSelector(operand, subSelector));                   // 373
-          } // XXX support {$exists: true}, $mod, $type, $in, $elemMatch                                               // 376
-                                                                                                                       //
-        });                                                                                                            // 379
-                                                                                                                       //
-        return;                                                                                                        // 380
-      } // OK, it's an equality thing.                                                                                 // 381
+      if (isOperatorObject(subSelector)) {                                                                             // 364
+        _.each(subSelector, function (operand, operator) {                                                             // 365
+          if (_.contains(['$lt', '$lte', '$gt', '$gte'], operator)) {                                                  // 366
+            // XXX this depends on us knowing that these operators don't use any                                       // 367
+            // of the arguments to compileElementSelector other than operand.                                          // 368
+            constraints.push(ELEMENT_OPERATORS[operator].compileElementSelector(operand));                             // 369
+          } // See comments in the RegExp block above.                                                                 // 371
                                                                                                                        //
                                                                                                                        //
-      constraints.push(equalityElementMatcher(subSelector));                                                           // 384
-    }); // It appears that the first sort field is treated differently from the                                        // 385
-    // others; we shouldn't create a key filter unless the first sort field is                                         // 388
-    // restricted, though after that point we can restrict the other sort fields                                       // 389
-    // or not as we wish.                                                                                              // 390
+          if (operator === '$regex' && !subSelector.$options) {                                                        // 374
+            constraints.push(ELEMENT_OPERATORS.$regex.compileElementSelector(operand, subSelector));                   // 375
+          } // XXX support {$exists: true}, $mod, $type, $in, $elemMatch                                               // 378
+                                                                                                                       //
+        });                                                                                                            // 381
+                                                                                                                       //
+        return;                                                                                                        // 382
+      } // OK, it's an equality thing.                                                                                 // 383
                                                                                                                        //
                                                                                                                        //
-    if (_.isEmpty(constraintsByPath[self._sortSpecParts[0].path])) return;                                             // 391
+      constraints.push(equalityElementMatcher(subSelector));                                                           // 386
+    }); // It appears that the first sort field is treated differently from the                                        // 387
+    // others; we shouldn't create a key filter unless the first sort field is                                         // 390
+    // restricted, though after that point we can restrict the other sort fields                                       // 391
+    // or not as we wish.                                                                                              // 392
                                                                                                                        //
-    self._keyFilter = function (key) {                                                                                 // 394
-      return _.all(self._sortSpecParts, function (specPart, index) {                                                   // 395
-        return _.all(constraintsByPath[specPart.path], function (f) {                                                  // 396
-          return f(key[index]);                                                                                        // 397
-        });                                                                                                            // 398
-      });                                                                                                              // 399
-    };                                                                                                                 // 400
-  }                                                                                                                    // 401
+                                                                                                                       //
+    if (_.isEmpty(constraintsByPath[self._sortSpecParts[0].path])) return;                                             // 393
+                                                                                                                       //
+    self._keyFilter = function (key) {                                                                                 // 396
+      return _.all(self._sortSpecParts, function (specPart, index) {                                                   // 397
+        return _.all(constraintsByPath[specPart.path], function (f) {                                                  // 398
+          return f(key[index]);                                                                                        // 399
+        });                                                                                                            // 400
+      });                                                                                                              // 401
+    };                                                                                                                 // 402
+  }                                                                                                                    // 403
 }); // Given an array of comparators                                                                                   // 80
-// (functions (a,b)->(negative or positive or zero)), returns a single                                                 // 405
-// comparator which uses each comparator in order and returns the first                                                // 406
-// non-zero value.                                                                                                     // 407
+// (functions (a,b)->(negative or positive or zero)), returns a single                                                 // 407
+// comparator which uses each comparator in order and returns the first                                                // 408
+// non-zero value.                                                                                                     // 409
                                                                                                                        //
                                                                                                                        //
-var composeComparators = function (comparatorArray) {                                                                  // 408
-  return function (a, b) {                                                                                             // 409
-    for (var i = 0; i < comparatorArray.length; ++i) {                                                                 // 410
-      var compare = comparatorArray[i](a, b);                                                                          // 411
-      if (compare !== 0) return compare;                                                                               // 412
-    }                                                                                                                  // 414
+var composeComparators = function (comparatorArray) {                                                                  // 410
+  return function (a, b) {                                                                                             // 411
+    for (var i = 0; i < comparatorArray.length; ++i) {                                                                 // 412
+      var compare = comparatorArray[i](a, b);                                                                          // 413
+      if (compare !== 0) return compare;                                                                               // 414
+    }                                                                                                                  // 416
                                                                                                                        //
-    return 0;                                                                                                          // 415
-  };                                                                                                                   // 416
-};                                                                                                                     // 417
+    return 0;                                                                                                          // 417
+  };                                                                                                                   // 418
+};                                                                                                                     // 419
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"projection.js":["babel-runtime/helpers/typeof",function(require){
+},"projection.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -3047,7 +3057,7 @@ LocalCollection._checkSupportedProjection = function (fields) {                 
 };                                                                                                                     // 174
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"modify.js":["babel-runtime/helpers/typeof","./validation.js",function(require,exports,module){
+},"modify.js":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -3063,7 +3073,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
                                                                                                                        //
 var assertHasValidFieldNames = void 0,                                                                                 // 1
     assertIsValidFieldName = void 0;                                                                                   // 1
-module.importSync("./validation.js", {                                                                                 // 1
+module.watch(require("./validation.js"), {                                                                             // 1
   assertHasValidFieldNames: function (v) {                                                                             // 1
     assertHasValidFieldNames = v;                                                                                      // 1
   },                                                                                                                   // 1
@@ -3377,207 +3387,204 @@ var MODIFIERS = {                                                               
         field: field                                                                                                   // 302
       }); // XXX should check to make sure integer                                                                     // 302
                                                                                                                        //
-      if (arg.$slice > 0) throw MinimongoError("$slice in $push must be zero or negative", {                           // 304
-        field: field                                                                                                   // 306
-      });                                                                                                              // 306
-      slice = arg.$slice;                                                                                              // 307
-    } // Parse $sort.                                                                                                  // 308
+      slice = arg.$slice;                                                                                              // 304
+    } // Parse $sort.                                                                                                  // 305
                                                                                                                        //
                                                                                                                        //
-    var sortFunction = undefined;                                                                                      // 311
+    var sortFunction = undefined;                                                                                      // 308
                                                                                                                        //
-    if (arg.$sort) {                                                                                                   // 312
-      if (slice === undefined) throw MinimongoError("$sort requires $slice to be present", {                           // 313
-        field: field                                                                                                   // 314
-      }); // XXX this allows us to use a $sort whose value is an array, but that's                                     // 314
-      // actually an extension of the Node driver, so it won't work                                                    // 316
-      // server-side. Could be confusing!                                                                              // 317
-      // XXX is it correct that we don't do geo-stuff here?                                                            // 318
+    if (arg.$sort) {                                                                                                   // 309
+      if (slice === undefined) throw MinimongoError("$sort requires $slice to be present", {                           // 310
+        field: field                                                                                                   // 311
+      }); // XXX this allows us to use a $sort whose value is an array, but that's                                     // 311
+      // actually an extension of the Node driver, so it won't work                                                    // 313
+      // server-side. Could be confusing!                                                                              // 314
+      // XXX is it correct that we don't do geo-stuff here?                                                            // 315
                                                                                                                        //
-      sortFunction = new Minimongo.Sorter(arg.$sort).getComparator();                                                  // 319
+      sortFunction = new Minimongo.Sorter(arg.$sort).getComparator();                                                  // 316
                                                                                                                        //
-      for (var i = 0; i < toPush.length; i++) {                                                                        // 320
-        if (LocalCollection._f._type(toPush[i]) !== 3) {                                                               // 321
-          throw MinimongoError("$push like modifiers using $sort " + "require all elements to be objects", {           // 322
-            field: field                                                                                               // 323
-          });                                                                                                          // 323
-        }                                                                                                              // 324
-      }                                                                                                                // 325
-    } // Actually push.                                                                                                // 326
-                                                                                                                       //
-                                                                                                                       //
-    if (position === undefined) {                                                                                      // 329
-      for (var j = 0; j < toPush.length; j++) {                                                                        // 330
-        target[field].push(toPush[j]);                                                                                 // 331
-      }                                                                                                                // 330
-    } else {                                                                                                           // 332
-      var spliceArguments = [position, 0];                                                                             // 333
-                                                                                                                       //
-      for (var j = 0; j < toPush.length; j++) {                                                                        // 334
-        spliceArguments.push(toPush[j]);                                                                               // 335
-      }                                                                                                                // 334
-                                                                                                                       //
-      Array.prototype.splice.apply(target[field], spliceArguments);                                                    // 336
-    } // Actually sort.                                                                                                // 337
+      for (var i = 0; i < toPush.length; i++) {                                                                        // 317
+        if (LocalCollection._f._type(toPush[i]) !== 3) {                                                               // 318
+          throw MinimongoError("$push like modifiers using $sort " + "require all elements to be objects", {           // 319
+            field: field                                                                                               // 320
+          });                                                                                                          // 320
+        }                                                                                                              // 321
+      }                                                                                                                // 322
+    } // Actually push.                                                                                                // 323
                                                                                                                        //
                                                                                                                        //
-    if (sortFunction) target[field].sort(sortFunction); // Actually slice.                                             // 340
+    if (position === undefined) {                                                                                      // 326
+      for (var j = 0; j < toPush.length; j++) {                                                                        // 327
+        target[field].push(toPush[j]);                                                                                 // 328
+      }                                                                                                                // 327
+    } else {                                                                                                           // 329
+      var spliceArguments = [position, 0];                                                                             // 330
                                                                                                                        //
-    if (slice !== undefined) {                                                                                         // 344
-      if (slice === 0) target[field] = []; // differs from Array.slice!                                                // 345
-      else target[field] = target[field].slice(slice);                                                                 // 345
-    }                                                                                                                  // 349
-  },                                                                                                                   // 350
-  $pushAll: function (target, field, arg) {                                                                            // 351
+      for (var j = 0; j < toPush.length; j++) {                                                                        // 331
+        spliceArguments.push(toPush[j]);                                                                               // 332
+      }                                                                                                                // 331
+                                                                                                                       //
+      Array.prototype.splice.apply(target[field], spliceArguments);                                                    // 333
+    } // Actually sort.                                                                                                // 334
+                                                                                                                       //
+                                                                                                                       //
+    if (sortFunction) target[field].sort(sortFunction); // Actually slice.                                             // 337
+                                                                                                                       //
+    if (slice !== undefined) {                                                                                         // 341
+      if (slice === 0) target[field] = []; // differs from Array.slice!                                                // 342
+      else if (slice < 0) target[field] = target[field].slice(slice);else target[field] = target[field].slice(0, slice);
+    }                                                                                                                  // 348
+  },                                                                                                                   // 349
+  $pushAll: function (target, field, arg) {                                                                            // 350
     if (!((typeof arg === "undefined" ? "undefined" : (0, _typeof3.default)(arg)) === "object" && arg instanceof Array)) throw MinimongoError("Modifier $pushAll/pullAll allowed for arrays only");
-    assertHasValidFieldNames(arg);                                                                                     // 354
-    var x = target[field];                                                                                             // 355
+    assertHasValidFieldNames(arg);                                                                                     // 353
+    var x = target[field];                                                                                             // 354
     if (x === undefined) target[field] = arg;else if (!(x instanceof Array)) throw MinimongoError("Cannot apply $pushAll modifier to non-array", {
-      field: field                                                                                                     // 360
-    });else {                                                                                                          // 360
-      for (var i = 0; i < arg.length; i++) {                                                                           // 362
-        x.push(arg[i]);                                                                                                // 363
-      }                                                                                                                // 362
-    }                                                                                                                  // 364
-  },                                                                                                                   // 365
-  $addToSet: function (target, field, arg) {                                                                           // 366
-    var isEach = false;                                                                                                // 367
+      field: field                                                                                                     // 359
+    });else {                                                                                                          // 359
+      for (var i = 0; i < arg.length; i++) {                                                                           // 361
+        x.push(arg[i]);                                                                                                // 362
+      }                                                                                                                // 361
+    }                                                                                                                  // 363
+  },                                                                                                                   // 364
+  $addToSet: function (target, field, arg) {                                                                           // 365
+    var isEach = false;                                                                                                // 366
                                                                                                                        //
-    if ((typeof arg === "undefined" ? "undefined" : (0, _typeof3.default)(arg)) === "object") {                        // 368
-      //check if first key is '$each'                                                                                  // 369
-      var keys = Object.keys(arg);                                                                                     // 370
+    if ((typeof arg === "undefined" ? "undefined" : (0, _typeof3.default)(arg)) === "object") {                        // 367
+      //check if first key is '$each'                                                                                  // 368
+      var keys = Object.keys(arg);                                                                                     // 369
                                                                                                                        //
-      if (keys[0] === "$each") {                                                                                       // 371
-        isEach = true;                                                                                                 // 372
-      }                                                                                                                // 373
-    }                                                                                                                  // 374
+      if (keys[0] === "$each") {                                                                                       // 370
+        isEach = true;                                                                                                 // 371
+      }                                                                                                                // 372
+    }                                                                                                                  // 373
                                                                                                                        //
-    var values = isEach ? arg["$each"] : [arg];                                                                        // 375
-    assertHasValidFieldNames(values);                                                                                  // 376
-    var x = target[field];                                                                                             // 377
+    var values = isEach ? arg["$each"] : [arg];                                                                        // 374
+    assertHasValidFieldNames(values);                                                                                  // 375
+    var x = target[field];                                                                                             // 376
     if (x === undefined) target[field] = values;else if (!(x instanceof Array)) throw MinimongoError("Cannot apply $addToSet modifier to non-array", {
-      field: field                                                                                                     // 382
-    });else {                                                                                                          // 382
-      _.each(values, function (value) {                                                                                // 384
-        for (var i = 0; i < x.length; i++) {                                                                           // 385
-          if (LocalCollection._f._equal(value, x[i])) return;                                                          // 386
-        }                                                                                                              // 385
+      field: field                                                                                                     // 381
+    });else {                                                                                                          // 381
+      _.each(values, function (value) {                                                                                // 383
+        for (var i = 0; i < x.length; i++) {                                                                           // 384
+          if (LocalCollection._f._equal(value, x[i])) return;                                                          // 385
+        }                                                                                                              // 384
                                                                                                                        //
-        x.push(value);                                                                                                 // 388
-      });                                                                                                              // 389
-    }                                                                                                                  // 390
-  },                                                                                                                   // 391
-  $pop: function (target, field, arg) {                                                                                // 392
-    if (target === undefined) return;                                                                                  // 393
-    var x = target[field];                                                                                             // 395
+        x.push(value);                                                                                                 // 387
+      });                                                                                                              // 388
+    }                                                                                                                  // 389
+  },                                                                                                                   // 390
+  $pop: function (target, field, arg) {                                                                                // 391
+    if (target === undefined) return;                                                                                  // 392
+    var x = target[field];                                                                                             // 394
     if (x === undefined) return;else if (!(x instanceof Array)) throw MinimongoError("Cannot apply $pop modifier to non-array", {
-      field: field                                                                                                     // 400
-    });else {                                                                                                          // 400
-      if (typeof arg === 'number' && arg < 0) x.splice(0, 1);else x.pop();                                             // 402
-    }                                                                                                                  // 406
-  },                                                                                                                   // 407
-  $pull: function (target, field, arg) {                                                                               // 408
-    if (target === undefined) return;                                                                                  // 409
-    var x = target[field];                                                                                             // 411
+      field: field                                                                                                     // 399
+    });else {                                                                                                          // 399
+      if (typeof arg === 'number' && arg < 0) x.splice(0, 1);else x.pop();                                             // 401
+    }                                                                                                                  // 405
+  },                                                                                                                   // 406
+  $pull: function (target, field, arg) {                                                                               // 407
+    if (target === undefined) return;                                                                                  // 408
+    var x = target[field];                                                                                             // 410
     if (x === undefined) return;else if (!(x instanceof Array)) throw MinimongoError("Cannot apply $pull/pullAll modifier to non-array", {
-      field: field                                                                                                     // 416
-    });else {                                                                                                          // 416
-      var out = [];                                                                                                    // 418
+      field: field                                                                                                     // 415
+    });else {                                                                                                          // 415
+      var out = [];                                                                                                    // 417
                                                                                                                        //
       if (arg != null && (typeof arg === "undefined" ? "undefined" : (0, _typeof3.default)(arg)) === "object" && !(arg instanceof Array)) {
-        // XXX would be much nicer to compile this once, rather than                                                   // 420
-        // for each document we modify.. but usually we're not                                                         // 421
-        // modifying that many documents, so we'll let it slide for                                                    // 422
-        // now                                                                                                         // 423
-        // XXX Minimongo.Matcher isn't up for the job, because we need                                                 // 425
-        // to permit stuff like {$pull: {a: {$gt: 4}}}.. something                                                     // 426
-        // like {$gt: 4} is not normally a complete selector.                                                          // 427
-        // same issue as $elemMatch possibly?                                                                          // 428
-        var matcher = new Minimongo.Matcher(arg);                                                                      // 429
+        // XXX would be much nicer to compile this once, rather than                                                   // 419
+        // for each document we modify.. but usually we're not                                                         // 420
+        // modifying that many documents, so we'll let it slide for                                                    // 421
+        // now                                                                                                         // 422
+        // XXX Minimongo.Matcher isn't up for the job, because we need                                                 // 424
+        // to permit stuff like {$pull: {a: {$gt: 4}}}.. something                                                     // 425
+        // like {$gt: 4} is not normally a complete selector.                                                          // 426
+        // same issue as $elemMatch possibly?                                                                          // 427
+        var matcher = new Minimongo.Matcher(arg);                                                                      // 428
                                                                                                                        //
-        for (var i = 0; i < x.length; i++) {                                                                           // 430
-          if (!matcher.documentMatches(x[i]).result) out.push(x[i]);                                                   // 431
-        }                                                                                                              // 430
-      } else {                                                                                                         // 433
-        for (var i = 0; i < x.length; i++) {                                                                           // 434
-          if (!LocalCollection._f._equal(x[i], arg)) out.push(x[i]);                                                   // 435
-        }                                                                                                              // 434
-      }                                                                                                                // 437
+        for (var i = 0; i < x.length; i++) {                                                                           // 429
+          if (!matcher.documentMatches(x[i]).result) out.push(x[i]);                                                   // 430
+        }                                                                                                              // 429
+      } else {                                                                                                         // 432
+        for (var i = 0; i < x.length; i++) {                                                                           // 433
+          if (!LocalCollection._f._equal(x[i], arg)) out.push(x[i]);                                                   // 434
+        }                                                                                                              // 433
+      }                                                                                                                // 436
                                                                                                                        //
-      target[field] = out;                                                                                             // 438
-    }                                                                                                                  // 439
-  },                                                                                                                   // 440
-  $pullAll: function (target, field, arg) {                                                                            // 441
+      target[field] = out;                                                                                             // 437
+    }                                                                                                                  // 438
+  },                                                                                                                   // 439
+  $pullAll: function (target, field, arg) {                                                                            // 440
     if (!((typeof arg === "undefined" ? "undefined" : (0, _typeof3.default)(arg)) === "object" && arg instanceof Array)) throw MinimongoError("Modifier $pushAll/pullAll allowed for arrays only", {
-      field: field                                                                                                     // 444
-    });                                                                                                                // 444
-    if (target === undefined) return;                                                                                  // 445
-    var x = target[field];                                                                                             // 447
+      field: field                                                                                                     // 443
+    });                                                                                                                // 443
+    if (target === undefined) return;                                                                                  // 444
+    var x = target[field];                                                                                             // 446
     if (x === undefined) return;else if (!(x instanceof Array)) throw MinimongoError("Cannot apply $pull/pullAll modifier to non-array", {
-      field: field                                                                                                     // 452
-    });else {                                                                                                          // 452
-      var out = [];                                                                                                    // 454
+      field: field                                                                                                     // 451
+    });else {                                                                                                          // 451
+      var out = [];                                                                                                    // 453
                                                                                                                        //
-      for (var i = 0; i < x.length; i++) {                                                                             // 455
-        var exclude = false;                                                                                           // 456
+      for (var i = 0; i < x.length; i++) {                                                                             // 454
+        var exclude = false;                                                                                           // 455
                                                                                                                        //
-        for (var j = 0; j < arg.length; j++) {                                                                         // 457
-          if (LocalCollection._f._equal(x[i], arg[j])) {                                                               // 458
-            exclude = true;                                                                                            // 459
-            break;                                                                                                     // 460
-          }                                                                                                            // 461
-        }                                                                                                              // 462
+        for (var j = 0; j < arg.length; j++) {                                                                         // 456
+          if (LocalCollection._f._equal(x[i], arg[j])) {                                                               // 457
+            exclude = true;                                                                                            // 458
+            break;                                                                                                     // 459
+          }                                                                                                            // 460
+        }                                                                                                              // 461
                                                                                                                        //
-        if (!exclude) out.push(x[i]);                                                                                  // 463
-      }                                                                                                                // 465
+        if (!exclude) out.push(x[i]);                                                                                  // 462
+      }                                                                                                                // 464
                                                                                                                        //
-      target[field] = out;                                                                                             // 466
-    }                                                                                                                  // 467
-  },                                                                                                                   // 468
-  $rename: function (target, field, arg, keypath, doc) {                                                               // 469
-    if (keypath === arg) // no idea why mongo has this restriction..                                                   // 470
-      throw MinimongoError("$rename source must differ from target", {                                                 // 472
-        field: field                                                                                                   // 472
-      });                                                                                                              // 472
-    if (target === null) throw MinimongoError("$rename source field invalid", {                                        // 473
-      field: field                                                                                                     // 474
-    });                                                                                                                // 474
-    if (typeof arg !== "string") throw MinimongoError("$rename target must be a string", {                             // 475
-      field: field                                                                                                     // 476
-    });                                                                                                                // 476
+      target[field] = out;                                                                                             // 465
+    }                                                                                                                  // 466
+  },                                                                                                                   // 467
+  $rename: function (target, field, arg, keypath, doc) {                                                               // 468
+    if (keypath === arg) // no idea why mongo has this restriction..                                                   // 469
+      throw MinimongoError("$rename source must differ from target", {                                                 // 471
+        field: field                                                                                                   // 471
+      });                                                                                                              // 471
+    if (target === null) throw MinimongoError("$rename source field invalid", {                                        // 472
+      field: field                                                                                                     // 473
+    });                                                                                                                // 473
+    if (typeof arg !== "string") throw MinimongoError("$rename target must be a string", {                             // 474
+      field: field                                                                                                     // 475
+    });                                                                                                                // 475
                                                                                                                        //
-    if (arg.indexOf('\0') > -1) {                                                                                      // 477
-      // Null bytes are not allowed in Mongo field names                                                               // 478
-      // https://docs.mongodb.com/manual/reference/limits/#Restrictions-on-Field-Names                                 // 479
-      throw MinimongoError("The 'to' field for $rename cannot contain an embedded null byte", {                        // 480
-        field: field                                                                                                   // 482
-      });                                                                                                              // 482
-    }                                                                                                                  // 483
+    if (arg.indexOf('\0') > -1) {                                                                                      // 476
+      // Null bytes are not allowed in Mongo field names                                                               // 477
+      // https://docs.mongodb.com/manual/reference/limits/#Restrictions-on-Field-Names                                 // 478
+      throw MinimongoError("The 'to' field for $rename cannot contain an embedded null byte", {                        // 479
+        field: field                                                                                                   // 481
+      });                                                                                                              // 481
+    }                                                                                                                  // 482
                                                                                                                        //
-    if (target === undefined) return;                                                                                  // 484
-    var v = target[field];                                                                                             // 486
-    delete target[field];                                                                                              // 487
-    var keyparts = arg.split('.');                                                                                     // 489
-    var target2 = findModTarget(doc, keyparts, {                                                                       // 490
-      forbidArray: true                                                                                                // 490
-    });                                                                                                                // 490
-    if (target2 === null) throw MinimongoError("$rename target field invalid", {                                       // 491
-      field: field                                                                                                     // 492
-    });                                                                                                                // 492
-    var field2 = keyparts.pop();                                                                                       // 493
-    target2[field2] = v;                                                                                               // 494
-  },                                                                                                                   // 495
-  $bit: function (target, field, arg) {                                                                                // 496
-    // XXX mongo only supports $bit on integers, and we only support                                                   // 497
-    // native javascript numbers (doubles) so far, so we can't support $bit                                            // 498
-    throw MinimongoError("$bit is not supported", {                                                                    // 499
-      field: field                                                                                                     // 499
-    });                                                                                                                // 499
-  }                                                                                                                    // 500
+    if (target === undefined) return;                                                                                  // 483
+    var v = target[field];                                                                                             // 485
+    delete target[field];                                                                                              // 486
+    var keyparts = arg.split('.');                                                                                     // 488
+    var target2 = findModTarget(doc, keyparts, {                                                                       // 489
+      forbidArray: true                                                                                                // 489
+    });                                                                                                                // 489
+    if (target2 === null) throw MinimongoError("$rename target field invalid", {                                       // 490
+      field: field                                                                                                     // 491
+    });                                                                                                                // 491
+    var field2 = keyparts.pop();                                                                                       // 492
+    target2[field2] = v;                                                                                               // 493
+  },                                                                                                                   // 494
+  $bit: function (target, field, arg) {                                                                                // 495
+    // XXX mongo only supports $bit on integers, and we only support                                                   // 496
+    // native javascript numbers (doubles) so far, so we can't support $bit                                            // 497
+    throw MinimongoError("$bit is not supported", {                                                                    // 498
+      field: field                                                                                                     // 498
+    });                                                                                                                // 498
+  }                                                                                                                    // 499
 };                                                                                                                     // 181
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"diff.js":function(){
+},"diff.js":function(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -3812,7 +3819,7 @@ LocalCollection._observeFromObserveChanges = function (cursor, observeCallbacks)
 };                                                                                                                     // 181
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"objectid.js":["babel-runtime/helpers/typeof",function(require){
+},"objectid.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -3872,7 +3879,7 @@ LocalCollection._idsMatchedBySelector = function (selector) {                   
 };                                                                                                                     // 55
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"selector_projection.js":function(){
+},"selector_projection.js":function(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -4183,7 +4190,7 @@ Minimongo.Sorter.prototype.combineIntoProjection = function (projection) {      
 };                                                                                                                     // 5
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"validation.js":["babel-runtime/helpers/typeof",function(require,exports,module){
+},"validation.js":function(require,exports,module){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     //
@@ -4236,7 +4243,12 @@ function assertHasValidFieldNames(doc) {                                        
 ;                                                                                                                      // 24
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}]}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/minimongo/minimongo.js");
 require("./node_modules/meteor/minimongo/wrap_transform.js");
 require("./node_modules/meteor/minimongo/helpers.js");

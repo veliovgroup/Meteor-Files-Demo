@@ -46,12 +46,7 @@ module.exports = Transform;
 
 var Duplex = require('./_stream_duplex');
 
-/*<replacement>*/
-var util = require('core-util-is');
-util.inherits = require('inherits');
-/*</replacement>*/
-
-util.inherits(Transform, Duplex);
+require('util').inherits(Transform, Duplex);
 
 function TransformState(stream) {
   this.afterTransform = function (er, data) {

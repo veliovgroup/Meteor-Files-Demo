@@ -6,15 +6,15 @@ var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 
 /* Package-scope variables */
-var makeInstaller, meteorInstall;
+var makeInstaller, makeInstallerOptions, meteorInstall;
 
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// packages/modules-runtime/.npm/package/node_modules/install/install.js   //
-// This file is in bare mode and is not in its own closure.                //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// packages/modules-runtime/.npm/package/node_modules/install/install.js     //
+// This file is in bare mode and is not in its own closure.                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+                                                                             //
 makeInstaller = function (options) {
   "use strict";
 
@@ -29,7 +29,7 @@ makeInstaller = function (options) {
   var onInstall = options.onInstall;
 
   // If defined, each module-specific require function will be passed to
-  // this function, along with the module.id of the parent module, and
+  // this function, along with the module object of the parent module, and
   // the result will be used in place of the original require function.
   var wrapRequire = options.wrapRequire;
 
@@ -46,14 +46,25 @@ makeInstaller = function (options) {
   // require function, which has the ability to load binary modules.
   var fallback = options.fallback;
 
-  // If truthy, package resolution will prefer the "browser" field of
-  // package.json files to the "main" field. Note that this only supports
-  // string-valued "browser" fields for now, though in the future it might
-  // make sense to support the object version, a la browserify.
-  var browser = options.browser;
+  // List of fields to look for in package.json files to determine the
+  // main entry module of the package. The first field listed here whose
+  // value is a string will be used to resolve the entry module.
+  var mainFields = options.mainFields ||
+    // If options.mainFields is absent and options.browser is truthy,
+    // package resolution will prefer the "browser" field of package.json
+    // files to the "main" field. Note that this only supports
+    // string-valued "browser" fields for now, though in the future it
+    // might make sense to support the object version, a la browserify.
+    (options.browser ? ["browser", "main"] : ["main"]);
 
   // Called below as hasOwn.call(obj, key).
   var hasOwn = {}.hasOwnProperty;
+
+  // Cache for looking up File objects given absolute module identifiers.
+  // Invariants:
+  //   filesByModuleId[module.id] === fileAppendId(root, module.id)
+  //   filesByModuleId[module.id].module === module
+  var filesByModuleId = {};
 
   // The file object representing the root directory of the installed
   // module tree.
@@ -72,6 +83,11 @@ makeInstaller = function (options) {
     }
     return rootRequire;
   }
+
+  // Replace this function to enable Module.prototype.prefetch.
+  install.fetch = function (ids) {
+    throw new Error("fetch not implemented");
+  };
 
   // This constructor will be used to instantiate the module objects
   // passed to module factory functions (i.e. the third argument after
@@ -95,6 +111,94 @@ makeInstaller = function (options) {
     return this.require.resolve(id);
   };
 
+  var resolvedPromise;
+  var lastPrefetchPromise;
+
+  Module.prototype.prefetch = function (id) {
+    var module = this;
+    var parentFile = getOwn(filesByModuleId, module.id);
+    var missing; // Initialized to {} only if necessary.
+
+    resolvedPromise = resolvedPromise || Promise.resolve();
+    lastPrefetchPromise = lastPrefetchPromise || resolvedPromise;
+    var previousPromise = lastPrefetchPromise;
+
+    function walk(module) {
+      var file = getOwn(filesByModuleId, module.id);
+      if (fileIsDynamic(file) && ! file.pending) {
+        file.pending = true;
+        missing = missing || {};
+
+        // These are the data that will be exposed to the install.fetch
+        // callback, so it's worth documenting each item with a comment.
+        missing[module.id] = {
+          // The CommonJS module object that will be exposed to this
+          // dynamic module when it is evaluated. Note that install.fetch
+          // could decide to populate module.exports directly, instead of
+          // fetching anything. In that case, install.fetch should omit
+          // this module from the tree that it produces.
+          module: file.module,
+          // List of module identifier strings imported by this module.
+          // Note that the missing object already contains all available
+          // dependencies (including transitive dependencies), so
+          // install.fetch should not need to traverse these dependencies
+          // in most cases; however, they may be useful for other reasons.
+          // Though the strings are unique, note that two different
+          // strings could resolve to the same module.
+          deps: Object.keys(file.deps),
+          // The options (if any) that were passed as the second argument
+          // to the install(tree, options) function when this stub was
+          // first registered. Typically contains options.extensions, but
+          // could contain any information appropriate for the entire tree
+          // as originally installed. These options will be automatically
+          // inherited by the newly fetched modules, so install.fetch
+          // should not need to modify them.
+          options: file.options,
+          // Any stub data included in the array notation from the
+          // original entry for this dynamic module. Typically contains
+          // "main" and/or "browser" fields for package.json files, and is
+          // otherwise undefined.
+          stub: file.stub
+        };
+
+        each(file.deps, function (parentId, id) {
+          fileResolve(file, id);
+        });
+
+        each(module.childrenById, walk);
+      }
+    }
+
+    return lastPrefetchPromise = resolvedPromise.then(function () {
+      var absChildId = module.resolve(id);
+      each(module.childrenById, walk);
+
+      return Promise.resolve(
+        // The install.fetch function takes an object mapping missing
+        // dynamic module identifiers to options objects, and should
+        // return a Promise that resolves to a module tree that can be
+        // installed. As an optimization, if there were no missing dynamic
+        // modules, then we can skip calling install.fetch entirely.
+        missing && install.fetch(missing)
+
+      ).then(function (tree) {
+        function both() {
+          if (tree) install(tree);
+          return absChildId;
+        }
+
+        // Although we want multiple install.fetch calls to run in
+        // parallel, it is important that the promises returned by
+        // module.prefetch are resolved in the same order as the original
+        // calls to module.prefetch, because previous fetches may include
+        // modules assumed to exist by more recent module.prefetch calls.
+        // Whether previousPromise was resolved or rejected, carry on with
+        // the installation regardless.
+        return previousPromise.then(both, both);
+      });
+    });
+  };
+
   install.Module = Module;
 
   function getOwn(obj, key) {
@@ -102,7 +206,7 @@ makeInstaller = function (options) {
   }
 
   function isObject(value) {
-    return value && typeof value === "object";
+    return typeof value === "object" && value !== null;
   }
 
   function isFunction(value) {
@@ -113,19 +217,23 @@ makeInstaller = function (options) {
     return typeof value === "string";
   }
 
+  function makeMissingError(id) {
+    return new Error("Cannot find module '" + id + "'");
+  }
+
   function makeRequire(file) {
     function require(id) {
       var result = fileResolve(file, id);
       if (result) {
-        return fileEvaluate(result, file.m);
+        return fileEvaluate(result, file.module);
       }
 
-      var error = new Error("Cannot find module '" + id + "'");
+      var error = makeMissingError(id);
 
       if (isFunction(fallback)) {
         return fallback(
           id, // The missing module identifier.
-          file.m.id, // The path of the requiring file.
+          file.module.id, // The path of the requiring file.
           error // The error we would have thrown.
         );
       }
@@ -134,17 +242,17 @@ makeInstaller = function (options) {
     }
 
     if (isFunction(wrapRequire)) {
-      require = wrapRequire(require, file.m.id);
+      require = wrapRequire(require, file.module);
     }
 
     require.extensions = fileGetExtensions(file).slice(0);
 
     require.resolve = function (id) {
       var f = fileResolve(file, id);
-      if (f) return f.m.id;
-      var error = new Error("Cannot find module '" + id + "'");
+      if (f) return f.module.id;
+      var error = makeMissingError(id);
       if (fallback && isFunction(fallback.resolve)) {
-        return fallback.resolve(id, file.m.id, error);
+        return fallback.resolve(id, file.module.id, error);
       }
       throw error;
     };
@@ -153,35 +261,63 @@ makeInstaller = function (options) {
   }
 
   // File objects represent either directories or modules that have been
-  // installed. When a `File` respresents a directory, its `.c` (contents)
+  // installed. When a `File` respresents a directory, its `.contents`
   // property is an object containing the names of the files (or
   // directories) that it contains. When a `File` represents a module, its
-  // `.c` property is a function that can be invoked with the appropriate
-  // `(require, exports, module)` arguments to evaluate the module. If the
-  // `.c` property is a string, that string will be resolved as a module
-  // identifier, and the exports of the resulting module will provide the
-  // exports of the original file. The `.p` (parent) property of a File is
-  // either a directory `File` or `null`. Note that a child may claim
-  // another `File` as its parent even if the parent does not have an
-  // entry for that child in its `.c` object.  This is important for
-  // implementing anonymous files, and preventing child modules from using
-  // `../relative/identifier` syntax to examine unrelated modules.
-  function File(name, parent) {
+  // `.contents` property is a function that can be invoked with the
+  // appropriate `(require, exports, module)` arguments to evaluate the
+  // module. If the `.contents` property is a string, that string will be
+  // resolved as a module identifier, and the exports of the resulting
+  // module will provide the exports of the original file. The `.parent`
+  // property of a File is either a directory `File` or `null`. Note that
+  // a child may claim another `File` as its parent even if the parent
+  // does not have an entry for that child in its `.contents` object.
+  // This is important for implementing anonymous files, and preventing
+  // child modules from using `../relative/identifier` syntax to examine
+  // unrelated modules.
+  function File(moduleId, parent) {
     var file = this;
 
     // Link to the parent file.
-    file.p = parent = parent || null;
+    file.parent = parent = parent || null;
 
     // The module object for this File, which will eventually boast an
     // .exports property when/if the file is evaluated.
-    file.m = new Module(name);
+    file.module = new Module(moduleId);
+    filesByModuleId[moduleId] = file;
+
+    // The .contents of the file can be either (1) an object, if the file
+    // represents a directory containing other files; (2) a factory
+    // function, if the file represents a module that can be imported; (3)
+    // a string, if the file is an alias for another file; or (4) null, if
+    // the file's contents are not (yet) available.
+    file.contents = null;
+
+    // Set of module identifiers imported by this module. Note that this
+    // set is not necessarily complete, so don't rely on it unless you
+    // know what you're doing.
+    file.deps = {};
   }
 
   function fileEvaluate(file, parentModule) {
-    var contents = file && file.c;
-    var module = file.m;
-
+    var module = file.module;
     if (! hasOwn.call(module, "exports")) {
+      var contents = file.contents;
+      if (! contents) {
+        // If this file was installed with array notation, and the array
+        // contained one or more objects but no functions, then the combined
+        // properties of the objects are treated as a temporary stub for
+        // file.module.exports. This is particularly important for partial
+        // package.json modules, so that the resolution logic can know the
+        // value of the "main" and/or "browser" fields, at least, even if
+        // the rest of the package.json file is not (yet) available.
+        if (file.stub) {
+          return file.stub;
+        }
+
+        throw makeMissingError(module.id);
+      }
+
       if (parentModule) {
         module.parent = parentModule;
         var children = parentModule.children;
@@ -196,53 +332,57 @@ makeInstaller = function (options) {
           ! module.useNode()) {
         contents(
           module.require = module.require || makeRequire(file),
-          module.exports = {},
+          // If the file had a .stub, reuse the same object for exports.
+          module.exports = file.stub || {},
           module,
-          file.m.id,
-          file.p.m.id
+          file.module.id,
+          file.parent.module.id
         );
       }
 
       module.loaded = true;
     }
 
-    if (isFunction(module.runModuleSetters)) {
-      module.runModuleSetters();
+    // The module.runModuleSetters method will be deprecated in favor of
+    // just module.runSetters: https://github.com/benjamn/reify/pull/160
+    var runSetters = module.runSetters || module.runModuleSetters;
+    if (isFunction(runSetters)) {
+      runSetters.call(module);
     }
 
     return module.exports;
   }
 
   function fileIsDirectory(file) {
-    return file && isObject(file.c);
+    return file && isObject(file.contents);
+  }
+
+  function fileIsDynamic(file) {
+    return file && file.contents === null;
   }
 
   function fileMergeContents(file, contents, options) {
-    // If contents is an array of strings and functions, return the last
-    // function with a `.d` property containing all the strings.
     if (Array.isArray(contents)) {
-      var deps = [];
-
       contents.forEach(function (item) {
         if (isString(item)) {
-          deps.push(item);
+          file.deps[item] = file.module.id;
         } else if (isFunction(item)) {
           contents = item;
+        } else if (isObject(item)) {
+          file.stub = file.stub || {};
+          each(item, function (value, key) {
+            file.stub[key] = value;
+          });
         }
       });
 
-      if (isFunction(contents)) {
-        contents.d = deps;
-      } else {
+      if (! isFunction(contents)) {
         // If the array did not contain a function, merge nothing.
         contents = null;
       }
 
-    } else if (isFunction(contents)) {
-      // If contents is already a function, make sure it has `.d`.
-      contents.d = contents.d || [];
-
-    } else if (! isString(contents) &&
+    } else if (! isFunction(contents) &&
+               ! isString(contents) &&
                ! isObject(contents)) {
       // If contents is neither an array nor a function nor a string nor
       // an object, just give up and merge nothing.
@@ -250,38 +390,47 @@ makeInstaller = function (options) {
     }
 
     if (contents) {
-      file.c = file.c || (isObject(contents) ? {} : contents);
+      file.contents = file.contents || (isObject(contents) ? {} : contents);
       if (isObject(contents) && fileIsDirectory(file)) {
-        Object.keys(contents).forEach(function (key) {
+        each(contents, function (value, key) {
           if (key === "..") {
-            child = file.p;
+            child = file.parent;
 
           } else {
-            var child = getOwn(file.c, key);
+            var child = getOwn(file.contents, key);
+
             if (! child) {
-              child = file.c[key] = new File(
-                file.m.id.replace(/\/*$/, "/") + key,
+              child = file.contents[key] = new File(
+                file.module.id.replace(/\/*$/, "/") + key,
                 file
               );
 
-              child.o = options;
+              child.options = options;
             }
           }
 
-          fileMergeContents(child, contents[key], options);
+          fileMergeContents(child, value, options);
         });
       }
     }
   }
 
+  function each(obj, callback, context) {
+    Object.keys(obj).forEach(function (key) {
+      callback.call(this, obj[key], key);
+    }, context);
+  }
+
   function fileGetExtensions(file) {
-    return file.o && file.o.extensions || defaultExtensions;
+    return file.options
+      && file.options.extensions
+      || defaultExtensions;
   }
 
   function fileAppendIdPart(file, part, extensions) {
     // Always append relative to a directory.
     while (file && ! fileIsDirectory(file)) {
-      file = file.p;
+      file = file.parent;
     }
 
     if (! file || ! part || part === ".") {
@@ -289,17 +438,17 @@ makeInstaller = function (options) {
     }
 
     if (part === "..") {
-      return file.p;
+      return file.parent;
     }
 
-    var exactChild = getOwn(file.c, part);
+    var exactChild = getOwn(file.contents, part);
 
     // Only consider multiple file extensions if this part is the last
     // part of a module identifier and not equal to `.` or `..`, and there
     // was no exact match or the exact match was a directory.
     if (extensions && (! exactChild || fileIsDirectory(exactChild))) {
       for (var e = 0; e < extensions.length; ++e) {
-        var child = getOwn(file.c, part + extensions[e]);
+        var child = getOwn(file.contents, part + extensions[e]);
         if (child && ! fileIsDirectory(child)) {
           return child;
         }
@@ -324,14 +473,14 @@ makeInstaller = function (options) {
   }
 
   function recordChild(parentModule, childFile) {
-    var childModule = childFile && childFile.m;
+    var childModule = childFile && childFile.module;
     if (parentModule && childModule) {
       parentModule.childrenById[childModule.id] = childModule;
     }
   }
 
   function fileResolve(file, id, parentModule, seenDirFiles) {
-    var parentModule = parentModule || file.m;
+    var parentModule = parentModule || file.module;
     var extensions = fileGetExtensions(file);
 
     file =
@@ -363,9 +512,10 @@ makeInstaller = function (options) {
 
         var pkgJsonFile = fileAppendIdPart(file, "package.json"), main;
         var pkg = pkgJsonFile && fileEvaluate(pkgJsonFile, parentModule);
-        if (pkg && (browser &&
-                    isString(main = pkg.browser) ||
-                    isString(main = pkg.main))) {
+        if (pkg &&
+            mainFields.some(function (name) {
+              return isString(main = pkg[name]);
+            })) {
           recordChild(parentModule, pkgJsonFile);
 
           // The "main" field of package.json does not have to begin with
@@ -396,8 +546,8 @@ makeInstaller = function (options) {
       file = fileAppendIdPart(file, "index.js");
     }
 
-    if (file && isString(file.c)) {
-      file = fileResolve(file, file.c, parentModule, seenDirFiles);
+    if (file && isString(file.contents)) {
+      file = fileResolve(file, file.contents, parentModule, seenDirFiles);
     }
 
     recordChild(parentModule, file);
@@ -407,11 +557,11 @@ makeInstaller = function (options) {
 
   function nodeModulesLookup(file, id, extensions) {
     if (isFunction(override)) {
-      id = override(id, file.m.id);
+      id = override(id, file.module.id);
     }
 
     if (isString(id)) {
-      for (var resolved; file && ! resolved; file = file.p) {
+      for (var resolved; file && ! resolved; file = file.parent) {
         resolved = fileIsDirectory(file) &&
           fileAppendId(file, "node_modules/" + id, extensions);
       }
@@ -427,7 +577,7 @@ if (typeof exports === "object") {
   exports.makeInstaller = makeInstaller;
 }
 
-/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -437,36 +587,48 @@ if (typeof exports === "object") {
 
 (function(){
 
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// packages/modules-runtime/modules-runtime.js                             //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-                                                                           //
-var options = {};
-var hasOwn = options.hasOwnProperty;
-
-// RegExp matching strings that don't start with a `.` or a `/`.
-var topLevelIdPattern = /^[^./]/;
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// packages/modules-runtime/options.js                                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+                                                                             //
+makeInstallerOptions = {};
 
 if (typeof Profile === "function" &&
     process.env.METEOR_PROFILE) {
-  options.wrapRequire = function (require) {
+  makeInstallerOptions.wrapRequire = function (require) {
     return Profile(function (id) {
       return "require(" + JSON.stringify(id) + ")";
     }, require);
   };
 }
 
-// On the client, make package resolution prefer the "browser" field of
-// package.json files to the "main" field.
-options.browser = Meteor.isClient;
+///////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
+
+(function(){
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// packages/modules-runtime/server.js                                        //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+                                                                             //
+// RegExp matching strings that don't start with a `.` or a `/`.
+var topLevelIdPattern = /^[^./]/;
 
 // This function will be called whenever a module identifier that hasn't
 // been installed is required. For backwards compatibility, and so that we
 // can require binary dependencies on the server, we implement the
 // fallback in terms of Npm.require.
-options.fallback = function (id, parentId, error) {
+makeInstallerOptions.fallback = function (id, parentId, error) {
   // For simplicity, we honor only top-level module identifiers here.
   // We could try to honor relative and absolute module identifiers by
   // somehow combining `id` with `dir`, but we'd have to be really careful
@@ -483,54 +645,51 @@ options.fallback = function (id, parentId, error) {
   throw error;
 };
 
-options.fallback.resolve = function (id, parentId, error) {
-  if (Meteor.isServer &&
-      topLevelIdPattern.test(id)) {
+makeInstallerOptions.fallback.resolve = function (id, parentId, error) {
+  if (topLevelIdPattern.test(id)) {
     // Allow any top-level identifier to resolve to itself on the server,
-    // so that options.fallback can have a chance to handle it.
+    // so that makeInstallerOptions.fallback has a chance to handle it.
     return id;
   }
 
   throw error;
 };
 
-meteorInstall = makeInstaller(options);
-var Mp = meteorInstall.Module.prototype;
+meteorInstall = makeInstaller(makeInstallerOptions);
+var Module = meteorInstall.Module;
 
-if (Meteor.isServer) {
-  Mp.useNode = function () {
-    if (typeof npmRequire !== "function") {
-      // Can't use Node if npmRequire is not defined.
-      return false;
-    }
+Module.prototype.useNode = function () {
+  if (typeof npmRequire !== "function") {
+    // Can't use Node if npmRequire is not defined.
+    return false;
+  }
 
-    var parts = this.id.split("/");
-    var start = 0;
-    if (parts[start] === "") ++start;
-    if (parts[start] === "node_modules" &&
-        parts[start + 1] === "meteor") {
-      start += 2;
-    }
+  var parts = this.id.split("/");
+  var start = 0;
+  if (parts[start] === "") ++start;
+  if (parts[start] === "node_modules" &&
+      parts[start + 1] === "meteor") {
+    start += 2;
+  }
 
-    if (parts.indexOf("node_modules", start) < 0) {
-      // Don't try to use Node for modules that aren't in node_modules
-      // directories.
-      return false;
-    }
+  if (parts.indexOf("node_modules", start) < 0) {
+    // Don't try to use Node for modules that aren't in node_modules
+    // directories.
+    return false;
+  }
 
-    try {
-      npmRequire.resolve(this.id);
-    } catch (e) {
-      return false;
-    }
+  try {
+    npmRequire.resolve(this.id);
+  } catch (e) {
+    return false;
+  }
 
-    this.exports = npmRequire(this.id);
+  this.exports = npmRequire(this.id);
 
-    return true;
-  };
-}
+  return true;
+};
 
-/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 }).call(this);
 

@@ -16,20 +16,19 @@ var ECMAScript = Package.ecmascript.ECMAScript;
 var DDPCommon = Package['ddp-common'].DDPCommon;
 var DDP = Package['ddp-client'].DDP;
 var WebApp = Package.webapp.WebApp;
-var main = Package.webapp.main;
 var WebAppInternals = Package.webapp.WebAppInternals;
+var main = Package.webapp.main;
 var RoutePolicy = Package.routepolicy.RoutePolicy;
 var Hook = Package['callback-hook'].Hook;
 var LocalCollection = Package.minimongo.LocalCollection;
 var Minimongo = Package.minimongo.Minimongo;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
-var Symbol = Package['ecmascript-runtime'].Symbol;
-var Map = Package['ecmascript-runtime'].Map;
-var Set = Package['ecmascript-runtime'].Set;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
+var Symbol = Package['ecmascript-runtime-server'].Symbol;
+var Map = Package['ecmascript-runtime-server'].Map;
+var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var StreamServer, DDPServer, Server;
@@ -217,7 +216,7 @@ _.extend(StreamServer.prototype, {                                              
 });                                                                                                                   // 132
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"livedata_server.js":["babel-runtime/helpers/typeof",function(require){
+},"livedata_server.js":function(require){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
@@ -901,7 +900,7 @@ _.extend(Session.prototype, {                                                   
         }                                                                                                             // 713
                                                                                                                       //
         resolve(DDPServer._CurrentWriteFence.withValue(fence, function () {                                           // 715
-          return DDP._CurrentInvocation.withValue(invocation, function () {                                           // 717
+          return DDP._CurrentMethodInvocation.withValue(invocation, function () {                                     // 717
             return maybeAuditArgumentChecks(handler, invocation, msg.params, "call to '" + msg.method + "'");         // 719
           });                                                                                                         // 719
         }));                                                                                                          // 717
@@ -982,377 +981,387 @@ _.extend(Session.prototype, {                                                   
     self._isSending = false;                                                                                          // 807
     var beforeCVs = self.collectionViews;                                                                             // 808
     self.collectionViews = {};                                                                                        // 809
-    self.userId = userId; // Save the old named subs, and reset to having no subscriptions.                           // 810
+    self.userId = userId; // _setUserId is normally called from a Meteor method with                                  // 810
+    // DDP._CurrentMethodInvocation set. But DDP._CurrentMethodInvocation is not                                      // 813
+    // expected to be set inside a publish function, so we temporary unset it.                                        // 814
+    // Inside a publish function DDP._CurrentPublicationInvocation is set.                                            // 815
                                                                                                                       //
-    var oldNamedSubs = self._namedSubs;                                                                               // 813
-    self._namedSubs = {};                                                                                             // 814
-    self._universalSubs = [];                                                                                         // 815
+    DDP._CurrentMethodInvocation.withValue(undefined, function () {                                                   // 816
+      // Save the old named subs, and reset to having no subscriptions.                                               // 817
+      var oldNamedSubs = self._namedSubs;                                                                             // 818
+      self._namedSubs = {};                                                                                           // 819
+      self._universalSubs = [];                                                                                       // 820
                                                                                                                       //
-    _.each(oldNamedSubs, function (sub, subscriptionId) {                                                             // 817
-      self._namedSubs[subscriptionId] = sub._recreate(); // nb: if the handler throws or calls this.error(), it will in fact
-      // immediately send its 'nosub'. This is OK, though.                                                            // 820
+      _.each(oldNamedSubs, function (sub, subscriptionId) {                                                           // 822
+        self._namedSubs[subscriptionId] = sub._recreate(); // nb: if the handler throws or calls this.error(), it will in fact
+        // immediately send its 'nosub'. This is OK, though.                                                          // 825
                                                                                                                       //
-      self._namedSubs[subscriptionId]._runHandler();                                                                  // 821
-    }); // Allow newly-created universal subs to be started on our connection in                                      // 822
-    // parallel with the ones we're spinning up here, and spin up universal                                           // 825
-    // subs.                                                                                                          // 826
+        self._namedSubs[subscriptionId]._runHandler();                                                                // 826
+      }); // Allow newly-created universal subs to be started on our connection in                                    // 827
+      // parallel with the ones we're spinning up here, and spin up universal                                         // 830
+      // subs.                                                                                                        // 831
                                                                                                                       //
                                                                                                                       //
-    self._dontStartNewUniversalSubs = false;                                                                          // 827
-    self.startUniversalSubs(); // Start sending messages again, beginning with the diff from the previous             // 828
-    // state of the world to the current state. No yields are allowed during                                          // 831
-    // this diff, so that other changes cannot interleave.                                                            // 832
+      self._dontStartNewUniversalSubs = false;                                                                        // 832
+      self.startUniversalSubs();                                                                                      // 833
+    }); // Start sending messages again, beginning with the diff from the previous                                    // 834
+    // state of the world to the current state. No yields are allowed during                                          // 837
+    // this diff, so that other changes cannot interleave.                                                            // 838
                                                                                                                       //
-    Meteor._noYieldsAllowed(function () {                                                                             // 833
-      self._isSending = true;                                                                                         // 834
                                                                                                                       //
-      self._diffCollectionViews(beforeCVs);                                                                           // 835
+    Meteor._noYieldsAllowed(function () {                                                                             // 839
+      self._isSending = true;                                                                                         // 840
                                                                                                                       //
-      if (!_.isEmpty(self._pendingReady)) {                                                                           // 836
-        self.sendReady(self._pendingReady);                                                                           // 837
-        self._pendingReady = [];                                                                                      // 838
-      }                                                                                                               // 839
-    });                                                                                                               // 840
-  },                                                                                                                  // 841
-  _startSubscription: function (handler, subId, params, name) {                                                       // 843
-    var self = this;                                                                                                  // 844
-    var sub = new Subscription(self, handler, subId, params, name);                                                   // 846
-    if (subId) self._namedSubs[subId] = sub;else self._universalSubs.push(sub);                                       // 848
+      self._diffCollectionViews(beforeCVs);                                                                           // 841
                                                                                                                       //
-    sub._runHandler();                                                                                                // 853
-  },                                                                                                                  // 854
-  // tear down specified subscription                                                                                 // 856
-  _stopSubscription: function (subId, error) {                                                                        // 857
-    var self = this;                                                                                                  // 858
-    var subName = null;                                                                                               // 860
+      if (!_.isEmpty(self._pendingReady)) {                                                                           // 842
+        self.sendReady(self._pendingReady);                                                                           // 843
+        self._pendingReady = [];                                                                                      // 844
+      }                                                                                                               // 845
+    });                                                                                                               // 846
+  },                                                                                                                  // 847
+  _startSubscription: function (handler, subId, params, name) {                                                       // 849
+    var self = this;                                                                                                  // 850
+    var sub = new Subscription(self, handler, subId, params, name);                                                   // 852
+    if (subId) self._namedSubs[subId] = sub;else self._universalSubs.push(sub);                                       // 854
                                                                                                                       //
-    if (subId && self._namedSubs[subId]) {                                                                            // 862
-      subName = self._namedSubs[subId]._name;                                                                         // 863
+    sub._runHandler();                                                                                                // 859
+  },                                                                                                                  // 860
+  // tear down specified subscription                                                                                 // 862
+  _stopSubscription: function (subId, error) {                                                                        // 863
+    var self = this;                                                                                                  // 864
+    var subName = null;                                                                                               // 866
                                                                                                                       //
-      self._namedSubs[subId]._removeAllDocuments();                                                                   // 864
+    if (subId && self._namedSubs[subId]) {                                                                            // 868
+      subName = self._namedSubs[subId]._name;                                                                         // 869
                                                                                                                       //
-      self._namedSubs[subId]._deactivate();                                                                           // 865
+      self._namedSubs[subId]._removeAllDocuments();                                                                   // 870
                                                                                                                       //
-      delete self._namedSubs[subId];                                                                                  // 866
-    }                                                                                                                 // 867
+      self._namedSubs[subId]._deactivate();                                                                           // 871
                                                                                                                       //
-    var response = {                                                                                                  // 869
-      msg: 'nosub',                                                                                                   // 869
-      id: subId                                                                                                       // 869
-    };                                                                                                                // 869
+      delete self._namedSubs[subId];                                                                                  // 872
+    }                                                                                                                 // 873
                                                                                                                       //
-    if (error) {                                                                                                      // 871
+    var response = {                                                                                                  // 875
+      msg: 'nosub',                                                                                                   // 875
+      id: subId                                                                                                       // 875
+    };                                                                                                                // 875
+                                                                                                                      //
+    if (error) {                                                                                                      // 877
       response.error = wrapInternalException(error, subName ? "from sub " + subName + " id " + subId : "from sub id " + subId);
-    }                                                                                                                 // 876
+    }                                                                                                                 // 882
                                                                                                                       //
-    self.send(response);                                                                                              // 878
-  },                                                                                                                  // 879
-  // tear down all subscriptions. Note that this does NOT send removed or nosub                                       // 881
-  // messages, since we assume the client is gone.                                                                    // 882
-  _deactivateAllSubscriptions: function () {                                                                          // 883
-    var self = this;                                                                                                  // 884
+    self.send(response);                                                                                              // 884
+  },                                                                                                                  // 885
+  // tear down all subscriptions. Note that this does NOT send removed or nosub                                       // 887
+  // messages, since we assume the client is gone.                                                                    // 888
+  _deactivateAllSubscriptions: function () {                                                                          // 889
+    var self = this;                                                                                                  // 890
                                                                                                                       //
-    _.each(self._namedSubs, function (sub, id) {                                                                      // 886
-      sub._deactivate();                                                                                              // 887
-    });                                                                                                               // 888
+    _.each(self._namedSubs, function (sub, id) {                                                                      // 892
+      sub._deactivate();                                                                                              // 893
+    });                                                                                                               // 894
                                                                                                                       //
-    self._namedSubs = {};                                                                                             // 889
+    self._namedSubs = {};                                                                                             // 895
                                                                                                                       //
-    _.each(self._universalSubs, function (sub) {                                                                      // 891
-      sub._deactivate();                                                                                              // 892
-    });                                                                                                               // 893
+    _.each(self._universalSubs, function (sub) {                                                                      // 897
+      sub._deactivate();                                                                                              // 898
+    });                                                                                                               // 899
                                                                                                                       //
-    self._universalSubs = [];                                                                                         // 894
-  },                                                                                                                  // 895
-  // Determine the remote client's IP address, based on the                                                           // 897
-  // HTTP_FORWARDED_COUNT environment variable representing how many                                                  // 898
-  // proxies the server is behind.                                                                                    // 899
-  _clientAddress: function () {                                                                                       // 900
-    var self = this; // For the reported client address for a connection to be correct,                               // 901
-    // the developer must set the HTTP_FORWARDED_COUNT environment                                                    // 904
-    // variable to an integer representing the number of hops they                                                    // 905
-    // expect in the `x-forwarded-for` header. E.g., set to "1" if the                                                // 906
-    // server is behind one proxy.                                                                                    // 907
-    //                                                                                                                // 908
-    // This could be computed once at startup instead of every time.                                                  // 909
+    self._universalSubs = [];                                                                                         // 900
+  },                                                                                                                  // 901
+  // Determine the remote client's IP address, based on the                                                           // 903
+  // HTTP_FORWARDED_COUNT environment variable representing how many                                                  // 904
+  // proxies the server is behind.                                                                                    // 905
+  _clientAddress: function () {                                                                                       // 906
+    var self = this; // For the reported client address for a connection to be correct,                               // 907
+    // the developer must set the HTTP_FORWARDED_COUNT environment                                                    // 910
+    // variable to an integer representing the number of hops they                                                    // 911
+    // expect in the `x-forwarded-for` header. E.g., set to "1" if the                                                // 912
+    // server is behind one proxy.                                                                                    // 913
+    //                                                                                                                // 914
+    // This could be computed once at startup instead of every time.                                                  // 915
                                                                                                                       //
-    var httpForwardedCount = parseInt(process.env['HTTP_FORWARDED_COUNT']) || 0;                                      // 910
-    if (httpForwardedCount === 0) return self.socket.remoteAddress;                                                   // 912
-    var forwardedFor = self.socket.headers["x-forwarded-for"];                                                        // 915
-    if (!_.isString(forwardedFor)) return null;                                                                       // 916
+    var httpForwardedCount = parseInt(process.env['HTTP_FORWARDED_COUNT']) || 0;                                      // 916
+    if (httpForwardedCount === 0) return self.socket.remoteAddress;                                                   // 918
+    var forwardedFor = self.socket.headers["x-forwarded-for"];                                                        // 921
+    if (!_.isString(forwardedFor)) return null;                                                                       // 922
     forwardedFor = forwardedFor.trim().split(/\s*,\s*/); // Typically the first value in the `x-forwarded-for` header is
-    // the original IP address of the client connecting to the first                                                  // 921
-    // proxy.  However, the end user can easily spoof the header, in                                                  // 922
-    // which case the first value(s) will be the fake IP address from                                                 // 923
-    // the user pretending to be a proxy reporting the original IP                                                    // 924
-    // address value.  By counting HTTP_FORWARDED_COUNT back from the                                                 // 925
-    // end of the list, we ensure that we get the IP address being                                                    // 926
-    // reported by *our* first proxy.                                                                                 // 927
+    // the original IP address of the client connecting to the first                                                  // 927
+    // proxy.  However, the end user can easily spoof the header, in                                                  // 928
+    // which case the first value(s) will be the fake IP address from                                                 // 929
+    // the user pretending to be a proxy reporting the original IP                                                    // 930
+    // address value.  By counting HTTP_FORWARDED_COUNT back from the                                                 // 931
+    // end of the list, we ensure that we get the IP address being                                                    // 932
+    // reported by *our* first proxy.                                                                                 // 933
                                                                                                                       //
-    if (httpForwardedCount < 0 || httpForwardedCount > forwardedFor.length) return null;                              // 929
-    return forwardedFor[forwardedFor.length - httpForwardedCount];                                                    // 932
-  }                                                                                                                   // 933
+    if (httpForwardedCount < 0 || httpForwardedCount > forwardedFor.length) return null;                              // 935
+    return forwardedFor[forwardedFor.length - httpForwardedCount];                                                    // 938
+  }                                                                                                                   // 939
 }); /******************************************************************************/ /* Subscription                                                               */ /******************************************************************************/ // ctor for a sub handle: the input to each publish function
-// Instance name is this because it's usually referred to as this inside a                                            // 942
-// publish                                                                                                            // 943
-/**                                                                                                                   // 944
+// Instance name is this because it's usually referred to as this inside a                                            // 948
+// publish                                                                                                            // 949
+/**                                                                                                                   // 950
  * @summary The server's side of a subscription                                                                       //
  * @class Subscription                                                                                                //
  * @instanceName this                                                                                                 //
  * @showInstanceName true                                                                                             //
  */                                                                                                                   //
                                                                                                                       //
-var Subscription = function (session, handler, subscriptionId, params, name) {                                        // 950
-  var self = this;                                                                                                    // 952
-  self._session = session; // type is Session                                                                         // 953
-  /**                                                                                                                 // 955
+var Subscription = function (session, handler, subscriptionId, params, name) {                                        // 956
+  var self = this;                                                                                                    // 958
+  self._session = session; // type is Session                                                                         // 959
+  /**                                                                                                                 // 961
    * @summary Access inside the publish function. The incoming [connection](#meteor_onconnection) for this subscription.
    * @locus Server                                                                                                    //
    * @name  connection                                                                                                //
    * @memberOf Subscription                                                                                           //
    * @instance                                                                                                        //
    */                                                                                                                 //
-  self.connection = session.connectionHandle; // public API object                                                    // 962
+  self.connection = session.connectionHandle; // public API object                                                    // 968
                                                                                                                       //
-  self._handler = handler; // my subscription ID (generated by client, undefined for universal subs).                 // 964
+  self._handler = handler; // my subscription ID (generated by client, undefined for universal subs).                 // 970
                                                                                                                       //
-  self._subscriptionId = subscriptionId; // undefined for universal subs                                              // 967
+  self._subscriptionId = subscriptionId; // undefined for universal subs                                              // 973
                                                                                                                       //
-  self._name = name;                                                                                                  // 969
-  self._params = params || []; // Only named subscriptions have IDs, but we need some sort of string                  // 971
-  // internally to keep track of all subscriptions inside                                                             // 974
-  // SessionDocumentViews. We use this subscriptionHandle for that.                                                   // 975
+  self._name = name;                                                                                                  // 975
+  self._params = params || []; // Only named subscriptions have IDs, but we need some sort of string                  // 977
+  // internally to keep track of all subscriptions inside                                                             // 980
+  // SessionDocumentViews. We use this subscriptionHandle for that.                                                   // 981
                                                                                                                       //
-  if (self._subscriptionId) {                                                                                         // 976
-    self._subscriptionHandle = 'N' + self._subscriptionId;                                                            // 977
-  } else {                                                                                                            // 978
-    self._subscriptionHandle = 'U' + Random.id();                                                                     // 979
-  } // has _deactivate been called?                                                                                   // 980
+  if (self._subscriptionId) {                                                                                         // 982
+    self._subscriptionHandle = 'N' + self._subscriptionId;                                                            // 983
+  } else {                                                                                                            // 984
+    self._subscriptionHandle = 'U' + Random.id();                                                                     // 985
+  } // has _deactivate been called?                                                                                   // 986
                                                                                                                       //
                                                                                                                       //
-  self._deactivated = false; // stop callbacks to g/c this sub.  called w/ zero arguments.                            // 983
+  self._deactivated = false; // stop callbacks to g/c this sub.  called w/ zero arguments.                            // 989
                                                                                                                       //
-  self._stopCallbacks = []; // the set of (collection, documentid) that this subscription has                         // 986
-  // an opinion about                                                                                                 // 989
+  self._stopCallbacks = []; // the set of (collection, documentid) that this subscription has                         // 992
+  // an opinion about                                                                                                 // 995
                                                                                                                       //
-  self._documents = {}; // remember if we are ready.                                                                  // 990
+  self._documents = {}; // remember if we are ready.                                                                  // 996
                                                                                                                       //
-  self._ready = false; // Part of the public API: the user of this sub.                                               // 993
-  /**                                                                                                                 // 997
+  self._ready = false; // Part of the public API: the user of this sub.                                               // 999
+  /**                                                                                                                 // 1003
    * @summary Access inside the publish function. The id of the logged-in user, or `null` if no user is logged in.    //
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
    * @name  userId                                                                                                    //
    * @instance                                                                                                        //
    */                                                                                                                 //
-  self.userId = session.userId; // For now, the id filter is going to default to                                      // 1004
-  // the to/from DDP methods on MongoID, to                                                                           // 1007
-  // specifically deal with mongo/minimongo ObjectIds.                                                                // 1008
-  // Later, you will be able to make this be "raw"                                                                    // 1010
-  // if you want to publish a collection that you know                                                                // 1011
-  // just has strings for keys and no funny business, to                                                              // 1012
-  // a ddp consumer that isn't minimongo                                                                              // 1013
+  self.userId = session.userId; // For now, the id filter is going to default to                                      // 1010
+  // the to/from DDP methods on MongoID, to                                                                           // 1013
+  // specifically deal with mongo/minimongo ObjectIds.                                                                // 1014
+  // Later, you will be able to make this be "raw"                                                                    // 1016
+  // if you want to publish a collection that you know                                                                // 1017
+  // just has strings for keys and no funny business, to                                                              // 1018
+  // a ddp consumer that isn't minimongo                                                                              // 1019
                                                                                                                       //
-  self._idFilter = {                                                                                                  // 1015
-    idStringify: MongoID.idStringify,                                                                                 // 1016
-    idParse: MongoID.idParse                                                                                          // 1017
-  };                                                                                                                  // 1015
-  Package.facts && Package.facts.Facts.incrementServerFact("livedata", "subscriptions", 1);                           // 1020
-};                                                                                                                    // 1022
+  self._idFilter = {                                                                                                  // 1021
+    idStringify: MongoID.idStringify,                                                                                 // 1022
+    idParse: MongoID.idParse                                                                                          // 1023
+  };                                                                                                                  // 1021
+  Package.facts && Package.facts.Facts.incrementServerFact("livedata", "subscriptions", 1);                           // 1026
+};                                                                                                                    // 1028
                                                                                                                       //
-_.extend(Subscription.prototype, {                                                                                    // 1024
-  _runHandler: function () {                                                                                          // 1025
-    // XXX should we unblock() here? Either before running the publish                                                // 1026
-    // function, or before running _publishCursor.                                                                    // 1027
-    //                                                                                                                // 1028
-    // Right now, each publish function blocks all future publishes and                                               // 1029
-    // methods waiting on data from Mongo (or whatever else the function                                              // 1030
-    // blocks on). This probably slows page load in common cases.                                                     // 1031
-    var self = this;                                                                                                  // 1033
+_.extend(Subscription.prototype, {                                                                                    // 1030
+  _runHandler: function () {                                                                                          // 1031
+    // XXX should we unblock() here? Either before running the publish                                                // 1032
+    // function, or before running _publishCursor.                                                                    // 1033
+    //                                                                                                                // 1034
+    // Right now, each publish function blocks all future publishes and                                               // 1035
+    // methods waiting on data from Mongo (or whatever else the function                                              // 1036
+    // blocks on). This probably slows page load in common cases.                                                     // 1037
+    var self = this;                                                                                                  // 1039
                                                                                                                       //
-    try {                                                                                                             // 1034
-      var res = maybeAuditArgumentChecks(self._handler, self, EJSON.clone(self._params), // It's OK that this would look weird for universal subscriptions,
-      // because they have no arguments so there can never be an                                                      // 1038
-      // audit-argument-checks failure.                                                                               // 1039
-      "publisher '" + self._name + "'");                                                                              // 1040
-    } catch (e) {                                                                                                     // 1041
-      self.error(e);                                                                                                  // 1042
-      return;                                                                                                         // 1043
-    } // Did the handler call this.error or this.stop?                                                                // 1044
-                                                                                                                      //
-                                                                                                                      //
-    if (self._isDeactivated()) return;                                                                                // 1047
-                                                                                                                      //
-    self._publishHandlerResult(res);                                                                                  // 1050
-  },                                                                                                                  // 1051
-  _publishHandlerResult: function (res) {                                                                             // 1053
-    // SPECIAL CASE: Instead of writing their own callbacks that invoke                                               // 1054
-    // this.added/changed/ready/etc, the user can just return a collection                                            // 1055
-    // cursor or array of cursors from the publish function; we call their                                            // 1056
-    // _publishCursor method which starts observing the cursor and publishes the                                      // 1057
-    // results. Note that _publishCursor does NOT call ready().                                                       // 1058
-    //                                                                                                                // 1059
-    // XXX This uses an undocumented interface which only the Mongo cursor                                            // 1060
-    // interface publishes. Should we make this interface public and encourage                                        // 1061
-    // users to implement it themselves? Arguably, it's unnecessary; users can                                        // 1062
-    // already write their own functions like                                                                         // 1063
-    //   var publishMyReactiveThingy = function (name, handler) {                                                     // 1064
-    //     Meteor.publish(name, function () {                                                                         // 1065
-    //       var reactiveThingy = handler();                                                                          // 1066
-    //       reactiveThingy.publishMe();                                                                              // 1067
-    //     });                                                                                                        // 1068
-    //   };                                                                                                           // 1069
-    var self = this;                                                                                                  // 1071
-                                                                                                                      //
-    var isCursor = function (c) {                                                                                     // 1072
-      return c && c._publishCursor;                                                                                   // 1073
-    };                                                                                                                // 1074
-                                                                                                                      //
-    if (isCursor(res)) {                                                                                              // 1075
-      try {                                                                                                           // 1076
-        res._publishCursor(self);                                                                                     // 1077
-      } catch (e) {                                                                                                   // 1078
-        self.error(e);                                                                                                // 1079
-        return;                                                                                                       // 1080
-      } // _publishCursor only returns after the initial added callbacks have run.                                    // 1081
-      // mark subscription as ready.                                                                                  // 1083
+    try {                                                                                                             // 1040
+      var res = DDP._CurrentPublicationInvocation.withValue(self, function () {                                       // 1041
+        return maybeAuditArgumentChecks(self._handler, self, EJSON.clone(self._params), // It's OK that this would look weird for universal subscriptions,
+        // because they have no arguments so there can never be an                                                    // 1046
+        // audit-argument-checks failure.                                                                             // 1047
+        "publisher '" + self._name + "'");                                                                            // 1048
+      });                                                                                                             // 1043
+    } catch (e) {                                                                                                     // 1051
+      self.error(e);                                                                                                  // 1052
+      return;                                                                                                         // 1053
+    } // Did the handler call this.error or this.stop?                                                                // 1054
                                                                                                                       //
                                                                                                                       //
-      self.ready();                                                                                                   // 1084
-    } else if (_.isArray(res)) {                                                                                      // 1085
-      // check all the elements are cursors                                                                           // 1086
-      if (!_.all(res, isCursor)) {                                                                                    // 1087
-        self.error(new Error("Publish function returned an array of non-Cursors"));                                   // 1088
-        return;                                                                                                       // 1089
-      } // find duplicate collection names                                                                            // 1090
-      // XXX we should support overlapping cursors, but that would require the                                        // 1092
-      // merge box to allow overlap within a subscription                                                             // 1093
+    if (self._isDeactivated()) return;                                                                                // 1057
+                                                                                                                      //
+    self._publishHandlerResult(res);                                                                                  // 1060
+  },                                                                                                                  // 1061
+  _publishHandlerResult: function (res) {                                                                             // 1063
+    // SPECIAL CASE: Instead of writing their own callbacks that invoke                                               // 1064
+    // this.added/changed/ready/etc, the user can just return a collection                                            // 1065
+    // cursor or array of cursors from the publish function; we call their                                            // 1066
+    // _publishCursor method which starts observing the cursor and publishes the                                      // 1067
+    // results. Note that _publishCursor does NOT call ready().                                                       // 1068
+    //                                                                                                                // 1069
+    // XXX This uses an undocumented interface which only the Mongo cursor                                            // 1070
+    // interface publishes. Should we make this interface public and encourage                                        // 1071
+    // users to implement it themselves? Arguably, it's unnecessary; users can                                        // 1072
+    // already write their own functions like                                                                         // 1073
+    //   var publishMyReactiveThingy = function (name, handler) {                                                     // 1074
+    //     Meteor.publish(name, function () {                                                                         // 1075
+    //       var reactiveThingy = handler();                                                                          // 1076
+    //       reactiveThingy.publishMe();                                                                              // 1077
+    //     });                                                                                                        // 1078
+    //   };                                                                                                           // 1079
+    var self = this;                                                                                                  // 1081
+                                                                                                                      //
+    var isCursor = function (c) {                                                                                     // 1082
+      return c && c._publishCursor;                                                                                   // 1083
+    };                                                                                                                // 1084
+                                                                                                                      //
+    if (isCursor(res)) {                                                                                              // 1085
+      try {                                                                                                           // 1086
+        res._publishCursor(self);                                                                                     // 1087
+      } catch (e) {                                                                                                   // 1088
+        self.error(e);                                                                                                // 1089
+        return;                                                                                                       // 1090
+      } // _publishCursor only returns after the initial added callbacks have run.                                    // 1091
+      // mark subscription as ready.                                                                                  // 1093
                                                                                                                       //
                                                                                                                       //
-      var collectionNames = {};                                                                                       // 1094
+      self.ready();                                                                                                   // 1094
+    } else if (_.isArray(res)) {                                                                                      // 1095
+      // check all the elements are cursors                                                                           // 1096
+      if (!_.all(res, isCursor)) {                                                                                    // 1097
+        self.error(new Error("Publish function returned an array of non-Cursors"));                                   // 1098
+        return;                                                                                                       // 1099
+      } // find duplicate collection names                                                                            // 1100
+      // XXX we should support overlapping cursors, but that would require the                                        // 1102
+      // merge box to allow overlap within a subscription                                                             // 1103
                                                                                                                       //
-      for (var i = 0; i < res.length; ++i) {                                                                          // 1095
-        var collectionName = res[i]._getCollectionName();                                                             // 1096
                                                                                                                       //
-        if (_.has(collectionNames, collectionName)) {                                                                 // 1097
-          self.error(new Error("Publish function returned multiple cursors for collection " + collectionName));       // 1098
-          return;                                                                                                     // 1101
-        }                                                                                                             // 1102
+      var collectionNames = {};                                                                                       // 1104
                                                                                                                       //
-        collectionNames[collectionName] = true;                                                                       // 1103
-      }                                                                                                               // 1104
+      for (var i = 0; i < res.length; ++i) {                                                                          // 1105
+        var collectionName = res[i]._getCollectionName();                                                             // 1106
                                                                                                                       //
-      ;                                                                                                               // 1104
+        if (_.has(collectionNames, collectionName)) {                                                                 // 1107
+          self.error(new Error("Publish function returned multiple cursors for collection " + collectionName));       // 1108
+          return;                                                                                                     // 1111
+        }                                                                                                             // 1112
                                                                                                                       //
-      try {                                                                                                           // 1106
-        _.each(res, function (cur) {                                                                                  // 1107
-          cur._publishCursor(self);                                                                                   // 1108
-        });                                                                                                           // 1109
-      } catch (e) {                                                                                                   // 1110
-        self.error(e);                                                                                                // 1111
-        return;                                                                                                       // 1112
-      }                                                                                                               // 1113
+        collectionNames[collectionName] = true;                                                                       // 1113
+      }                                                                                                               // 1114
                                                                                                                       //
-      self.ready();                                                                                                   // 1114
-    } else if (res) {                                                                                                 // 1115
-      // truthy values other than cursors or arrays are probably a                                                    // 1116
-      // user mistake (possible returning a Mongo document via, say,                                                  // 1117
-      // `coll.findOne()`).                                                                                           // 1118
-      self.error(new Error("Publish function can only return a Cursor or " + "an array of Cursors"));                 // 1119
-    }                                                                                                                 // 1121
-  },                                                                                                                  // 1122
-  // This calls all stop callbacks and prevents the handler from updating any                                         // 1124
-  // SessionCollectionViews further. It's used when the user unsubscribes or                                          // 1125
-  // disconnects, as well as during setUserId re-runs. It does *NOT* send                                             // 1126
-  // removed messages for the published objects; if that is necessary, call                                           // 1127
-  // _removeAllDocuments first.                                                                                       // 1128
-  _deactivate: function () {                                                                                          // 1129
-    var self = this;                                                                                                  // 1130
-    if (self._deactivated) return;                                                                                    // 1131
-    self._deactivated = true;                                                                                         // 1133
+      ;                                                                                                               // 1114
                                                                                                                       //
-    self._callStopCallbacks();                                                                                        // 1134
+      try {                                                                                                           // 1116
+        _.each(res, function (cur) {                                                                                  // 1117
+          cur._publishCursor(self);                                                                                   // 1118
+        });                                                                                                           // 1119
+      } catch (e) {                                                                                                   // 1120
+        self.error(e);                                                                                                // 1121
+        return;                                                                                                       // 1122
+      }                                                                                                               // 1123
                                                                                                                       //
-    Package.facts && Package.facts.Facts.incrementServerFact("livedata", "subscriptions", -1);                        // 1135
-  },                                                                                                                  // 1137
-  _callStopCallbacks: function () {                                                                                   // 1139
-    var self = this; // tell listeners, so they can clean up                                                          // 1140
+      self.ready();                                                                                                   // 1124
+    } else if (res) {                                                                                                 // 1125
+      // truthy values other than cursors or arrays are probably a                                                    // 1126
+      // user mistake (possible returning a Mongo document via, say,                                                  // 1127
+      // `coll.findOne()`).                                                                                           // 1128
+      self.error(new Error("Publish function can only return a Cursor or " + "an array of Cursors"));                 // 1129
+    }                                                                                                                 // 1131
+  },                                                                                                                  // 1132
+  // This calls all stop callbacks and prevents the handler from updating any                                         // 1134
+  // SessionCollectionViews further. It's used when the user unsubscribes or                                          // 1135
+  // disconnects, as well as during setUserId re-runs. It does *NOT* send                                             // 1136
+  // removed messages for the published objects; if that is necessary, call                                           // 1137
+  // _removeAllDocuments first.                                                                                       // 1138
+  _deactivate: function () {                                                                                          // 1139
+    var self = this;                                                                                                  // 1140
+    if (self._deactivated) return;                                                                                    // 1141
+    self._deactivated = true;                                                                                         // 1143
                                                                                                                       //
-    var callbacks = self._stopCallbacks;                                                                              // 1142
-    self._stopCallbacks = [];                                                                                         // 1143
+    self._callStopCallbacks();                                                                                        // 1144
                                                                                                                       //
-    _.each(callbacks, function (callback) {                                                                           // 1144
-      callback();                                                                                                     // 1145
-    });                                                                                                               // 1146
+    Package.facts && Package.facts.Facts.incrementServerFact("livedata", "subscriptions", -1);                        // 1145
   },                                                                                                                  // 1147
-  // Send remove messages for every document.                                                                         // 1149
-  _removeAllDocuments: function () {                                                                                  // 1150
-    var self = this;                                                                                                  // 1151
+  _callStopCallbacks: function () {                                                                                   // 1149
+    var self = this; // tell listeners, so they can clean up                                                          // 1150
                                                                                                                       //
-    Meteor._noYieldsAllowed(function () {                                                                             // 1152
-      _.each(self._documents, function (collectionDocs, collectionName) {                                             // 1153
-        // Iterate over _.keys instead of the dictionary itself, since we'll be                                       // 1154
-        // mutating it.                                                                                               // 1155
-        _.each(_.keys(collectionDocs), function (strId) {                                                             // 1156
-          self.removed(collectionName, self._idFilter.idParse(strId));                                                // 1157
-        });                                                                                                           // 1158
-      });                                                                                                             // 1159
-    });                                                                                                               // 1160
-  },                                                                                                                  // 1161
-  // Returns a new Subscription for the same session with the same                                                    // 1163
-  // initial creation parameters. This isn't a clone: it doesn't have                                                 // 1164
-  // the same _documents cache, stopped state or callbacks; may have a                                                // 1165
-  // different _subscriptionHandle, and gets its userId from the                                                      // 1166
-  // session, not from this object.                                                                                   // 1167
-  _recreate: function () {                                                                                            // 1168
-    var self = this;                                                                                                  // 1169
-    return new Subscription(self._session, self._handler, self._subscriptionId, self._params, self._name);            // 1170
-  },                                                                                                                  // 1173
-  /**                                                                                                                 // 1175
+    var callbacks = self._stopCallbacks;                                                                              // 1152
+    self._stopCallbacks = [];                                                                                         // 1153
+                                                                                                                      //
+    _.each(callbacks, function (callback) {                                                                           // 1154
+      callback();                                                                                                     // 1155
+    });                                                                                                               // 1156
+  },                                                                                                                  // 1157
+  // Send remove messages for every document.                                                                         // 1159
+  _removeAllDocuments: function () {                                                                                  // 1160
+    var self = this;                                                                                                  // 1161
+                                                                                                                      //
+    Meteor._noYieldsAllowed(function () {                                                                             // 1162
+      _.each(self._documents, function (collectionDocs, collectionName) {                                             // 1163
+        // Iterate over _.keys instead of the dictionary itself, since we'll be                                       // 1164
+        // mutating it.                                                                                               // 1165
+        _.each(_.keys(collectionDocs), function (strId) {                                                             // 1166
+          self.removed(collectionName, self._idFilter.idParse(strId));                                                // 1167
+        });                                                                                                           // 1168
+      });                                                                                                             // 1169
+    });                                                                                                               // 1170
+  },                                                                                                                  // 1171
+  // Returns a new Subscription for the same session with the same                                                    // 1173
+  // initial creation parameters. This isn't a clone: it doesn't have                                                 // 1174
+  // the same _documents cache, stopped state or callbacks; may have a                                                // 1175
+  // different _subscriptionHandle, and gets its userId from the                                                      // 1176
+  // session, not from this object.                                                                                   // 1177
+  _recreate: function () {                                                                                            // 1178
+    var self = this;                                                                                                  // 1179
+    return new Subscription(self._session, self._handler, self._subscriptionId, self._params, self._name);            // 1180
+  },                                                                                                                  // 1183
+  /**                                                                                                                 // 1185
    * @summary Call inside the publish function.  Stops this client's subscription, triggering a call on the client to the `onStop` callback passed to [`Meteor.subscribe`](#meteor_subscribe), if any. If `error` is not a [`Meteor.Error`](#meteor_error), it will be [sanitized](#meteor_error).
    * @locus Server                                                                                                    //
    * @param {Error} error The error to pass to the client.                                                            //
    * @instance                                                                                                        //
    * @memberOf Subscription                                                                                           //
    */error: function (error) {                                                                                        //
-    var self = this;                                                                                                  // 1183
-    if (self._isDeactivated()) return;                                                                                // 1184
+    var self = this;                                                                                                  // 1193
+    if (self._isDeactivated()) return;                                                                                // 1194
                                                                                                                       //
-    self._session._stopSubscription(self._subscriptionId, error);                                                     // 1186
-  },                                                                                                                  // 1187
-  // Note that while our DDP client will notice that you've called stop() on the                                      // 1189
-  // server (and clean up its _subscriptions table) we don't actually provide a                                       // 1190
-  // mechanism for an app to notice this (the subscribe onError callback only                                         // 1191
-  // triggers if there is an error).                                                                                  // 1192
-  /**                                                                                                                 // 1194
+    self._session._stopSubscription(self._subscriptionId, error);                                                     // 1196
+  },                                                                                                                  // 1197
+  // Note that while our DDP client will notice that you've called stop() on the                                      // 1199
+  // server (and clean up its _subscriptions table) we don't actually provide a                                       // 1200
+  // mechanism for an app to notice this (the subscribe onError callback only                                         // 1201
+  // triggers if there is an error).                                                                                  // 1202
+  /**                                                                                                                 // 1204
    * @summary Call inside the publish function.  Stops this client's subscription and invokes the client's `onStop` callback with no error.
    * @locus Server                                                                                                    //
    * @instance                                                                                                        //
    * @memberOf Subscription                                                                                           //
    */stop: function () {                                                                                              //
-    var self = this;                                                                                                  // 1201
-    if (self._isDeactivated()) return;                                                                                // 1202
+    var self = this;                                                                                                  // 1211
+    if (self._isDeactivated()) return;                                                                                // 1212
                                                                                                                       //
-    self._session._stopSubscription(self._subscriptionId);                                                            // 1204
-  },                                                                                                                  // 1205
-  /**                                                                                                                 // 1207
+    self._session._stopSubscription(self._subscriptionId);                                                            // 1214
+  },                                                                                                                  // 1215
+  /**                                                                                                                 // 1217
    * @summary Call inside the publish function.  Registers a callback function to run when the subscription is stopped.
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
    * @instance                                                                                                        //
    * @param {Function} func The callback function                                                                     //
    */onStop: function (callback) {                                                                                    //
-    var self = this;                                                                                                  // 1215
-    if (self._isDeactivated()) callback();else self._stopCallbacks.push(callback);                                    // 1216
-  },                                                                                                                  // 1220
-  // This returns true if the sub has been deactivated, *OR* if the session was                                       // 1222
-  // destroyed but the deferred call to _deactivateAllSubscriptions hasn't                                            // 1223
-  // happened yet.                                                                                                    // 1224
-  _isDeactivated: function () {                                                                                       // 1225
-    var self = this;                                                                                                  // 1226
-    return self._deactivated || self._session.inQueue === null;                                                       // 1227
-  },                                                                                                                  // 1228
-  /**                                                                                                                 // 1230
+    var self = this;                                                                                                  // 1225
+    callback = Meteor.bindEnvironment(callback, 'onStop callback', self);                                             // 1226
+    if (self._isDeactivated()) callback();else self._stopCallbacks.push(callback);                                    // 1227
+  },                                                                                                                  // 1231
+  // This returns true if the sub has been deactivated, *OR* if the session was                                       // 1233
+  // destroyed but the deferred call to _deactivateAllSubscriptions hasn't                                            // 1234
+  // happened yet.                                                                                                    // 1235
+  _isDeactivated: function () {                                                                                       // 1236
+    var self = this;                                                                                                  // 1237
+    return self._deactivated || self._session.inQueue === null;                                                       // 1238
+  },                                                                                                                  // 1239
+  /**                                                                                                                 // 1241
    * @summary Call inside the publish function.  Informs the subscriber that a document has been added to the record set.
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
@@ -1361,14 +1370,14 @@ _.extend(Subscription.prototype, {                                              
    * @param {String} id The new document's ID.                                                                        //
    * @param {Object} fields The fields in the new document.  If `_id` is present it is ignored.                       //
    */added: function (collectionName, id, fields) {                                                                   //
-    var self = this;                                                                                                  // 1240
-    if (self._isDeactivated()) return;                                                                                // 1241
-    id = self._idFilter.idStringify(id);                                                                              // 1243
-    Meteor._ensure(self._documents, collectionName)[id] = true;                                                       // 1244
+    var self = this;                                                                                                  // 1251
+    if (self._isDeactivated()) return;                                                                                // 1252
+    id = self._idFilter.idStringify(id);                                                                              // 1254
+    Meteor._ensure(self._documents, collectionName)[id] = true;                                                       // 1255
                                                                                                                       //
-    self._session.added(self._subscriptionHandle, collectionName, id, fields);                                        // 1245
-  },                                                                                                                  // 1246
-  /**                                                                                                                 // 1248
+    self._session.added(self._subscriptionHandle, collectionName, id, fields);                                        // 1256
+  },                                                                                                                  // 1257
+  /**                                                                                                                 // 1259
    * @summary Call inside the publish function.  Informs the subscriber that a document in the record set has been modified.
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
@@ -1377,13 +1386,13 @@ _.extend(Subscription.prototype, {                                              
    * @param {String} id The changed document's ID.                                                                    //
    * @param {Object} fields The fields in the document that have changed, together with their new values.  If a field is not present in `fields` it was left unchanged; if it is present in `fields` and has a value of `undefined` it was removed from the document.  If `_id` is present it is ignored.
    */changed: function (collectionName, id, fields) {                                                                 //
-    var self = this;                                                                                                  // 1258
-    if (self._isDeactivated()) return;                                                                                // 1259
-    id = self._idFilter.idStringify(id);                                                                              // 1261
+    var self = this;                                                                                                  // 1269
+    if (self._isDeactivated()) return;                                                                                // 1270
+    id = self._idFilter.idStringify(id);                                                                              // 1272
                                                                                                                       //
-    self._session.changed(self._subscriptionHandle, collectionName, id, fields);                                      // 1262
-  },                                                                                                                  // 1263
-  /**                                                                                                                 // 1265
+    self._session.changed(self._subscriptionHandle, collectionName, id, fields);                                      // 1273
+  },                                                                                                                  // 1274
+  /**                                                                                                                 // 1276
    * @summary Call inside the publish function.  Informs the subscriber that a document has been removed from the record set.
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
@@ -1391,190 +1400,190 @@ _.extend(Subscription.prototype, {                                              
    * @param {String} collection The name of the collection that the document has been removed from.                   //
    * @param {String} id The ID of the document that has been removed.                                                 //
    */removed: function (collectionName, id) {                                                                         //
-    var self = this;                                                                                                  // 1274
-    if (self._isDeactivated()) return;                                                                                // 1275
-    id = self._idFilter.idStringify(id); // We don't bother to delete sets of things in a collection if the           // 1277
-    // collection is empty.  It could break _removeAllDocuments.                                                      // 1279
+    var self = this;                                                                                                  // 1285
+    if (self._isDeactivated()) return;                                                                                // 1286
+    id = self._idFilter.idStringify(id); // We don't bother to delete sets of things in a collection if the           // 1288
+    // collection is empty.  It could break _removeAllDocuments.                                                      // 1290
                                                                                                                       //
-    delete self._documents[collectionName][id];                                                                       // 1280
+    delete self._documents[collectionName][id];                                                                       // 1291
                                                                                                                       //
-    self._session.removed(self._subscriptionHandle, collectionName, id);                                              // 1281
-  },                                                                                                                  // 1282
-  /**                                                                                                                 // 1284
+    self._session.removed(self._subscriptionHandle, collectionName, id);                                              // 1292
+  },                                                                                                                  // 1293
+  /**                                                                                                                 // 1295
    * @summary Call inside the publish function.  Informs the subscriber that an initial, complete snapshot of the record set has been sent.  This will trigger a call on the client to the `onReady` callback passed to  [`Meteor.subscribe`](#meteor_subscribe), if any.
    * @locus Server                                                                                                    //
    * @memberOf Subscription                                                                                           //
    * @instance                                                                                                        //
    */ready: function () {                                                                                             //
-    var self = this;                                                                                                  // 1291
-    if (self._isDeactivated()) return;                                                                                // 1292
-    if (!self._subscriptionId) return; // unnecessary but ignored for universal sub                                   // 1294
+    var self = this;                                                                                                  // 1302
+    if (self._isDeactivated()) return;                                                                                // 1303
+    if (!self._subscriptionId) return; // unnecessary but ignored for universal sub                                   // 1305
                                                                                                                       //
-    if (!self._ready) {                                                                                               // 1296
-      self._session.sendReady([self._subscriptionId]);                                                                // 1297
+    if (!self._ready) {                                                                                               // 1307
+      self._session.sendReady([self._subscriptionId]);                                                                // 1308
                                                                                                                       //
-      self._ready = true;                                                                                             // 1298
-    }                                                                                                                 // 1299
-  }                                                                                                                   // 1300
+      self._ready = true;                                                                                             // 1309
+    }                                                                                                                 // 1310
+  }                                                                                                                   // 1311
 }); /******************************************************************************/ /* Server                                                                     */ /******************************************************************************/
                                                                                                                       //
-Server = function (options) {                                                                                         // 1307
-  var self = this; // The default heartbeat interval is 30 seconds on the server and 35                               // 1308
-  // seconds on the client.  Since the client doesn't need to send a                                                  // 1311
-  // ping as long as it is receiving pings, this means that pings                                                     // 1312
-  // normally go from the server to the client.                                                                       // 1313
-  //                                                                                                                  // 1314
-  // Note: Troposphere depends on the ability to mutate                                                               // 1315
-  // Meteor.server.options.heartbeatTimeout! This is a hack, but it's life.                                           // 1316
+Server = function (options) {                                                                                         // 1318
+  var self = this; // The default heartbeat interval is 30 seconds on the server and 35                               // 1319
+  // seconds on the client.  Since the client doesn't need to send a                                                  // 1322
+  // ping as long as it is receiving pings, this means that pings                                                     // 1323
+  // normally go from the server to the client.                                                                       // 1324
+  //                                                                                                                  // 1325
+  // Note: Troposphere depends on the ability to mutate                                                               // 1326
+  // Meteor.server.options.heartbeatTimeout! This is a hack, but it's life.                                           // 1327
                                                                                                                       //
-  self.options = _.defaults(options || {}, {                                                                          // 1317
-    heartbeatInterval: 15000,                                                                                         // 1318
-    heartbeatTimeout: 15000,                                                                                          // 1319
-    // For testing, allow responding to pings to be disabled.                                                         // 1320
-    respondToPings: true                                                                                              // 1321
-  }); // Map of callbacks to call when a new connection comes in to the                                               // 1317
-  // server and completes DDP version negotiation. Use an object instead                                              // 1325
-  // of an array so we can safely remove one from the list while                                                      // 1326
-  // iterating over it.                                                                                               // 1327
+  self.options = _.defaults(options || {}, {                                                                          // 1328
+    heartbeatInterval: 15000,                                                                                         // 1329
+    heartbeatTimeout: 15000,                                                                                          // 1330
+    // For testing, allow responding to pings to be disabled.                                                         // 1331
+    respondToPings: true                                                                                              // 1332
+  }); // Map of callbacks to call when a new connection comes in to the                                               // 1328
+  // server and completes DDP version negotiation. Use an object instead                                              // 1336
+  // of an array so we can safely remove one from the list while                                                      // 1337
+  // iterating over it.                                                                                               // 1338
                                                                                                                       //
-  self.onConnectionHook = new Hook({                                                                                  // 1328
-    debugPrintExceptions: "onConnection callback"                                                                     // 1329
-  }); // Map of callbacks to call when a new message comes in.                                                        // 1328
+  self.onConnectionHook = new Hook({                                                                                  // 1339
+    debugPrintExceptions: "onConnection callback"                                                                     // 1340
+  }); // Map of callbacks to call when a new message comes in.                                                        // 1339
                                                                                                                       //
-  self.onMessageHook = new Hook({                                                                                     // 1333
-    debugPrintExceptions: "onMessage callback"                                                                        // 1334
-  });                                                                                                                 // 1333
-  self.publish_handlers = {};                                                                                         // 1337
-  self.universal_publish_handlers = [];                                                                               // 1338
-  self.method_handlers = {};                                                                                          // 1340
-  self.sessions = {}; // map from id to session                                                                       // 1342
+  self.onMessageHook = new Hook({                                                                                     // 1344
+    debugPrintExceptions: "onMessage callback"                                                                        // 1345
+  });                                                                                                                 // 1344
+  self.publish_handlers = {};                                                                                         // 1348
+  self.universal_publish_handlers = [];                                                                               // 1349
+  self.method_handlers = {};                                                                                          // 1351
+  self.sessions = {}; // map from id to session                                                                       // 1353
                                                                                                                       //
-  self.stream_server = new StreamServer();                                                                            // 1344
-  self.stream_server.register(function (socket) {                                                                     // 1346
-    // socket implements the SockJSConnection interface                                                               // 1347
-    socket._meteorSession = null;                                                                                     // 1348
+  self.stream_server = new StreamServer();                                                                            // 1355
+  self.stream_server.register(function (socket) {                                                                     // 1357
+    // socket implements the SockJSConnection interface                                                               // 1358
+    socket._meteorSession = null;                                                                                     // 1359
                                                                                                                       //
-    var sendError = function (reason, offendingMessage) {                                                             // 1350
-      var msg = {                                                                                                     // 1351
-        msg: 'error',                                                                                                 // 1351
-        reason: reason                                                                                                // 1351
-      };                                                                                                              // 1351
-      if (offendingMessage) msg.offendingMessage = offendingMessage;                                                  // 1352
-      socket.send(DDPCommon.stringifyDDP(msg));                                                                       // 1354
-    };                                                                                                                // 1355
+    var sendError = function (reason, offendingMessage) {                                                             // 1361
+      var msg = {                                                                                                     // 1362
+        msg: 'error',                                                                                                 // 1362
+        reason: reason                                                                                                // 1362
+      };                                                                                                              // 1362
+      if (offendingMessage) msg.offendingMessage = offendingMessage;                                                  // 1363
+      socket.send(DDPCommon.stringifyDDP(msg));                                                                       // 1365
+    };                                                                                                                // 1366
                                                                                                                       //
-    socket.on('data', function (raw_msg) {                                                                            // 1357
-      if (Meteor._printReceivedDDP) {                                                                                 // 1358
-        Meteor._debug("Received DDP", raw_msg);                                                                       // 1359
-      }                                                                                                               // 1360
+    socket.on('data', function (raw_msg) {                                                                            // 1368
+      if (Meteor._printReceivedDDP) {                                                                                 // 1369
+        Meteor._debug("Received DDP", raw_msg);                                                                       // 1370
+      }                                                                                                               // 1371
                                                                                                                       //
-      try {                                                                                                           // 1361
-        try {                                                                                                         // 1362
-          var msg = DDPCommon.parseDDP(raw_msg);                                                                      // 1363
-        } catch (err) {                                                                                               // 1364
-          sendError('Parse error');                                                                                   // 1365
-          return;                                                                                                     // 1366
-        }                                                                                                             // 1367
+      try {                                                                                                           // 1372
+        try {                                                                                                         // 1373
+          var msg = DDPCommon.parseDDP(raw_msg);                                                                      // 1374
+        } catch (err) {                                                                                               // 1375
+          sendError('Parse error');                                                                                   // 1376
+          return;                                                                                                     // 1377
+        }                                                                                                             // 1378
                                                                                                                       //
-        if (msg === null || !msg.msg) {                                                                               // 1368
-          sendError('Bad request', msg);                                                                              // 1369
-          return;                                                                                                     // 1370
-        }                                                                                                             // 1371
-                                                                                                                      //
-        if (msg.msg === 'connect') {                                                                                  // 1373
-          if (socket._meteorSession) {                                                                                // 1374
-            sendError("Already connected", msg);                                                                      // 1375
-            return;                                                                                                   // 1376
-          }                                                                                                           // 1377
-                                                                                                                      //
-          Fiber(function () {                                                                                         // 1378
-            self._handleConnect(socket, msg);                                                                         // 1379
-          }).run();                                                                                                   // 1380
+        if (msg === null || !msg.msg) {                                                                               // 1379
+          sendError('Bad request', msg);                                                                              // 1380
           return;                                                                                                     // 1381
         }                                                                                                             // 1382
                                                                                                                       //
-        if (!socket._meteorSession) {                                                                                 // 1384
-          sendError('Must connect first', msg);                                                                       // 1385
-          return;                                                                                                     // 1386
-        }                                                                                                             // 1387
+        if (msg.msg === 'connect') {                                                                                  // 1384
+          if (socket._meteorSession) {                                                                                // 1385
+            sendError("Already connected", msg);                                                                      // 1386
+            return;                                                                                                   // 1387
+          }                                                                                                           // 1388
                                                                                                                       //
-        socket._meteorSession.processMessage(msg);                                                                    // 1388
-      } catch (e) {                                                                                                   // 1389
-        // XXX print stack nicely                                                                                     // 1390
-        Meteor._debug("Internal exception while processing message", msg, e.message, e.stack);                        // 1391
-      }                                                                                                               // 1393
-    });                                                                                                               // 1394
-    socket.on('close', function () {                                                                                  // 1396
-      if (socket._meteorSession) {                                                                                    // 1397
-        Fiber(function () {                                                                                           // 1398
-          socket._meteorSession.close();                                                                              // 1399
-        }).run();                                                                                                     // 1400
-      }                                                                                                               // 1401
-    });                                                                                                               // 1402
-  });                                                                                                                 // 1403
-};                                                                                                                    // 1404
+          Fiber(function () {                                                                                         // 1389
+            self._handleConnect(socket, msg);                                                                         // 1390
+          }).run();                                                                                                   // 1391
+          return;                                                                                                     // 1392
+        }                                                                                                             // 1393
                                                                                                                       //
-_.extend(Server.prototype, {                                                                                          // 1406
-  /**                                                                                                                 // 1408
+        if (!socket._meteorSession) {                                                                                 // 1395
+          sendError('Must connect first', msg);                                                                       // 1396
+          return;                                                                                                     // 1397
+        }                                                                                                             // 1398
+                                                                                                                      //
+        socket._meteorSession.processMessage(msg);                                                                    // 1399
+      } catch (e) {                                                                                                   // 1400
+        // XXX print stack nicely                                                                                     // 1401
+        Meteor._debug("Internal exception while processing message", msg, e.message, e.stack);                        // 1402
+      }                                                                                                               // 1404
+    });                                                                                                               // 1405
+    socket.on('close', function () {                                                                                  // 1407
+      if (socket._meteorSession) {                                                                                    // 1408
+        Fiber(function () {                                                                                           // 1409
+          socket._meteorSession.close();                                                                              // 1410
+        }).run();                                                                                                     // 1411
+      }                                                                                                               // 1412
+    });                                                                                                               // 1413
+  });                                                                                                                 // 1414
+};                                                                                                                    // 1415
+                                                                                                                      //
+_.extend(Server.prototype, {                                                                                          // 1417
+  /**                                                                                                                 // 1419
    * @summary Register a callback to be called when a new DDP connection is made to the server.                       //
    * @locus Server                                                                                                    //
    * @param {function} callback The function to call when a new DDP connection is established.                        //
    * @memberOf Meteor                                                                                                 //
    * @importFromPackage meteor                                                                                        //
    */onConnection: function (fn) {                                                                                    //
-    var self = this;                                                                                                  // 1416
-    return self.onConnectionHook.register(fn);                                                                        // 1417
-  },                                                                                                                  // 1418
-  /**                                                                                                                 // 1420
+    var self = this;                                                                                                  // 1427
+    return self.onConnectionHook.register(fn);                                                                        // 1428
+  },                                                                                                                  // 1429
+  /**                                                                                                                 // 1431
    * @summary Register a callback to be called when a new DDP message is received.                                    //
    * @locus Server                                                                                                    //
    * @param {function} callback The function to call when a new DDP message is received.                              //
    * @memberOf Meteor                                                                                                 //
    * @importFromPackage meteor                                                                                        //
    */onMessage: function (fn) {                                                                                       //
-    var self = this;                                                                                                  // 1428
-    return self.onMessageHook.register(fn);                                                                           // 1429
-  },                                                                                                                  // 1430
-  _handleConnect: function (socket, msg) {                                                                            // 1432
-    var self = this; // The connect message must specify a version and an array of supported                          // 1433
-    // versions, and it must claim to support what it is proposing.                                                   // 1436
+    var self = this;                                                                                                  // 1439
+    return self.onMessageHook.register(fn);                                                                           // 1440
+  },                                                                                                                  // 1441
+  _handleConnect: function (socket, msg) {                                                                            // 1443
+    var self = this; // The connect message must specify a version and an array of supported                          // 1444
+    // versions, and it must claim to support what it is proposing.                                                   // 1447
                                                                                                                       //
     if (!(typeof msg.version === 'string' && _.isArray(msg.support) && _.all(msg.support, _.isString) && _.contains(msg.support, msg.version))) {
-      socket.send(DDPCommon.stringifyDDP({                                                                            // 1441
-        msg: 'failed',                                                                                                // 1441
-        version: DDPCommon.SUPPORTED_DDP_VERSIONS[0]                                                                  // 1442
-      }));                                                                                                            // 1441
-      socket.close();                                                                                                 // 1443
-      return;                                                                                                         // 1444
-    } // In the future, handle session resumption: something like:                                                    // 1445
-    //  socket._meteorSession = self.sessions[msg.session]                                                            // 1448
+      socket.send(DDPCommon.stringifyDDP({                                                                            // 1452
+        msg: 'failed',                                                                                                // 1452
+        version: DDPCommon.SUPPORTED_DDP_VERSIONS[0]                                                                  // 1453
+      }));                                                                                                            // 1452
+      socket.close();                                                                                                 // 1454
+      return;                                                                                                         // 1455
+    } // In the future, handle session resumption: something like:                                                    // 1456
+    //  socket._meteorSession = self.sessions[msg.session]                                                            // 1459
                                                                                                                       //
                                                                                                                       //
-    var version = calculateVersion(msg.support, DDPCommon.SUPPORTED_DDP_VERSIONS);                                    // 1449
+    var version = calculateVersion(msg.support, DDPCommon.SUPPORTED_DDP_VERSIONS);                                    // 1460
                                                                                                                       //
-    if (msg.version !== version) {                                                                                    // 1451
-      // The best version to use (according to the client's stated preferences)                                       // 1452
-      // is not the one the client is trying to use. Inform them about the best                                       // 1453
-      // version to use.                                                                                              // 1454
-      socket.send(DDPCommon.stringifyDDP({                                                                            // 1455
-        msg: 'failed',                                                                                                // 1455
-        version: version                                                                                              // 1455
-      }));                                                                                                            // 1455
-      socket.close();                                                                                                 // 1456
-      return;                                                                                                         // 1457
-    } // Yay, version matches! Create a new session.                                                                  // 1458
-    // Note: Troposphere depends on the ability to mutate                                                             // 1461
-    // Meteor.server.options.heartbeatTimeout! This is a hack, but it's life.                                         // 1462
+    if (msg.version !== version) {                                                                                    // 1462
+      // The best version to use (according to the client's stated preferences)                                       // 1463
+      // is not the one the client is trying to use. Inform them about the best                                       // 1464
+      // version to use.                                                                                              // 1465
+      socket.send(DDPCommon.stringifyDDP({                                                                            // 1466
+        msg: 'failed',                                                                                                // 1466
+        version: version                                                                                              // 1466
+      }));                                                                                                            // 1466
+      socket.close();                                                                                                 // 1467
+      return;                                                                                                         // 1468
+    } // Yay, version matches! Create a new session.                                                                  // 1469
+    // Note: Troposphere depends on the ability to mutate                                                             // 1472
+    // Meteor.server.options.heartbeatTimeout! This is a hack, but it's life.                                         // 1473
                                                                                                                       //
                                                                                                                       //
-    socket._meteorSession = new Session(self, version, socket, self.options);                                         // 1463
-    self.sessions[socket._meteorSession.id] = socket._meteorSession;                                                  // 1464
-    self.onConnectionHook.each(function (callback) {                                                                  // 1465
-      if (socket._meteorSession) callback(socket._meteorSession.connectionHandle);                                    // 1466
-      return true;                                                                                                    // 1468
-    });                                                                                                               // 1469
-  },                                                                                                                  // 1470
-  /**                                                                                                                 // 1471
+    socket._meteorSession = new Session(self, version, socket, self.options);                                         // 1474
+    self.sessions[socket._meteorSession.id] = socket._meteorSession;                                                  // 1475
+    self.onConnectionHook.each(function (callback) {                                                                  // 1476
+      if (socket._meteorSession) callback(socket._meteorSession.connectionHandle);                                    // 1477
+      return true;                                                                                                    // 1479
+    });                                                                                                               // 1480
+  },                                                                                                                  // 1481
+  /**                                                                                                                 // 1482
    * Register a publish handler function.                                                                             //
    *                                                                                                                  //
    * @param name {String} identifier for query                                                                        //
@@ -1603,228 +1612,254 @@ _.extend(Server.prototype, {                                                    
        * @param {String|Object} name If String, name of the record set.  If Object, publications Dictionary of publish functions by name.  If `null`, the set has no name, and the record set is automatically sent to all connected clients.
        * @param {Function} func Function called on the server each time a client subscribes.  Inside the function, `this` is the publish handler object, described below.  If the client passed arguments to `subscribe`, the function is called with the same arguments.
        */publish: function (name, handler, options) {                                                                 //
-    var self = this;                                                                                                  // 1503
+    var self = this;                                                                                                  // 1514
                                                                                                                       //
-    if (!_.isObject(name)) {                                                                                          // 1505
-      options = options || {};                                                                                        // 1506
+    if (!_.isObject(name)) {                                                                                          // 1516
+      options = options || {};                                                                                        // 1517
                                                                                                                       //
-      if (name && name in self.publish_handlers) {                                                                    // 1508
-        Meteor._debug("Ignoring duplicate publish named '" + name + "'");                                             // 1509
+      if (name && name in self.publish_handlers) {                                                                    // 1519
+        Meteor._debug("Ignoring duplicate publish named '" + name + "'");                                             // 1520
                                                                                                                       //
-        return;                                                                                                       // 1510
-      }                                                                                                               // 1511
+        return;                                                                                                       // 1521
+      }                                                                                                               // 1522
                                                                                                                       //
-      if (Package.autopublish && !options.is_auto) {                                                                  // 1513
-        // They have autopublish on, yet they're trying to manually                                                   // 1514
-        // picking stuff to publish. They probably should turn off                                                    // 1515
-        // autopublish. (This check isn't perfect -- if you create a                                                  // 1516
-        // publish before you turn on autopublish, it won't catch                                                     // 1517
-        // it. But this will definitely handle the simple case where                                                  // 1518
-        // you've added the autopublish package to your app, and are                                                  // 1519
-        // calling publish from your app code.)                                                                       // 1520
-        if (!self.warned_about_autopublish) {                                                                         // 1521
-          self.warned_about_autopublish = true;                                                                       // 1522
+      if (Package.autopublish && !options.is_auto) {                                                                  // 1524
+        // They have autopublish on, yet they're trying to manually                                                   // 1525
+        // picking stuff to publish. They probably should turn off                                                    // 1526
+        // autopublish. (This check isn't perfect -- if you create a                                                  // 1527
+        // publish before you turn on autopublish, it won't catch                                                     // 1528
+        // it. But this will definitely handle the simple case where                                                  // 1529
+        // you've added the autopublish package to your app, and are                                                  // 1530
+        // calling publish from your app code.)                                                                       // 1531
+        if (!self.warned_about_autopublish) {                                                                         // 1532
+          self.warned_about_autopublish = true;                                                                       // 1533
                                                                                                                       //
           Meteor._debug("** You've set up some data subscriptions with Meteor.publish(), but\n" + "** you still have autopublish turned on. Because autopublish is still\n" + "** on, your Meteor.publish() calls won't have much effect. All data\n" + "** will still be sent to all clients.\n" + "**\n" + "** Turn off autopublish by removing the autopublish package:\n" + "**\n" + "**   $ meteor remove autopublish\n" + "**\n" + "** .. and make sure you have Meteor.publish() and Meteor.subscribe() calls\n" + "** for each collection that you want clients to see.\n");
-        }                                                                                                             // 1535
-      }                                                                                                               // 1536
+        }                                                                                                             // 1546
+      }                                                                                                               // 1547
                                                                                                                       //
-      if (name) self.publish_handlers[name] = handler;else {                                                          // 1538
+      if (name) self.publish_handlers[name] = handler;else {                                                          // 1549
         self.universal_publish_handlers.push(handler); // Spin up the new publisher on any existing session too. Run each
-        // session's subscription in a new Fiber, so that there's no change for                                       // 1543
-        // self.sessions to change while we're running this loop.                                                     // 1544
+        // session's subscription in a new Fiber, so that there's no change for                                       // 1554
+        // self.sessions to change while we're running this loop.                                                     // 1555
                                                                                                                       //
-        _.each(self.sessions, function (session) {                                                                    // 1545
-          if (!session._dontStartNewUniversalSubs) {                                                                  // 1546
-            Fiber(function () {                                                                                       // 1547
-              session._startSubscription(handler);                                                                    // 1548
-            }).run();                                                                                                 // 1549
-          }                                                                                                           // 1550
-        });                                                                                                           // 1551
-      }                                                                                                               // 1552
-    } else {                                                                                                          // 1553
-      _.each(name, function (value, key) {                                                                            // 1555
-        self.publish(key, value, {});                                                                                 // 1556
-      });                                                                                                             // 1557
-    }                                                                                                                 // 1558
-  },                                                                                                                  // 1559
-  _removeSession: function (session) {                                                                                // 1561
-    var self = this;                                                                                                  // 1562
+        _.each(self.sessions, function (session) {                                                                    // 1556
+          if (!session._dontStartNewUniversalSubs) {                                                                  // 1557
+            Fiber(function () {                                                                                       // 1558
+              session._startSubscription(handler);                                                                    // 1559
+            }).run();                                                                                                 // 1560
+          }                                                                                                           // 1561
+        });                                                                                                           // 1562
+      }                                                                                                               // 1563
+    } else {                                                                                                          // 1564
+      _.each(name, function (value, key) {                                                                            // 1566
+        self.publish(key, value, {});                                                                                 // 1567
+      });                                                                                                             // 1568
+    }                                                                                                                 // 1569
+  },                                                                                                                  // 1570
+  _removeSession: function (session) {                                                                                // 1572
+    var self = this;                                                                                                  // 1573
                                                                                                                       //
-    if (self.sessions[session.id]) {                                                                                  // 1563
-      delete self.sessions[session.id];                                                                               // 1564
-    }                                                                                                                 // 1565
-  },                                                                                                                  // 1566
-  /**                                                                                                                 // 1568
+    if (self.sessions[session.id]) {                                                                                  // 1574
+      delete self.sessions[session.id];                                                                               // 1575
+    }                                                                                                                 // 1576
+  },                                                                                                                  // 1577
+  /**                                                                                                                 // 1579
    * @summary Defines functions that can be invoked over the network by clients.                                      //
    * @locus Anywhere                                                                                                  //
    * @param {Object} methods Dictionary whose keys are method names and values are functions.                         //
    * @memberOf Meteor                                                                                                 //
    * @importFromPackage meteor                                                                                        //
    */methods: function (methods) {                                                                                    //
-    var self = this;                                                                                                  // 1576
+    var self = this;                                                                                                  // 1587
                                                                                                                       //
-    _.each(methods, function (func, name) {                                                                           // 1577
-      if (typeof func !== 'function') throw new Error("Method '" + name + "' must be a function");                    // 1578
-      if (self.method_handlers[name]) throw new Error("A method named '" + name + "' is already defined");            // 1580
-      self.method_handlers[name] = func;                                                                              // 1582
-    });                                                                                                               // 1583
-  },                                                                                                                  // 1584
-  call: function (name) {                                                                                             // 1586
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {         // 1586
-      args[_key - 1] = arguments[_key];                                                                               // 1586
-    }                                                                                                                 // 1586
-                                                                                                                      //
-    if (args.length && typeof args[args.length - 1] === "function") {                                                 // 1587
-      // If it's a function, the last argument is the result callback, not                                            // 1588
-      // a parameter to the remote method.                                                                            // 1589
-      var callback = args.pop();                                                                                      // 1590
-    }                                                                                                                 // 1591
-                                                                                                                      //
-    return this.apply(name, args, callback);                                                                          // 1593
-  },                                                                                                                  // 1594
-  // A version of the call method that always returns a Promise.                                                      // 1596
-  callAsync: function (name) {                                                                                        // 1597
-    for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {  // 1597
-      args[_key2 - 1] = arguments[_key2];                                                                             // 1597
+    _.each(methods, function (func, name) {                                                                           // 1588
+      if (typeof func !== 'function') throw new Error("Method '" + name + "' must be a function");                    // 1589
+      if (self.method_handlers[name]) throw new Error("A method named '" + name + "' is already defined");            // 1591
+      self.method_handlers[name] = func;                                                                              // 1593
+    });                                                                                                               // 1594
+  },                                                                                                                  // 1595
+  call: function (name) {                                                                                             // 1597
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {         // 1597
+      args[_key - 1] = arguments[_key];                                                                               // 1597
     }                                                                                                                 // 1597
                                                                                                                       //
-    return this.applyAsync(name, args);                                                                               // 1598
-  },                                                                                                                  // 1599
-  apply: function (name, args, options, callback) {                                                                   // 1601
-    // We were passed 3 arguments. They may be either (name, args, options)                                           // 1602
-    // or (name, args, callback)                                                                                      // 1603
-    if (!callback && typeof options === 'function') {                                                                 // 1604
-      callback = options;                                                                                             // 1605
-      options = {};                                                                                                   // 1606
-    } else {                                                                                                          // 1607
-      options = options || {};                                                                                        // 1608
-    }                                                                                                                 // 1609
+    if (args.length && typeof args[args.length - 1] === "function") {                                                 // 1598
+      // If it's a function, the last argument is the result callback, not                                            // 1599
+      // a parameter to the remote method.                                                                            // 1600
+      var callback = args.pop();                                                                                      // 1601
+    }                                                                                                                 // 1602
+                                                                                                                      //
+    return this.apply(name, args, callback);                                                                          // 1604
+  },                                                                                                                  // 1605
+  // A version of the call method that always returns a Promise.                                                      // 1607
+  callAsync: function (name) {                                                                                        // 1608
+    for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {  // 1608
+      args[_key2 - 1] = arguments[_key2];                                                                             // 1608
+    }                                                                                                                 // 1608
+                                                                                                                      //
+    return this.applyAsync(name, args);                                                                               // 1609
+  },                                                                                                                  // 1610
+  apply: function (name, args, options, callback) {                                                                   // 1612
+    // We were passed 3 arguments. They may be either (name, args, options)                                           // 1613
+    // or (name, args, callback)                                                                                      // 1614
+    if (!callback && typeof options === 'function') {                                                                 // 1615
+      callback = options;                                                                                             // 1616
+      options = {};                                                                                                   // 1617
+    } else {                                                                                                          // 1618
+      options = options || {};                                                                                        // 1619
+    }                                                                                                                 // 1620
                                                                                                                       //
     var promise = this.applyAsync(name, args, options); // Return the result in whichever way the caller asked for it. Note that we
-    // do NOT block on the write fence in an analogous way to how the client                                          // 1614
-    // blocks on the relevant data being visible, so you are NOT guaranteed that                                      // 1615
-    // cursor observe callbacks have fired when your callback is invoked. (We                                         // 1616
-    // can change this if there's a real use case.)                                                                   // 1617
+    // do NOT block on the write fence in an analogous way to how the client                                          // 1625
+    // blocks on the relevant data being visible, so you are NOT guaranteed that                                      // 1626
+    // cursor observe callbacks have fired when your callback is invoked. (We                                         // 1627
+    // can change this if there's a real use case.)                                                                   // 1628
                                                                                                                       //
-    if (callback) {                                                                                                   // 1618
-      promise.then(function (result) {                                                                                // 1619
-        return callback(undefined, result);                                                                           // 1620
-      }, function (exception) {                                                                                       // 1620
-        return callback(exception);                                                                                   // 1621
-      });                                                                                                             // 1621
-    } else {                                                                                                          // 1623
-      return promise.await();                                                                                         // 1624
-    }                                                                                                                 // 1625
-  },                                                                                                                  // 1626
-  // @param options {Optional Object}                                                                                 // 1628
-  applyAsync: function (name, args, options) {                                                                        // 1629
-    // Run the handler                                                                                                // 1630
-    var handler = this.method_handlers[name];                                                                         // 1631
+    if (callback) {                                                                                                   // 1629
+      promise.then(function (result) {                                                                                // 1630
+        return callback(undefined, result);                                                                           // 1631
+      }, function (exception) {                                                                                       // 1631
+        return callback(exception);                                                                                   // 1632
+      });                                                                                                             // 1632
+    } else {                                                                                                          // 1634
+      return promise.await();                                                                                         // 1635
+    }                                                                                                                 // 1636
+  },                                                                                                                  // 1637
+  // @param options {Optional Object}                                                                                 // 1639
+  applyAsync: function (name, args, options) {                                                                        // 1640
+    // Run the handler                                                                                                // 1641
+    var handler = this.method_handlers[name];                                                                         // 1642
                                                                                                                       //
-    if (!handler) {                                                                                                   // 1632
-      return Promise.reject(new Meteor.Error(404, "Method '" + name + "' not found"));                                // 1633
-    } // If this is a method call from within another method, get the                                                 // 1636
-    // user state from the outer method, otherwise don't allow                                                        // 1639
-    // setUserId to be called                                                                                         // 1640
+    if (!handler) {                                                                                                   // 1643
+      return Promise.reject(new Meteor.Error(404, "Method '" + name + "' not found"));                                // 1644
+    } // If this is a method call from within another method or publish function,                                     // 1647
+    // get the user state from the outer method or publish function, otherwise                                        // 1650
+    // don't allow setUserId to be called                                                                             // 1651
                                                                                                                       //
                                                                                                                       //
-    var userId = null;                                                                                                // 1641
+    var userId = null;                                                                                                // 1652
                                                                                                                       //
-    var setUserId = function () {                                                                                     // 1642
-      throw new Error("Can't call setUserId on a server initiated method call");                                      // 1643
-    };                                                                                                                // 1644
+    var setUserId = function () {                                                                                     // 1653
+      throw new Error("Can't call setUserId on a server initiated method call");                                      // 1654
+    };                                                                                                                // 1655
                                                                                                                       //
-    var connection = null;                                                                                            // 1645
+    var connection = null;                                                                                            // 1656
                                                                                                                       //
-    var currentInvocation = DDP._CurrentInvocation.get();                                                             // 1646
+    var currentMethodInvocation = DDP._CurrentMethodInvocation.get();                                                 // 1657
                                                                                                                       //
-    if (currentInvocation) {                                                                                          // 1647
-      userId = currentInvocation.userId;                                                                              // 1648
+    var currentPublicationInvocation = DDP._CurrentPublicationInvocation.get();                                       // 1658
                                                                                                                       //
-      setUserId = function (userId) {                                                                                 // 1649
-        currentInvocation.setUserId(userId);                                                                          // 1650
-      };                                                                                                              // 1651
+    var randomSeed = null;                                                                                            // 1659
                                                                                                                       //
-      connection = currentInvocation.connection;                                                                      // 1652
-    }                                                                                                                 // 1653
+    if (currentMethodInvocation) {                                                                                    // 1660
+      userId = currentMethodInvocation.userId;                                                                        // 1661
                                                                                                                       //
-    var invocation = new DDPCommon.MethodInvocation({                                                                 // 1655
-      isSimulation: false,                                                                                            // 1656
-      userId: userId,                                                                                                 // 1657
-      setUserId: setUserId,                                                                                           // 1658
-      connection: connection,                                                                                         // 1659
-      randomSeed: DDPCommon.makeRpcSeed(currentInvocation, name)                                                      // 1660
-    });                                                                                                               // 1655
-    return new Promise(function (resolve) {                                                                           // 1663
-      return resolve(DDP._CurrentInvocation.withValue(invocation, function () {                                       // 1663
-        return maybeAuditArgumentChecks(handler, invocation, EJSON.clone(args), "internal call to '" + name + "'");   // 1666
-      }));                                                                                                            // 1666
-    }).then(EJSON.clone);                                                                                             // 1663
-  },                                                                                                                  // 1672
-  _urlForSession: function (sessionId) {                                                                              // 1674
-    var self = this;                                                                                                  // 1675
-    var session = self.sessions[sessionId];                                                                           // 1676
-    if (session) return session._socketUrl;else return null;                                                          // 1677
-  }                                                                                                                   // 1681
-});                                                                                                                   // 1406
+      setUserId = function (userId) {                                                                                 // 1662
+        currentMethodInvocation.setUserId(userId);                                                                    // 1663
+      };                                                                                                              // 1664
                                                                                                                       //
-var calculateVersion = function (clientSupportedVersions, serverSupportedVersions) {                                  // 1684
-  var correctVersion = _.find(clientSupportedVersions, function (version) {                                           // 1686
-    return _.contains(serverSupportedVersions, version);                                                              // 1687
-  });                                                                                                                 // 1688
+      connection = currentMethodInvocation.connection;                                                                // 1665
+      randomSeed = DDPCommon.makeRpcSeed(currentMethodInvocation, name);                                              // 1666
+    } else if (currentPublicationInvocation) {                                                                        // 1667
+      userId = currentPublicationInvocation.userId;                                                                   // 1668
                                                                                                                       //
-  if (!correctVersion) {                                                                                              // 1689
-    correctVersion = serverSupportedVersions[0];                                                                      // 1690
-  }                                                                                                                   // 1691
+      setUserId = function (userId) {                                                                                 // 1669
+        currentPublicationInvocation._session._setUserId(userId);                                                     // 1670
+      };                                                                                                              // 1671
                                                                                                                       //
-  return correctVersion;                                                                                              // 1692
-};                                                                                                                    // 1693
+      connection = currentPublicationInvocation.connection;                                                           // 1672
+    }                                                                                                                 // 1673
+                                                                                                                      //
+    var invocation = new DDPCommon.MethodInvocation({                                                                 // 1675
+      isSimulation: false,                                                                                            // 1676
+      userId: userId,                                                                                                 // 1677
+      setUserId: setUserId,                                                                                           // 1678
+      connection: connection,                                                                                         // 1679
+      randomSeed: randomSeed                                                                                          // 1680
+    });                                                                                                               // 1675
+    return new Promise(function (resolve) {                                                                           // 1683
+      return resolve(DDP._CurrentMethodInvocation.withValue(invocation, function () {                                 // 1683
+        return maybeAuditArgumentChecks(handler, invocation, EJSON.clone(args), "internal call to '" + name + "'");   // 1686
+      }));                                                                                                            // 1686
+    }).then(EJSON.clone);                                                                                             // 1683
+  },                                                                                                                  // 1692
+  _urlForSession: function (sessionId) {                                                                              // 1694
+    var self = this;                                                                                                  // 1695
+    var session = self.sessions[sessionId];                                                                           // 1696
+    if (session) return session._socketUrl;else return null;                                                          // 1697
+  }                                                                                                                   // 1701
+});                                                                                                                   // 1417
+                                                                                                                      //
+var calculateVersion = function (clientSupportedVersions, serverSupportedVersions) {                                  // 1704
+  var correctVersion = _.find(clientSupportedVersions, function (version) {                                           // 1706
+    return _.contains(serverSupportedVersions, version);                                                              // 1707
+  });                                                                                                                 // 1708
+                                                                                                                      //
+  if (!correctVersion) {                                                                                              // 1709
+    correctVersion = serverSupportedVersions[0];                                                                      // 1710
+  }                                                                                                                   // 1711
+                                                                                                                      //
+  return correctVersion;                                                                                              // 1712
+};                                                                                                                    // 1713
                                                                                                                       //
 DDPServer._calculateVersion = calculateVersion; // "blind" exceptions other than those that were deliberately thrown to signal
-// errors to the client                                                                                               // 1699
+// errors to the client                                                                                               // 1719
                                                                                                                       //
-var wrapInternalException = function (exception, context) {                                                           // 1700
-  if (!exception || exception instanceof Meteor.Error) return exception; // tests can set the 'expected' flag on an exception so it won't go to the
-  // server log                                                                                                       // 1705
+var wrapInternalException = function (exception, context) {                                                           // 1720
+  if (!exception) return exception; // To allow packages to throw errors intended for the client but not have to      // 1721
+  // depend on the Meteor.Error class, `isClientSafe` can be set to true on any                                       // 1724
+  // error before it is thrown.                                                                                       // 1725
                                                                                                                       //
-  if (!exception.expected) {                                                                                          // 1706
-    Meteor._debug("Exception " + context, exception.stack);                                                           // 1707
+  if (exception.isClientSafe) {                                                                                       // 1726
+    if (!(exception instanceof Meteor.Error)) {                                                                       // 1727
+      var originalMessage = exception.message;                                                                        // 1728
+      exception = new Meteor.Error(exception.error, exception.reason, exception.details);                             // 1729
+      exception.message = originalMessage;                                                                            // 1730
+    }                                                                                                                 // 1731
                                                                                                                       //
-    if (exception.sanitizedError) {                                                                                   // 1708
-      Meteor._debug("Sanitized and reported to the client as:", exception.sanitizedError.message);                    // 1709
-                                                                                                                      //
-      Meteor._debug();                                                                                                // 1710
-    }                                                                                                                 // 1711
-  } // Did the error contain more details that could have been useful if caught in                                    // 1712
-  // server code (or if thrown from non-client-originated code), but also                                             // 1715
-  // provided a "sanitized" version with more context than 500 Internal server                                        // 1716
-  // error? Use that.                                                                                                 // 1717
-                                                                                                                      //
-                                                                                                                      //
-  if (exception.sanitizedError) {                                                                                     // 1718
-    if (exception.sanitizedError instanceof Meteor.Error) return exception.sanitizedError;                            // 1719
-                                                                                                                      //
-    Meteor._debug("Exception " + context + " provides a sanitizedError that " + "is not a Meteor.Error; ignoring");   // 1721
-  }                                                                                                                   // 1723
-                                                                                                                      //
-  return new Meteor.Error(500, "Internal server error");                                                              // 1725
-}; // Audit argument checks, if the audit-argument-checks package exists (it is a                                     // 1726
-// weak dependency of this package).                                                                                  // 1730
+    return exception;                                                                                                 // 1732
+  } // tests can set the 'expected' flag on an exception so it won't go to the                                        // 1733
+  // server log                                                                                                       // 1736
                                                                                                                       //
                                                                                                                       //
-var maybeAuditArgumentChecks = function (f, context, args, description) {                                             // 1731
-  args = args || [];                                                                                                  // 1732
+  if (!exception.expected) {                                                                                          // 1737
+    Meteor._debug("Exception " + context, exception.stack);                                                           // 1738
                                                                                                                       //
-  if (Package['audit-argument-checks']) {                                                                             // 1733
-    return Match._failIfArgumentsAreNotAllChecked(f, context, args, description);                                     // 1734
-  }                                                                                                                   // 1736
+    if (exception.sanitizedError) {                                                                                   // 1739
+      Meteor._debug("Sanitized and reported to the client as:", exception.sanitizedError.message);                    // 1740
                                                                                                                       //
-  return f.apply(context, args);                                                                                      // 1737
-};                                                                                                                    // 1738
+      Meteor._debug();                                                                                                // 1741
+    }                                                                                                                 // 1742
+  } // Did the error contain more details that could have been useful if caught in                                    // 1743
+  // server code (or if thrown from non-client-originated code), but also                                             // 1746
+  // provided a "sanitized" version with more context than 500 Internal server                                        // 1747
+  // error? Use that.                                                                                                 // 1748
+                                                                                                                      //
+                                                                                                                      //
+  if (exception.sanitizedError) {                                                                                     // 1749
+    if (exception.sanitizedError.isClientSafe) return exception.sanitizedError;                                       // 1750
+                                                                                                                      //
+    Meteor._debug("Exception " + context + " provides a sanitizedError that " + "does not have isClientSafe property set; ignoring");
+  }                                                                                                                   // 1754
+                                                                                                                      //
+  return new Meteor.Error(500, "Internal server error");                                                              // 1756
+}; // Audit argument checks, if the audit-argument-checks package exists (it is a                                     // 1757
+// weak dependency of this package).                                                                                  // 1761
+                                                                                                                      //
+                                                                                                                      //
+var maybeAuditArgumentChecks = function (f, context, args, description) {                                             // 1762
+  args = args || [];                                                                                                  // 1763
+                                                                                                                      //
+  if (Package['audit-argument-checks']) {                                                                             // 1764
+    return Match._failIfArgumentsAreNotAllChecked(f, context, args, description);                                     // 1765
+  }                                                                                                                   // 1767
+                                                                                                                      //
+  return f.apply(context, args);                                                                                      // 1768
+};                                                                                                                    // 1769
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}],"writefence.js":function(require){
+},"writefence.js":function(require){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
@@ -2156,7 +2191,12 @@ _.each(['publish', 'methods', 'call', 'apply', 'onConnection', 'onMessage'], fun
 Meteor.default_server = Meteor.server;                                                                                // 22
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{"extensions":[".js",".json"]});
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/ddp-server/stream_server.js");
 require("./node_modules/meteor/ddp-server/livedata_server.js");
 require("./node_modules/meteor/ddp-server/writefence.js");

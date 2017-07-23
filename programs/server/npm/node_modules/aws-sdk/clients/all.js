@@ -1,6 +1,4 @@
 require('../lib/node_loader');
-var AWS = require('../lib/core');
-
 module.exports = {
   ACM: require('./acm'),
   APIGateway: require('./apigateway'),
@@ -101,5 +99,7 @@ module.exports = {
   CodeStar: require('./codestar'),
   LexModelBuildingService: require('./lexmodelbuildingservice'),
   MarketplaceEntitlementService: require('./marketplaceentitlementservice'),
-  Athena: require('./athena')
+  Athena: require('./athena'),
+  Greengrass: require('./greengrass'),
+  DAX: require('./dax')
 };

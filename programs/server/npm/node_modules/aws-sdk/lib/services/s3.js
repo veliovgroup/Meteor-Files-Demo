@@ -27,7 +27,7 @@ AWS.util.update(AWS.S3.prototype, {
   /**
    * @api private
    */
-  getSignerClass: function getSignerClass(request) {
+  getSignatureVersion: function getSignatureVersion(request) {
     var defaultApiVersion = this.api.signatureVersion;
     var userDefinedVersion = this._originalConfig ? this._originalConfig.signatureVersion : null;
     var regionDefinedVersion = this.config.signatureVersion;
@@ -37,16 +37,26 @@ AWS.util.update(AWS.S3.prototype, {
         a) always return user defined version
       2) No user defined version specified:
         a) default to lowest version the region supports
+        b) If using presigned urls, default to lowest version the region supports
     */
     if (userDefinedVersion) {
       userDefinedVersion = userDefinedVersion === 'v2' ? 's3' : userDefinedVersion;
-      return AWS.Signers.RequestSigner.getVersion(userDefinedVersion);
+      return userDefinedVersion;
     }
-    if (regionDefinedVersion) {
+    if (isPresigned !== true) {
+      defaultApiVersion = 'v4';
+    } else if (regionDefinedVersion) {
       defaultApiVersion = regionDefinedVersion;
     }
+    return defaultApiVersion;
+  },
 
-    return AWS.Signers.RequestSigner.getVersion(defaultApiVersion);
+  /**
+   * @api private
+   */
+  getSignerClass: function getSignerClass(request) {
+    var signatureVersion = this.getSignatureVersion(request);
+    return AWS.Signers.RequestSigner.getVersion(signatureVersion);
   },
 
   /**
@@ -93,6 +103,7 @@ AWS.util.update(AWS.S3.prototype, {
     request.addListener('validate', this.validateScheme);
     request.addListener('validate', this.validateBucketEndpoint);
     request.addListener('validate', this.correctBucketRegionFromCache);
+    request.addListener('validate', this.validateBucketName);
     request.addListener('build', this.addContentType);
     request.addListener('build', this.populateURI);
     request.addListener('build', this.computeContentMd5);
@@ -143,6 +154,34 @@ AWS.util.update(AWS.S3.prototype, {
   /**
    * @api private
    */
+  validateBucketName: function validateBucketName(req) {
+    var service = req.service;
+    var signatureVersion = service.getSignatureVersion(req);
+    // Only validate buckets when using sigv4
+    if (signatureVersion !== 'v4') {
+      return;
+    }
+    var bucket = req.params && req.params.Bucket;
+    var key = req.params && req.params.Key;
+    var slashIndex = bucket && bucket.indexOf('/');
+    if (bucket && slashIndex >= 0) {
+      if (typeof key === 'string') {
+        req.params = AWS.util.copy(req.params);
+        // Need to include trailing slash to match sigv2 behavior
+        var prefix = bucket.substr(slashIndex + 1) || '';
+        req.params.Key = prefix + '/' + key;
+        req.params.Bucket = bucket.substr(0, slashIndex);
+      } else {
+        var msg = 'Bucket names cannot contain forward slashes. Bucket: ' + bucket;
+        throw AWS.util.error(new Error(),
+          { code: 'InvalidBucket', message: msg });
+      }
+    }
+  },
+
+  /**
+   * @api private
+   */
   isValidAccelerateOperation: function isValidAccelerateOperation(operation) {
     var invalidOperations = [
       'createBucket',
@@ -166,7 +205,6 @@ AWS.util.update(AWS.S3.prototype, {
     var b = req.params.Bucket;
     var service = req.service;
     var endpoint = httpRequest.endpoint;
-
     if (b) {
       if (!service.pathStyleBucketName(b)) {
         if (service.config.useAccelerateEndpoint && service.isValidAccelerateOperation(req.operation)) {

@@ -7,13 +7,12 @@ var meteorEnv = Package.meteor.meteorEnv;
 var _ = Package.underscore._;
 var EJSON = Package.ejson.EJSON;
 var meteorInstall = Package.modules.meteorInstall;
-var Buffer = Package.modules.Buffer;
 var process = Package.modules.process;
 
 /* Package-scope variables */
 var Log;
 
-var require = meteorInstall({"node_modules":{"meteor":{"logging":{"logging.js":["cli-color",function(require){
+var require = meteorInstall({"node_modules":{"meteor":{"logging":{"logging.js":function(require){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
@@ -300,11 +299,11 @@ Log.objFromText = function (line, override) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-}],"node_modules":{"cli-color":{"package.json":function(require,exports){
+},"node_modules":{"cli-color":{"package.json":function(require,exports){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
-// ../../.1.1.17.omlclz++os+web.browser+web.cordova/npm/node_modules/cli-color/package //
+// ../../.1.1.17.6xtim6++os+web.browser+web.cordova/npm/node_modules/cli-color/package //
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
                                                                                        //
@@ -460,7 +459,12 @@ module.exports = defineProperties(getFn(), {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}}},{"extensions":[".js",".json"]});
+}}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
 require("./node_modules/meteor/logging/logging.js");
 
 /* Exports */
