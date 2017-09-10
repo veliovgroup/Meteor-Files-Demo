@@ -11,7 +11,6 @@ var RoutePolicy = Package.routepolicy.RoutePolicy;
 var Boilerplate = Package['boilerplate-generator'].Boilerplate;
 var WebAppHashing = Package['webapp-hashing'].WebAppHashing;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 var Symbol = Package['ecmascript-runtime-server'].Symbol;
@@ -1103,7 +1102,7 @@ function fresh(url, parsedUrl) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
-// ../../.1.3.17.1axaxd0++os+web.browser+web.cordova/npm/node_modules/useragent/package.json                          //
+// ../../.1.3.18.1h9sw3x++os+web.browser+web.cordova/npm/node_modules/useragent/package.json                          //
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //

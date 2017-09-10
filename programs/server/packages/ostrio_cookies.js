@@ -10,7 +10,6 @@ var WebApp = Package.webapp.WebApp;
 var WebAppInternals = Package.webapp.WebAppInternals;
 var main = Package.webapp.main;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 var Symbol = Package['ecmascript-runtime-server'].Symbol;

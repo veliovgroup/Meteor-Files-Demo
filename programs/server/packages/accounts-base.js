@@ -17,7 +17,6 @@ var DDPServer = Package['ddp-server'].DDPServer;
 var MongoInternals = Package.mongo.MongoInternals;
 var Mongo = Package.mongo.Mongo;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 var Symbol = Package['ecmascript-runtime-server'].Symbol;
@@ -300,12 +299,20 @@ var AccountsCommon = function () {                                              
     }                                                                                                                // 214
                                                                                                                      //
     return _initConnection;                                                                                          //
-  }();                                                                                                               //
+  }(); // The options argument is only used by tests.                                                                //
+                                                                                                                     //
                                                                                                                      //
   AccountsCommon.prototype._getTokenLifetimeMs = function () {                                                       //
-    function _getTokenLifetimeMs() {                                                                                 //
-      return (this._options.loginExpirationInDays || DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;           // 217
-    }                                                                                                                // 219
+    function _getTokenLifetimeMs(options) {                                                                          //
+      options = options || this._options;                                                                            // 218
+                                                                                                                     //
+      if (options.loginExpirationInDays === null) {                                                                  // 219
+        // We disable login expiration by returning Infinity                                                         // 220
+        return Infinity;                                                                                             // 221
+      }                                                                                                              // 222
+                                                                                                                     //
+      return (options.loginExpirationInDays || DEFAULT_LOGIN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;                 // 223
+    }                                                                                                                // 225
                                                                                                                      //
     return _getTokenLifetimeMs;                                                                                      //
   }();                                                                                                               //
@@ -313,7 +320,7 @@ var AccountsCommon = function () {                                              
   AccountsCommon.prototype._getPasswordResetTokenLifetimeMs = function () {                                          //
     function _getPasswordResetTokenLifetimeMs() {                                                                    //
       return (this._options.passwordResetTokenExpirationInDays || DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;
-    }                                                                                                                // 224
+    }                                                                                                                // 230
                                                                                                                      //
     return _getPasswordResetTokenLifetimeMs;                                                                         //
   }();                                                                                                               //
@@ -321,29 +328,29 @@ var AccountsCommon = function () {                                              
   AccountsCommon.prototype._getPasswordEnrollTokenLifetimeMs = function () {                                         //
     function _getPasswordEnrollTokenLifetimeMs() {                                                                   //
       return (this._options.passwordEnrollTokenExpirationInDays || DEFAULT_PASSWORD_ENROLL_TOKEN_EXPIRATION_DAYS) * 24 * 60 * 60 * 1000;
-    }                                                                                                                // 229
+    }                                                                                                                // 235
                                                                                                                      //
     return _getPasswordEnrollTokenLifetimeMs;                                                                        //
   }();                                                                                                               //
                                                                                                                      //
   AccountsCommon.prototype._tokenExpiration = function () {                                                          //
     function _tokenExpiration(when) {                                                                                //
-      // We pass when through the Date constructor for backwards compatibility;                                      // 232
-      // `when` used to be a number.                                                                                 // 233
-      return new Date(new Date(when).getTime() + this._getTokenLifetimeMs());                                        // 234
-    }                                                                                                                // 235
+      // We pass when through the Date constructor for backwards compatibility;                                      // 238
+      // `when` used to be a number.                                                                                 // 239
+      return new Date(new Date(when).getTime() + this._getTokenLifetimeMs());                                        // 240
+    }                                                                                                                // 241
                                                                                                                      //
     return _tokenExpiration;                                                                                         //
   }();                                                                                                               //
                                                                                                                      //
   AccountsCommon.prototype._tokenExpiresSoon = function () {                                                         //
     function _tokenExpiresSoon(when) {                                                                               //
-      var minLifetimeMs = .1 * this._getTokenLifetimeMs();                                                           // 238
+      var minLifetimeMs = .1 * this._getTokenLifetimeMs();                                                           // 244
                                                                                                                      //
-      var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                     // 239
-      if (minLifetimeMs > minLifetimeCapMs) minLifetimeMs = minLifetimeCapMs;                                        // 240
-      return new Date() > new Date(when) - minLifetimeMs;                                                            // 242
-    }                                                                                                                // 243
+      var minLifetimeCapMs = MIN_TOKEN_LIFETIME_CAP_SECS * 1000;                                                     // 245
+      if (minLifetimeMs > minLifetimeCapMs) minLifetimeMs = minLifetimeCapMs;                                        // 246
+      return new Date() > new Date(when) - minLifetimeMs;                                                            // 248
+    }                                                                                                                // 249
                                                                                                                      //
     return _tokenExpiresSoon;                                                                                        //
   }();                                                                                                               //
@@ -351,60 +358,60 @@ var AccountsCommon = function () {                                              
   return AccountsCommon;                                                                                             //
 }();                                                                                                                 //
                                                                                                                      //
-var Ap = AccountsCommon.prototype; // Note that Accounts is defined separately in accounts_client.js and             // 246
-// accounts_server.js.                                                                                               // 249
-/**                                                                                                                  // 251
+var Ap = AccountsCommon.prototype; // Note that Accounts is defined separately in accounts_client.js and             // 252
+// accounts_server.js.                                                                                               // 255
+/**                                                                                                                  // 257
  * @summary Get the current user id, or `null` if no user is logged in. A reactive data source.                      //
  * @locus Anywhere but publish functions                                                                             //
  * @importFromPackage meteor                                                                                         //
  */                                                                                                                  //
                                                                                                                      //
-Meteor.userId = function () {                                                                                        // 256
-  return Accounts.userId();                                                                                          // 257
-}; /**                                                                                                               // 258
+Meteor.userId = function () {                                                                                        // 262
+  return Accounts.userId();                                                                                          // 263
+}; /**                                                                                                               // 264
     * @summary Get the current user record, or `null` if no user is logged in. A reactive data source.               //
     * @locus Anywhere but publish functions                                                                          //
     * @importFromPackage meteor                                                                                      //
     */                                                                                                               //
                                                                                                                      //
-Meteor.user = function () {                                                                                          // 265
-  return Accounts.user();                                                                                            // 266
-}; // how long (in days) until a login token expires                                                                 // 267
+Meteor.user = function () {                                                                                          // 271
+  return Accounts.user();                                                                                            // 272
+}; // how long (in days) until a login token expires                                                                 // 273
                                                                                                                      //
                                                                                                                      //
-var DEFAULT_LOGIN_EXPIRATION_DAYS = 90; // how long (in days) until reset password token expires                     // 270
+var DEFAULT_LOGIN_EXPIRATION_DAYS = 90; // how long (in days) until reset password token expires                     // 276
                                                                                                                      //
-var DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS = 3; // how long (in days) until enrol password token expires       // 272
+var DEFAULT_PASSWORD_RESET_TOKEN_EXPIRATION_DAYS = 3; // how long (in days) until enrol password token expires       // 278
                                                                                                                      //
 var DEFAULT_PASSWORD_ENROLL_TOKEN_EXPIRATION_DAYS = 30; // Clients don't try to auto-login with a token that is going to expire within
-// .1 * DEFAULT_LOGIN_EXPIRATION_DAYS, capped at MIN_TOKEN_LIFETIME_CAP_SECS.                                        // 276
-// Tries to avoid abrupt disconnects from expiring tokens.                                                           // 277
+// .1 * DEFAULT_LOGIN_EXPIRATION_DAYS, capped at MIN_TOKEN_LIFETIME_CAP_SECS.                                        // 282
+// Tries to avoid abrupt disconnects from expiring tokens.                                                           // 283
                                                                                                                      //
-var MIN_TOKEN_LIFETIME_CAP_SECS = 3600; // one hour                                                                  // 278
-// how often (in milliseconds) we check for expired tokens                                                           // 279
+var MIN_TOKEN_LIFETIME_CAP_SECS = 3600; // one hour                                                                  // 284
+// how often (in milliseconds) we check for expired tokens                                                           // 285
                                                                                                                      //
-EXPIRE_TOKENS_INTERVAL_MS = 600 * 1000; // 10 minutes                                                                // 280
-// how long we wait before logging out clients when Meteor.logoutOtherClients is                                     // 281
-// called                                                                                                            // 282
+EXPIRE_TOKENS_INTERVAL_MS = 600 * 1000; // 10 minutes                                                                // 286
+// how long we wait before logging out clients when Meteor.logoutOtherClients is                                     // 287
+// called                                                                                                            // 288
                                                                                                                      //
 CONNECTION_CLOSE_DELAY_MS = 10 * 1000; // loginServiceConfiguration and ConfigError are maintained for backwards compatibility
                                                                                                                      //
-Meteor.startup(function () {                                                                                         // 286
-  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                  // 287
-  Ap.loginServiceConfiguration = ServiceConfiguration.configurations;                                                // 289
-  Ap.ConfigError = ServiceConfiguration.ConfigError;                                                                 // 290
-}); // Thrown when the user cancels the login process (eg, closes an oauth                                           // 291
-// popup, declines retina scan, etc)                                                                                 // 294
+Meteor.startup(function () {                                                                                         // 292
+  var ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;                                  // 293
+  Ap.loginServiceConfiguration = ServiceConfiguration.configurations;                                                // 295
+  Ap.ConfigError = ServiceConfiguration.ConfigError;                                                                 // 296
+}); // Thrown when the user cancels the login process (eg, closes an oauth                                           // 297
+// popup, declines retina scan, etc)                                                                                 // 300
                                                                                                                      //
-var lceName = 'Accounts.LoginCancelledError';                                                                        // 295
-Ap.LoginCancelledError = Meteor.makeErrorType(lceName, function (description) {                                      // 296
-  this.message = description;                                                                                        // 299
-});                                                                                                                  // 300
+var lceName = 'Accounts.LoginCancelledError';                                                                        // 301
+Ap.LoginCancelledError = Meteor.makeErrorType(lceName, function (description) {                                      // 302
+  this.message = description;                                                                                        // 305
+});                                                                                                                  // 306
 Ap.LoginCancelledError.prototype.name = lceName; // This is used to transmit specific subclass errors over the wire. We should
-// come up with a more generic way to do this (eg, with some sort of symbolic                                        // 305
-// error code rather than a number).                                                                                 // 306
+// come up with a more generic way to do this (eg, with some sort of symbolic                                        // 311
+// error code rather than a number).                                                                                 // 312
                                                                                                                      //
-Ap.LoginCancelledError.numericError = 0x8acdc2f;                                                                     // 307
+Ap.LoginCancelledError.numericError = 0x8acdc2f;                                                                     // 313
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"accounts_rate_limit.js":function(require,exports,module){

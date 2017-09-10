@@ -5,7 +5,6 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var ECMAScript = Package.ecmascript.ECMAScript;
 var Promise = Package.promise.Promise;
 var Blaze = Package.blaze.Blaze;
@@ -482,7 +481,7 @@ module.exportDefault(Router);                                                   
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
-// ../../.3.2.1.1scx2fm++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
+// ../../.3.3.3.1ll0qur++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
 //                                                                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                   //

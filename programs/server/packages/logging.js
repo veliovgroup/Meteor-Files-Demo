@@ -7,7 +7,6 @@ var meteorEnv = Package.meteor.meteorEnv;
 var _ = Package.underscore._;
 var EJSON = Package.ejson.EJSON;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var Log;

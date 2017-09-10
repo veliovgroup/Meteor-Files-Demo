@@ -5,7 +5,6 @@ var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 
 /* Package-scope variables */
 var Promise;
@@ -63,12 +62,12 @@ exports.Promise.prototype.done = function (onFulfilled, onRejected) {
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// ../../.0.8.9.djhwu4++os+web.browser+web.cordova/npm/node_modules/meteor-p //
+// ../../.0.9.0.it2zn5++os+web.browser+web.cordova/npm/node_modules/meteor-p //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
 exports.name = "meteor-promise";
-exports.version = "0.8.4";
+exports.version = "0.8.5";
 exports.main = "promise_server.js";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -331,9 +330,9 @@ var ZERO = valuePromise(0);
 var EMPTYSTRING = valuePromise('');
 
 function valuePromise(value) {
-  var p = new Promise(Promise._61);
-  p._81 = 1;
-  p._65 = value;
+  var p = new Promise(Promise._44);
+  p._83 = 1;
+  p._18 = value;
   return p;
 }
 Promise.resolve = function (value) {
@@ -370,11 +369,11 @@ Promise.all = function (arr) {
     function res(i, val) {
       if (val && (typeof val === 'object' || typeof val === 'function')) {
         if (val instanceof Promise && val.then === Promise.prototype.then) {
-          while (val._81 === 3) {
-            val = val._65;
+          while (val._83 === 3) {
+            val = val._18;
           }
-          if (val._81 === 1) return res(i, val._65);
-          if (val._81 === 2) reject(val._65);
+          if (val._83 === 1) return res(i, val._18);
+          if (val._83 === 2) reject(val._18);
           val.then(function (val) {
             res(i, val);
           }, reject);

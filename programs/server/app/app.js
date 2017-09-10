@@ -668,63 +668,64 @@ _app.createThumbnails = function (collection, fileRef, cb) {                    
                             size: stat.size,                                                                         // 147
                             type: fileRef.type,                                                                      // 148
                             extension: fileRef.extension,                                                            // 149
-                            meta: {                                                                                  // 150
-                              width: imgInfo.width,                                                                  // 151
-                              height: imgInfo.height                                                                 // 152
-                            }                                                                                        // 150
+                            name: fileRef.name,                                                                      // 150
+                            meta: {                                                                                  // 151
+                              width: imgInfo.width,                                                                  // 152
+                              height: imgInfo.height                                                                 // 153
+                            }                                                                                        // 151
                           };                                                                                         // 145
-                          collection.collection.update(fileRef._id, upd, function (colUpdError) {                    // 156
-                            ++i;                                                                                     // 157
+                          collection.collection.update(fileRef._id, upd, function (colUpdError) {                    // 157
+                            ++i;                                                                                     // 158
                                                                                                                      //
-                            if (i === Object.keys(sizes).length) {                                                   // 158
-                              isLast = true;                                                                         // 159
-                            }                                                                                        // 160
+                            if (i === Object.keys(sizes).length) {                                                   // 159
+                              isLast = true;                                                                         // 160
+                            }                                                                                        // 161
                                                                                                                      //
-                            finish(colUpdError);                                                                     // 161
-                          });                                                                                        // 162
-                        });                                                                                          // 163
-                      });                                                                                            // 164
-                    });                                                                                              // 165
-                  });                                                                                                // 166
-                });                                                                                                  // 167
-              };                                                                                                     // 168
+                            finish(colUpdError);                                                                     // 162
+                          });                                                                                        // 163
+                        });                                                                                          // 164
+                      });                                                                                            // 165
+                    });                                                                                              // 166
+                  });                                                                                                // 167
+                });                                                                                                  // 168
+              };                                                                                                     // 169
                                                                                                                      //
-              if (!size.square) {                                                                                    // 170
-                if (features.width > size.width) {                                                                   // 171
-                  img.resize(size.width).interlace('Line').write(path, updateAndSave);                               // 172
-                } else {                                                                                             // 173
-                  copyPaste();                                                                                       // 174
-                }                                                                                                    // 175
-              } else {                                                                                               // 176
-                var x = 0;                                                                                           // 177
-                var y = 0;                                                                                           // 178
-                var widthRatio = features.width / size.width;                                                        // 179
-                var heightRatio = features.height / size.width;                                                      // 180
-                var widthNew = size.width;                                                                           // 181
-                var heightNew = size.width;                                                                          // 182
+              if (!size.square) {                                                                                    // 171
+                if (features.width > size.width) {                                                                   // 172
+                  img.resize(size.width).interlace('Line').write(path, updateAndSave);                               // 173
+                } else {                                                                                             // 174
+                  copyPaste();                                                                                       // 175
+                }                                                                                                    // 176
+              } else {                                                                                               // 177
+                var x = 0;                                                                                           // 178
+                var y = 0;                                                                                           // 179
+                var widthRatio = features.width / size.width;                                                        // 180
+                var heightRatio = features.height / size.width;                                                      // 181
+                var widthNew = size.width;                                                                           // 182
+                var heightNew = size.width;                                                                          // 183
                                                                                                                      //
-                if (heightRatio < widthRatio) {                                                                      // 184
-                  widthNew = size.width * features.width / features.height;                                          // 185
-                  x = (widthNew - size.width) / 2;                                                                   // 186
-                }                                                                                                    // 187
+                if (heightRatio < widthRatio) {                                                                      // 185
+                  widthNew = size.width * features.width / features.height;                                          // 186
+                  x = (widthNew - size.width) / 2;                                                                   // 187
+                }                                                                                                    // 188
                                                                                                                      //
-                if (heightRatio > widthRatio) {                                                                      // 189
-                  heightNew = size.width * features.height / features.width;                                         // 190
-                  y = (heightNew - size.width) / 2;                                                                  // 191
-                }                                                                                                    // 192
+                if (heightRatio > widthRatio) {                                                                      // 190
+                  heightNew = size.width * features.height / features.width;                                         // 191
+                  y = (heightNew - size.width) / 2;                                                                  // 192
+                }                                                                                                    // 193
                                                                                                                      //
                 img.resize(widthNew, heightNew).crop(size.width, size.width, x, y).interlace('Line').write(path, updateAndSave);
-              }                                                                                                      // 199
-            } else {                                                                                                 // 200
-              copyPaste();                                                                                           // 201
-            }                                                                                                        // 202
-          });                                                                                                        // 203
-        });                                                                                                          // 204
-      });                                                                                                            // 205
-    });                                                                                                              // 206
-  });                                                                                                                // 207
-  return true;                                                                                                       // 208
-};                                                                                                                   // 209
+              }                                                                                                      // 200
+            } else {                                                                                                 // 201
+              copyPaste();                                                                                           // 202
+            }                                                                                                        // 203
+          });                                                                                                        // 204
+        });                                                                                                          // 205
+      });                                                                                                            // 206
+    });                                                                                                              // 207
+  });                                                                                                                // 208
+  return true;                                                                                                       // 209
+};                                                                                                                   // 210
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"methods.js":function(require,exports,module){
@@ -769,7 +770,7 @@ Meteor.methods({                                                                
       selector = {                                                                                                   // 11
         userId: this.userId                                                                                          // 12
       };                                                                                                             // 11
-    } else {                                                                                                         // 14
+    } else if (this.userId) {                                                                                        // 14
       selector = {                                                                                                   // 15
         $or: [{                                                                                                      // 16
           'meta.unlisted': false,                                                                                    // 18
@@ -778,81 +779,92 @@ Meteor.methods({                                                                
             $lt: 3                                                                                                   // 21
           }                                                                                                          // 20
         }, {                                                                                                         // 17
-          userId: this.userId                                                                                        // 24
+          userId: this.userId,                                                                                       // 24
+          'meta.blamed': {                                                                                           // 25
+            $lt: 3                                                                                                   // 26
+          }                                                                                                          // 25
         }]                                                                                                           // 23
       };                                                                                                             // 15
-    }                                                                                                                // 28
+    } else {                                                                                                         // 31
+      selector = {                                                                                                   // 32
+        'meta.unlisted': false,                                                                                      // 33
+        'meta.secured': false,                                                                                       // 34
+        'meta.blamed': {                                                                                             // 35
+          $lt: 3                                                                                                     // 36
+        }                                                                                                            // 35
+      };                                                                                                             // 32
+    }                                                                                                                // 39
                                                                                                                      //
-    return Collections.files.find(selector).count();                                                                 // 29
-  },                                                                                                                 // 30
-  unblame: function (_id) {                                                                                          // 31
-    check(_id, String);                                                                                              // 32
-    Collections.files.update({                                                                                       // 33
-      _id: _id                                                                                                       // 34
-    }, {                                                                                                             // 33
-      $inc: {                                                                                                        // 36
-        'meta.blamed': -1                                                                                            // 37
-      }                                                                                                              // 36
-    }, _app.NOOP);                                                                                                   // 35
-    return true;                                                                                                     // 40
+    return Collections.files.find(selector).count();                                                                 // 40
   },                                                                                                                 // 41
-  blame: function (_id) {                                                                                            // 42
+  unblame: function (_id) {                                                                                          // 42
     check(_id, String);                                                                                              // 43
     Collections.files.update({                                                                                       // 44
       _id: _id                                                                                                       // 45
     }, {                                                                                                             // 44
       $inc: {                                                                                                        // 47
-        'meta.blamed': 1                                                                                             // 48
+        'meta.blamed': -1                                                                                            // 48
       }                                                                                                              // 47
     }, _app.NOOP);                                                                                                   // 46
     return true;                                                                                                     // 51
   },                                                                                                                 // 52
-  changeAccess: function (_id) {                                                                                     // 53
+  blame: function (_id) {                                                                                            // 53
     check(_id, String);                                                                                              // 54
+    Collections.files.update({                                                                                       // 55
+      _id: _id                                                                                                       // 56
+    }, {                                                                                                             // 55
+      $inc: {                                                                                                        // 58
+        'meta.blamed': 1                                                                                             // 59
+      }                                                                                                              // 58
+    }, _app.NOOP);                                                                                                   // 57
+    return true;                                                                                                     // 62
+  },                                                                                                                 // 63
+  changeAccess: function (_id) {                                                                                     // 64
+    check(_id, String);                                                                                              // 65
                                                                                                                      //
-    if (Meteor.userId()) {                                                                                           // 55
-      var file = Collections.files.findOne({                                                                         // 56
-        _id: _id,                                                                                                    // 57
-        userId: Meteor.userId()                                                                                      // 58
-      });                                                                                                            // 56
+    if (Meteor.userId()) {                                                                                           // 66
+      var file = Collections.files.findOne({                                                                         // 67
+        _id: _id,                                                                                                    // 68
+        userId: Meteor.userId()                                                                                      // 69
+      });                                                                                                            // 67
                                                                                                                      //
-      if (file) {                                                                                                    // 61
-        Collections.files.update(_id, {                                                                              // 62
-          $set: {                                                                                                    // 63
-            'meta.unlisted': file.meta.unlisted ? false : true                                                       // 64
-          }                                                                                                          // 63
-        }, _app.NOOP);                                                                                               // 62
-        return true;                                                                                                 // 67
-      }                                                                                                              // 68
-    }                                                                                                                // 69
+      if (file) {                                                                                                    // 72
+        Collections.files.update(_id, {                                                                              // 73
+          $set: {                                                                                                    // 74
+            'meta.unlisted': file.meta.unlisted ? false : true                                                       // 75
+          }                                                                                                          // 74
+        }, _app.NOOP);                                                                                               // 73
+        return true;                                                                                                 // 78
+      }                                                                                                              // 79
+    }                                                                                                                // 80
                                                                                                                      //
-    throw new Meteor.Error(401, 'Access denied!');                                                                   // 70
-  },                                                                                                                 // 71
-  changePrivacy: function (_id) {                                                                                    // 72
-    check(_id, String);                                                                                              // 73
+    throw new Meteor.Error(401, 'Access denied!');                                                                   // 81
+  },                                                                                                                 // 82
+  changePrivacy: function (_id) {                                                                                    // 83
+    check(_id, String);                                                                                              // 84
                                                                                                                      //
-    if (Meteor.userId()) {                                                                                           // 74
-      var file = Collections.files.findOne({                                                                         // 75
-        _id: _id,                                                                                                    // 76
-        userId: Meteor.userId()                                                                                      // 77
-      });                                                                                                            // 75
+    if (Meteor.userId()) {                                                                                           // 85
+      var file = Collections.files.findOne({                                                                         // 86
+        _id: _id,                                                                                                    // 87
+        userId: Meteor.userId()                                                                                      // 88
+      });                                                                                                            // 86
                                                                                                                      //
-      if (file) {                                                                                                    // 80
-        Collections.files.update(_id, {                                                                              // 81
-          $set: {                                                                                                    // 82
-            'meta.unlisted': true,                                                                                   // 83
-            'meta.secured': file.meta.secured ? false : true                                                         // 84
-          }                                                                                                          // 82
-        }, _app.NOOP);                                                                                               // 81
-        return true;                                                                                                 // 87
-      }                                                                                                              // 88
-    }                                                                                                                // 89
+      if (file) {                                                                                                    // 91
+        Collections.files.update(_id, {                                                                              // 92
+          $set: {                                                                                                    // 93
+            'meta.unlisted': true,                                                                                   // 94
+            'meta.secured': file.meta.secured ? false : true                                                         // 95
+          }                                                                                                          // 93
+        }, _app.NOOP);                                                                                               // 92
+        return true;                                                                                                 // 98
+      }                                                                                                              // 99
+    }                                                                                                                // 100
                                                                                                                      //
-    throw new Meteor.Error(401, 'Access denied!');                                                                   // 90
-  },                                                                                                                 // 91
-  getServiceConfiguration: function () {                                                                             // 92
-    return _app.sc;                                                                                                  // 93
-  }                                                                                                                  // 94
+    throw new Meteor.Error(401, 'Access denied!');                                                                   // 101
+  },                                                                                                                 // 102
+  getServiceConfiguration: function () {                                                                             // 103
+    return _app.sc;                                                                                                  // 104
+  }                                                                                                                  // 105
 });                                                                                                                  // 5
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -893,7 +905,7 @@ Meteor.publish('latest', function () {                                          
     selector = {                                                                                                     // 11
       userId: this.userId                                                                                            // 12
     };                                                                                                               // 11
-  } else {                                                                                                           // 14
+  } else if (this.userId) {                                                                                          // 14
     selector = {                                                                                                     // 15
       $or: [{                                                                                                        // 16
         'meta.unlisted': false,                                                                                      // 18
@@ -902,68 +914,79 @@ Meteor.publish('latest', function () {                                          
           $lt: 3                                                                                                     // 21
         }                                                                                                            // 20
       }, {                                                                                                           // 17
-        userId: this.userId                                                                                          // 24
+        userId: this.userId,                                                                                         // 24
+        'meta.blamed': {                                                                                             // 25
+          $lt: 3                                                                                                     // 26
+        }                                                                                                            // 25
       }]                                                                                                             // 23
     };                                                                                                               // 15
-  }                                                                                                                  // 28
+  } else {                                                                                                           // 31
+    selector = {                                                                                                     // 32
+      'meta.unlisted': false,                                                                                        // 33
+      'meta.secured': false,                                                                                         // 34
+      'meta.blamed': {                                                                                               // 35
+        $lt: 3                                                                                                       // 36
+      }                                                                                                              // 35
+    };                                                                                                               // 32
+  }                                                                                                                  // 39
                                                                                                                      //
-  return Collections.files.find(selector, {                                                                          // 30
-    limit: take,                                                                                                     // 31
-    sort: {                                                                                                          // 32
-      'meta.created_at': -1                                                                                          // 33
-    },                                                                                                               // 32
-    fields: {                                                                                                        // 35
-      _id: 1,                                                                                                        // 36
-      name: 1,                                                                                                       // 37
-      size: 1,                                                                                                       // 38
-      meta: 1,                                                                                                       // 39
-      type: 1,                                                                                                       // 40
-      isPDF: 1,                                                                                                      // 41
-      isText: 1,                                                                                                     // 42
-      isJSON: 1,                                                                                                     // 43
-      isVideo: 1,                                                                                                    // 44
-      isAudio: 1,                                                                                                    // 45
-      isImage: 1,                                                                                                    // 46
-      userId: 1,                                                                                                     // 47
-      'versions.thumbnail40.extension': 1,                                                                           // 48
-      'versions.preview.extension': 1,                                                                               // 49
-      extension: 1,                                                                                                  // 50
-      _collectionName: 1,                                                                                            // 51
-      _downloadRoute: 1                                                                                              // 52
-    }                                                                                                                // 35
-  }).cursor;                                                                                                         // 30
-});                                                                                                                  // 55
-Meteor.publish('file', function (_id) {                                                                              // 57
-  check(_id, String);                                                                                                // 58
-  return Collections.files.find({                                                                                    // 59
-    $or: [{                                                                                                          // 60
-      _id: _id,                                                                                                      // 62
-      'meta.secured': false                                                                                          // 63
-    }, {                                                                                                             // 61
-      _id: _id,                                                                                                      // 65
-      'meta.secured': true,                                                                                          // 66
-      userId: this.userId                                                                                            // 67
-    }]                                                                                                               // 64
-  }, {                                                                                                               // 59
-    fields: {                                                                                                        // 71
-      _id: 1,                                                                                                        // 72
-      name: 1,                                                                                                       // 73
-      size: 1,                                                                                                       // 74
-      type: 1,                                                                                                       // 75
-      meta: 1,                                                                                                       // 76
-      isPDF: 1,                                                                                                      // 77
-      isText: 1,                                                                                                     // 78
-      isJSON: 1,                                                                                                     // 79
-      isVideo: 1,                                                                                                    // 80
-      isAudio: 1,                                                                                                    // 81
-      isImage: 1,                                                                                                    // 82
-      extension: 1,                                                                                                  // 83
-      'versions.preview.extension': 1,                                                                               // 84
-      _collectionName: 1,                                                                                            // 85
-      _downloadRoute: 1                                                                                              // 86
-    }                                                                                                                // 71
-  }).cursor;                                                                                                         // 70
-});                                                                                                                  // 89
+  return Collections.files.find(selector, {                                                                          // 41
+    limit: take,                                                                                                     // 42
+    sort: {                                                                                                          // 43
+      'meta.created_at': -1                                                                                          // 44
+    },                                                                                                               // 43
+    fields: {                                                                                                        // 46
+      _id: 1,                                                                                                        // 47
+      name: 1,                                                                                                       // 48
+      size: 1,                                                                                                       // 49
+      meta: 1,                                                                                                       // 50
+      type: 1,                                                                                                       // 51
+      isPDF: 1,                                                                                                      // 52
+      isText: 1,                                                                                                     // 53
+      isJSON: 1,                                                                                                     // 54
+      isVideo: 1,                                                                                                    // 55
+      isAudio: 1,                                                                                                    // 56
+      isImage: 1,                                                                                                    // 57
+      userId: 1,                                                                                                     // 58
+      'versions.thumbnail40.extension': 1,                                                                           // 59
+      'versions.preview.extension': 1,                                                                               // 60
+      extension: 1,                                                                                                  // 61
+      _collectionName: 1,                                                                                            // 62
+      _downloadRoute: 1                                                                                              // 63
+    }                                                                                                                // 46
+  }).cursor;                                                                                                         // 41
+});                                                                                                                  // 66
+Meteor.publish('file', function (_id) {                                                                              // 68
+  check(_id, String);                                                                                                // 69
+  return Collections.files.find({                                                                                    // 70
+    $or: [{                                                                                                          // 71
+      _id: _id,                                                                                                      // 73
+      'meta.secured': false                                                                                          // 74
+    }, {                                                                                                             // 72
+      _id: _id,                                                                                                      // 76
+      'meta.secured': true,                                                                                          // 77
+      userId: this.userId                                                                                            // 78
+    }]                                                                                                               // 75
+  }, {                                                                                                               // 70
+    fields: {                                                                                                        // 82
+      _id: 1,                                                                                                        // 83
+      name: 1,                                                                                                       // 84
+      size: 1,                                                                                                       // 85
+      type: 1,                                                                                                       // 86
+      meta: 1,                                                                                                       // 87
+      isPDF: 1,                                                                                                      // 88
+      isText: 1,                                                                                                     // 89
+      isJSON: 1,                                                                                                     // 90
+      isVideo: 1,                                                                                                    // 91
+      isAudio: 1,                                                                                                    // 92
+      isImage: 1,                                                                                                    // 93
+      extension: 1,                                                                                                  // 94
+      'versions.preview.extension': 1,                                                                               // 95
+      _collectionName: 1,                                                                                            // 96
+      _downloadRoute: 1                                                                                              // 97
+    }                                                                                                                // 82
+  }).cursor;                                                                                                         // 81
+});                                                                                                                  // 100
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"service-configurations.js":function(require,exports,module){

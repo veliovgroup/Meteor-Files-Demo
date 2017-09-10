@@ -2,17 +2,18 @@
   "name": "meteor-dev-bundle",
   "version": "0.0.0",
   "dependencies": {
-    "meteor-promise": "0.8.4",
+    "meteor-promise": "0.8.5",
     "fibers": "1.0.15",
-    "promise": "7.1.1",
+    "promise": "8.0.1",
     "underscore": "1.5.2",
     "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
-    "semver": "4.1.0",
+    "semver": "5.3.0",
     "node-gyp": "3.6.0",
     "node-pre-gyp": "0.6.34"
   },
   "devDependencies": {
-    "eachline": "https://github.com/meteor/node-eachline/tarball/ff89722ff94e6b6a08652bf5f44c8fffea8a21da",
+    "split2": "2.1.1",
+    "multipipe": "1.0.2",
     "chalk": "0.5.1"
   },
   "scripts": {

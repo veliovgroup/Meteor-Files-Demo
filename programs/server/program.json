@@ -3,9 +3,6 @@
   "arch": "os",
   "load": [
     {
-      "path": "packages/underscore.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/meteor/node_modules",
       "path": "packages/meteor.js"
     },
@@ -23,9 +20,6 @@
     },
     {
       "path": "packages/meteor-base.js"
-    },
-    {
-      "path": "packages/fastclick.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
@@ -51,23 +45,27 @@
       "path": "packages/ecmascript.js"
     },
     {
+      "path": "packages/underscore.js"
+    },
+    {
       "path": "packages/base64.js"
-    },
-    {
-      "path": "packages/ejson.js"
-    },
-    {
-      "path": "packages/id-map.js"
-    },
-    {
-      "path": "packages/ordered-dict.js"
-    },
-    {
-      "path": "packages/tracker.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
       "path": "packages/babel-runtime.js"
+    },
+    {
+      "sourceMap": "packages/ejson.js.map",
+      "path": "packages/ejson.js"
+    },
+    {
+      "path": "packages/diff-sequence.js"
+    },
+    {
+      "path": "packages/geojson-utils.js"
+    },
+    {
+      "path": "packages/id-map.js"
     },
     {
       "sourceMap": "packages/random.js.map",
@@ -77,10 +75,10 @@
       "path": "packages/mongo-id.js"
     },
     {
-      "path": "packages/diff-sequence.js"
+      "path": "packages/ordered-dict.js"
     },
     {
-      "path": "packages/geojson-utils.js"
+      "path": "packages/tracker.js"
     },
     {
       "sourceMap": "packages/minimongo.js.map",
@@ -114,45 +112,8 @@
       "path": "packages/routepolicy.js"
     },
     {
-      "path": "packages/deps.js"
-    },
-    {
-      "path": "packages/htmljs.js"
-    },
-    {
-      "path": "packages/html-tools.js"
-    },
-    {
-      "path": "packages/blaze-tools.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/spacebars-compiler/node_modules",
-      "path": "packages/spacebars-compiler.js"
-    },
-    {
-      "path": "packages/observe-sequence.js"
-    },
-    {
-      "path": "packages/jquery.js"
-    },
-    {
-      "path": "packages/reactive-var.js"
-    },
-    {
-      "path": "packages/blaze.js"
-    },
-    {
-      "path": "packages/spacebars.js"
-    },
-    {
-      "path": "packages/ui.js"
-    },
-    {
-      "path": "packages/boilerplate-generator.js",
-      "assets": {
-        "boilerplate_web.browser.html": "assets/packages/boilerplate-generator/boilerplate_web.browser.html",
-        "boilerplate_web.cordova.html": "assets/packages/boilerplate-generator/boilerplate_web.cordova.html"
-      }
+      "sourceMap": "packages/boilerplate-generator.js.map",
+      "path": "packages/boilerplate-generator.js"
     },
     {
       "sourceMap": "packages/webapp-hashing.js.map",
@@ -193,6 +154,9 @@
       "path": "packages/blaze-html-templates.js"
     },
     {
+      "path": "packages/jquery.js"
+    },
+    {
       "path": "packages/reload.js"
     },
     {
@@ -204,6 +168,9 @@
     {
       "sourceMap": "packages/dynamic-import.js.map",
       "path": "packages/dynamic-import.js"
+    },
+    {
+      "path": "packages/reactive-var.js"
     },
     {
       "path": "packages/mrt_filesize.js"
@@ -228,6 +195,18 @@
       "path": "packages/simple_highlight.js.js"
     },
     {
+      "path": "packages/observe-sequence.js"
+    },
+    {
+      "path": "packages/deps.js"
+    },
+    {
+      "path": "packages/htmljs.js"
+    },
+    {
+      "path": "packages/blaze.js"
+    },
+    {
       "path": "packages/mquandalle_jade.js"
     },
     {
@@ -235,6 +214,9 @@
     },
     {
       "path": "packages/momentjs_moment.js"
+    },
+    {
+      "path": "packages/spacebars.js"
     },
     {
       "path": "packages/templating-compiler.js"
@@ -345,6 +327,9 @@
     },
     {
       "path": "packages/hot-code-push.js"
+    },
+    {
+      "path": "packages/ui.js"
     },
     {
       "path": "packages/autoupdate.js"

@@ -23,7 +23,6 @@ var Hook = Package['callback-hook'].Hook;
 var LocalCollection = Package.minimongo.LocalCollection;
 var Minimongo = Package.minimongo.Minimongo;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 var Symbol = Package['ecmascript-runtime-server'].Symbol;

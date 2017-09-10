@@ -6,9 +6,6 @@ var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package['modules-runtime'].meteorInstall;
 
-/* Package-scope variables */
-var process;
-
 var require = meteorInstall({"node_modules":{"meteor":{"modules":{"server.js":function(require){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,30 +59,29 @@ function install(name, mainModule) {
 // This file will be modified during computeJsOutputFilesMap to include
 // install(<name>) calls for every Meteor package.
 
-install("underscore");
 install("meteor");
 install("modules-runtime");
 install("modules", "meteor/modules/server.js");
 install("es5-shim", "meteor/es5-shim/server.js");
 install("meteor-base");
-install("fastclick");
 install("npm-mongo");
 install("ecmascript-runtime");
 install("promise", "meteor/promise/server.js");
 install("ecmascript-runtime-server", "meteor/ecmascript-runtime-server/runtime.js");
 install("babel-compiler");
 install("ecmascript");
+install("underscore");
 install("base64");
-install("ejson");
-install("id-map");
-install("ordered-dict");
-install("tracker");
 install("babel-runtime", "meteor/babel-runtime/babel-runtime.js");
-install("random");
-install("mongo-id");
+install("ejson", "meteor/ejson/ejson.js");
 install("diff-sequence");
 install("geojson-utils", "meteor/geojson-utils/main.js");
-install("minimongo");
+install("id-map");
+install("random");
+install("mongo-id");
+install("ordered-dict");
+install("tracker");
+install("minimongo", "meteor/minimongo/minimongo_server.js");
 install("check", "meteor/check/match.js");
 install("retry");
 install("ddp-common");
@@ -94,18 +90,7 @@ install("rate-limit");
 install("ddp-rate-limiter");
 install("logging");
 install("routepolicy");
-install("deps");
-install("htmljs");
-install("html-tools");
-install("blaze-tools");
-install("spacebars-compiler");
-install("observe-sequence");
-install("jquery");
-install("reactive-var");
-install("blaze");
-install("spacebars");
-install("ui");
-install("boilerplate-generator");
+install("boilerplate-generator", "meteor/boilerplate-generator/generator.js");
 install("webapp-hashing");
 install("webapp", "meteor/webapp/webapp_server.js");
 install("audit-argument-checks");
@@ -116,19 +101,26 @@ install("allow-deny");
 install("binary-heap");
 install("mongo");
 install("blaze-html-templates");
+install("jquery");
 install("reload");
 install("seba:minifiers-autoprefixer");
 install("standard-minifier-js");
 install("dynamic-import", "meteor/dynamic-import/server.js");
+install("reactive-var");
 install("mrt:filesize");
 install("markdown");
 install("url");
 install("http");
 install("fortawesome:fontawesome");
 install("simple:highlight.js");
+install("observe-sequence");
+install("deps");
+install("htmljs");
+install("blaze");
 install("mquandalle:jade");
 install("fourseven:scss");
 install("momentjs:moment");
+install("spacebars");
 install("templating-compiler");
 install("templating-runtime");
 install("templating");
@@ -161,6 +153,7 @@ install("meteor-developer-oauth");
 install("accounts-meteor-developer");
 install("livedata");
 install("hot-code-push");
+install("ui");
 install("autoupdate");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,36 +166,40 @@ install("autoupdate");
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
-try {
-  // The application can run `npm install process` to provide its own
-  // process stub; otherwise this module will provide a partial stub.
-  process = global.process || require("process");
-} catch (noProcess) {
-  process = {};
+if (! global.process) {
+  try {
+    // The application can run `npm install process` to provide its own
+    // process stub; otherwise this module will provide a partial stub.
+    global.process = require("process");
+  } catch (missing) {
+    global.process = {};
+  }
 }
+
+var proc = global.process;
 
 if (Meteor.isServer) {
   // Make require("process") work on the server in all versions of Node.
   meteorInstall({
     node_modules: {
       "process.js": function (r, e, module) {
-        module.exports = process;
+        module.exports = proc;
       }
     }
   });
 } else {
-  process.platform = "browser";
-  process.nextTick = process.nextTick || Meteor._setImmediate;
+  proc.platform = "browser";
+  proc.nextTick = proc.nextTick || Meteor._setImmediate;
 }
 
-if (typeof process.env !== "object") {
-  process.env = {};
+if (typeof proc.env !== "object") {
+  proc.env = {};
 }
 
 var hasOwn = Object.prototype.hasOwnProperty;
 for (var key in meteorEnv) {
   if (hasOwn.call(meteorEnv, key)) {
-    process.env[key] = meteorEnv[key];
+    proc.env[key] = meteorEnv[key];
   }
 }
 
@@ -346,12 +343,18 @@ function runSetters(valueToPassThrough) {
 }
 
 // Returns a function that takes a namespace object and copies the
-// properties of the namespace to module.exports, which is useful for
-// implementing `export * from "module"` syntax.
+// properties of the namespace to module.exports, excluding any "default"
+// property, which is useful for implementing `export * from "module"`.
 function moduleMakeNsSetter() {
   var module = this;
+  // Discussion of why the "default" property is skipped:
+  // https://github.com/tc39/ecma262/issues/948
   return function (namespace) {
-    utils.assign(module.exports, namespace);
+    Object.keys(namespace).forEach(function (key) {
+      if (key !== "default") {
+        utils.copyKey(key, module.exports, namespace);
+      }
+    });
   };
 }
 
@@ -366,7 +369,7 @@ function moduleMakeNsSetter() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "fs-extra";
-exports.version = "4.0.0";
+exports.version = "4.0.1";
 exports.main = "./lib/index";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4746,25 +4749,6 @@ exports.default = function (arr) {
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"classCallCheck.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/babel-runtime/helpers/classCallCheck.js                                                               //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-"use strict";
-
-exports.__esModule = true;
-
-exports.default = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 },"possibleConstructorReturn.js":function(require,exports){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4835,6 +4819,58 @@ exports.default = function (subClass, superClass) {
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+},"classCallCheck.js":function(require,exports){
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                    //
+// node_modules/babel-runtime/helpers/classCallCheck.js                                                               //
+//                                                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                      //
+"use strict";
+
+exports.__esModule = true;
+
+exports.default = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"extends.js":function(require,exports){
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                    //
+// node_modules/babel-runtime/helpers/extends.js                                                                      //
+//                                                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                      //
+"use strict";
+
+exports.__esModule = true;
+
+var _assign = require("../core-js/object/assign");
+
+var _assign2 = _interopRequireDefault(_assign);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _assign2.default || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 },"slicedToArray.js":function(require,exports){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4896,39 +4932,6 @@ exports.default = function () {
 }();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"extends.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/babel-runtime/helpers/extends.js                                                                      //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-"use strict";
-
-exports.__esModule = true;
-
-var _assign = require("../core-js/object/assign");
-
-var _assign2 = _interopRequireDefault(_assign);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _assign2.default || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }}}}},{
   "extensions": [
     ".js",
@@ -4943,8 +4946,7 @@ if (typeof Package === 'undefined') Package = {};
   for (var s in symbols)
     (s in pkg) || (pkg[s] = symbols[s]);
 })(Package.modules = exports, {
-  meteorInstall: meteorInstall,
-  process: process
+  meteorInstall: meteorInstall
 });
 
 })();

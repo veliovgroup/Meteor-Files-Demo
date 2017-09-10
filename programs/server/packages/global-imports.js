@@ -34,7 +34,6 @@ UI = Package.ui.UI;
 Handlebars = Package.ui.Handlebars;
 Spacebars = Package.spacebars.Spacebars;
 meteorInstall = Package.modules.meteorInstall;
-process = Package.modules.process;
 meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 Promise = Package.promise.Promise;
 Github = Package['github-oauth'].Github;

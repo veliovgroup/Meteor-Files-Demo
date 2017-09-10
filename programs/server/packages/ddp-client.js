@@ -18,7 +18,6 @@ var DDPCommon = Package['ddp-common'].DDPCommon;
 var DiffSequence = Package['diff-sequence'].DiffSequence;
 var MongoID = Package['mongo-id'].MongoID;
 var meteorInstall = Package.modules.meteorInstall;
-var process = Package.modules.process;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
 var Symbol = Package['ecmascript-runtime-server'].Symbol;

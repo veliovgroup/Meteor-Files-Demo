@@ -1,8 +1,5 @@
 (function () {
 
-/* Imports */
-var _ = Package.underscore._;
-
 /* Package-scope variables */
 var global, meteorEnv, Meteor;
 
@@ -108,136 +105,136 @@ if (typeof __meteor_runtime_config__ === 'object' &&
 // XXX find a better home for these? Ideally they would be _.get,
 // _.ensure, _.delete..
 
-_.extend(Meteor, {
-  // _get(a,b,c,d) returns a[b][c][d], or else undefined if a[b] or
-  // a[b][c] doesn't exist.
-  //
-  _get: function (obj /*, arguments */) {
-    for (var i = 1; i < arguments.length; i++) {
-      if (!(arguments[i] in obj))
-        return undefined;
-      obj = obj[arguments[i]];
-    }
-    return obj;
-  },
-
-  // _ensure(a,b,c,d) ensures that a[b][c][d] exists. If it does not,
-  // it is created and set to {}. Either way, it is returned.
-  //
-  _ensure: function (obj /*, arguments */) {
-    for (var i = 1; i < arguments.length; i++) {
-      var key = arguments[i];
-      if (!(key in obj))
-        obj[key] = {};
-      obj = obj[key];
-    }
-
-    return obj;
-  },
-
-  // _delete(a, b, c, d) deletes a[b][c][d], then a[b][c] unless it
-  // isn't empty, then a[b] unless it isn't empty.
-  //
-  _delete: function (obj /*, arguments */) {
-    var stack = [obj];
-    var leaf = true;
-    for (var i = 1; i < arguments.length - 1; i++) {
-      var key = arguments[i];
-      if (!(key in obj)) {
-        leaf = false;
-        break;
-      }
-      obj = obj[key];
-      if (typeof obj !== "object")
-        break;
-      stack.push(obj);
-    }
-
-    for (var i = stack.length - 1; i >= 0; i--) {
-      var key = arguments[i+1];
-
-      if (leaf)
-        leaf = false;
-      else
-        for (var other in stack[i][key])
-          return; // not empty -- we're done
-
-      delete stack[i][key];
-    }
-  },
-
-  // wrapAsync can wrap any function that takes some number of arguments that
-  // can't be undefined, followed by some optional arguments, where the callback
-  // is the last optional argument.
-  // e.g. fs.readFile(pathname, [callback]),
-  // fs.open(pathname, flags, [mode], [callback])
-  // For maximum effectiveness and least confusion, wrapAsync should be used on
-  // functions where the callback is the only argument of type Function.
-
-  /**
-   * @memberOf Meteor
-   * @summary Wrap a function that takes a callback function as its final parameter. The signature of the callback of the wrapped function should be `function(error, result){}`. On the server, the wrapped function can be used either synchronously (without passing a callback) or asynchronously (when a callback is passed). On the client, a callback is always required; errors will be logged if there is no callback. If a callback is provided, the environment captured when the original function was called will be restored in the callback.
-   * @locus Anywhere
-   * @param {Function} func A function that takes a callback as its final parameter
-   * @param {Object} [context] Optional `this` object against which the original function will be invoked
-   */
-  wrapAsync: function (fn, context) {
-    return function (/* arguments */) {
-      var self = context || this;
-      var newArgs = _.toArray(arguments);
-      var callback;
-
-      for (var i = newArgs.length - 1; i >= 0; --i) {
-        var arg = newArgs[i];
-        var type = typeof arg;
-        if (type !== "undefined") {
-          if (type === "function") {
-            callback = arg;
-          }
-          break;
-        }
-      }
-
-      if (! callback) {
-        if (Meteor.isClient) {
-          callback = logErr;
-        } else {
-          var fut = new Future();
-          callback = fut.resolver();
-        }
-        ++i; // Insert the callback just after arg.
-      }
-
-      newArgs[i] = Meteor.bindEnvironment(callback);
-      var result = fn.apply(self, newArgs);
-      return fut ? fut.wait() : result;
-    };
-  },
-
-  // Sets child's prototype to a new object whose prototype is parent's
-  // prototype. Used as:
-  //   Meteor._inherits(ClassB, ClassA).
-  //   _.extend(ClassB.prototype, { ... })
-  // Inspired by CoffeeScript's `extend` and Google Closure's `goog.inherits`.
-  _inherits: function (Child, Parent) {
-    // copy Parent static properties
-    for (var key in Parent) {
-      // make sure we only copy hasOwnProperty properties vs. prototype
-      // properties
-      if (_.has(Parent, key))
-        Child[key] = Parent[key];
-    }
-
-    // a middle member of prototype chain: takes the prototype from the Parent
-    var Middle = function () {
-      this.constructor = Child;
-    };
-    Middle.prototype = Parent.prototype;
-    Child.prototype = new Middle();
-    Child.__super__ = Parent.prototype;
-    return Child;
+// _get(a,b,c,d) returns a[b][c][d], or else undefined if a[b] or
+// a[b][c] doesn't exist.
+//
+Meteor._get = function (obj /*, arguments */) {
+  for (var i = 1; i < arguments.length; i++) {
+    if (!(arguments[i] in obj))
+      return undefined;
+    obj = obj[arguments[i]];
   }
-});
+  return obj;
+};
+
+// _ensure(a,b,c,d) ensures that a[b][c][d] exists. If it does not,
+// it is created and set to {}. Either way, it is returned.
+//
+Meteor._ensure = function (obj /*, arguments */) {
+  for (var i = 1; i < arguments.length; i++) {
+    var key = arguments[i];
+    if (!(key in obj))
+      obj[key] = {};
+    obj = obj[key];
+  }
+
+  return obj;
+};
+
+// _delete(a, b, c, d) deletes a[b][c][d], then a[b][c] unless it
+// isn't empty, then a[b] unless it isn't empty.
+//
+Meteor._delete = function (obj /*, arguments */) {
+  var stack = [obj];
+  var leaf = true;
+  for (var i = 1; i < arguments.length - 1; i++) {
+    var key = arguments[i];
+    if (!(key in obj)) {
+      leaf = false;
+      break;
+    }
+    obj = obj[key];
+    if (typeof obj !== "object")
+      break;
+    stack.push(obj);
+  }
+
+  for (var i = stack.length - 1; i >= 0; i--) {
+    var key = arguments[i+1];
+
+    if (leaf)
+      leaf = false;
+    else
+      for (var other in stack[i][key])
+        return; // not empty -- we're done
+
+    delete stack[i][key];
+  }
+};
+
+// wrapAsync can wrap any function that takes some number of arguments that
+// can't be undefined, followed by some optional arguments, where the callback
+// is the last optional argument.
+// e.g. fs.readFile(pathname, [callback]),
+// fs.open(pathname, flags, [mode], [callback])
+// For maximum effectiveness and least confusion, wrapAsync should be used on
+// functions where the callback is the only argument of type Function.
+
+/**
+ * @memberOf Meteor
+ * @summary Wrap a function that takes a callback function as its final parameter. The signature of the callback of the wrapped function should be `function(error, result){}`. On the server, the wrapped function can be used either synchronously (without passing a callback) or asynchronously (when a callback is passed). On the client, a callback is always required; errors will be logged if there is no callback. If a callback is provided, the environment captured when the original function was called will be restored in the callback.
+ * @locus Anywhere
+ * @param {Function} func A function that takes a callback as its final parameter
+ * @param {Object} [context] Optional `this` object against which the original function will be invoked
+ */
+Meteor.wrapAsync = function (fn, context) {
+  return function (/* arguments */) {
+    var self = context || this;
+    var newArgs = Array.prototype.slice.call(arguments);
+    var callback;
+
+    for (var i = newArgs.length - 1; i >= 0; --i) {
+      var arg = newArgs[i];
+      var type = typeof arg;
+      if (type !== "undefined") {
+        if (type === "function") {
+          callback = arg;
+        }
+        break;
+      }
+    }
+
+    if (! callback) {
+      if (Meteor.isClient) {
+        callback = logErr;
+      } else {
+        var fut = new Future();
+        callback = fut.resolver();
+      }
+      ++i; // Insert the callback just after arg.
+    }
+
+    newArgs[i] = Meteor.bindEnvironment(callback);
+    var result = fn.apply(self, newArgs);
+    return fut ? fut.wait() : result;
+  };
+};
+
+// Sets child's prototype to a new object whose prototype is parent's
+// prototype. Used as:
+//   Meteor._inherits(ClassB, ClassA).
+//   _.extend(ClassB.prototype, { ... })
+// Inspired by CoffeeScript's `extend` and Google Closure's `goog.inherits`.
+var hasOwn = Object.prototype.hasOwnProperty;
+Meteor._inherits = function (Child, Parent) {
+  // copy Parent static properties
+  for (var key in Parent) {
+    // make sure we only copy hasOwnProperty properties vs. prototype
+    // properties
+    if (hasOwn.call(Parent, key)) {
+      Child[key] = Parent[key];
+    }
+  }
+
+  // a middle member of prototype chain: takes the prototype from the Parent
+  var Middle = function () {
+    this.constructor = Child;
+  };
+  Middle.prototype = Parent.prototype;
+  Child.prototype = new Middle();
+  Child.__super__ = Parent.prototype;
+  return Child;
+};
 
 var warnedAboutWrapAsync = false;
 
@@ -437,83 +434,92 @@ Meteor._setImmediate =
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-var withoutInvocation = function (f) {
+function withoutInvocation(f) {
   if (Package.ddp) {
-    var _CurrentMethodInvocation = Package.ddp.DDP._CurrentMethodInvocation;
-    if (_CurrentMethodInvocation.get() && _CurrentMethodInvocation.get().isSimulation)
+    var DDP = Package.ddp.DDP;
+    var CurrentInvocation =
+      DDP._CurrentMethodInvocation ||
+      // For backwards compatibility, as explained in this issue:
+      // https://github.com/meteor/meteor/issues/8947
+      DDP._CurrentInvocation;
+
+    var invocation = CurrentInvocation.get();
+    if (invocation && invocation.isSimulation) {
       throw new Error("Can't set timers inside simulations");
-    return function () { _CurrentMethodInvocation.withValue(null, f); };
-  }
-  else
+    }
+
+    return function () {
+      CurrentInvocation.withValue(null, f);
+    };
+  } else {
     return f;
-};
-
-var bindAndCatch = function (context, f) {
-  return Meteor.bindEnvironment(withoutInvocation(f), context);
-};
-
-_.extend(Meteor, {
-  // Meteor.setTimeout and Meteor.setInterval callbacks scheduled
-  // inside a server method are not part of the method invocation and
-  // should clear out the CurrentMethodInvocation environment variable.
-
-  /**
-   * @memberOf Meteor
-   * @summary Call a function in the future after waiting for a specified delay.
-   * @locus Anywhere
-   * @param {Function} func The function to run
-   * @param {Number} delay Number of milliseconds to wait before calling function
-   */
-  setTimeout: function (f, duration) {
-    return setTimeout(bindAndCatch("setTimeout callback", f), duration);
-  },
-
-  /**
-   * @memberOf Meteor
-   * @summary Call a function repeatedly, with a time delay between calls.
-   * @locus Anywhere
-   * @param {Function} func The function to run
-   * @param {Number} delay Number of milliseconds to wait between each function call.
-   */
-  setInterval: function (f, duration) {
-    return setInterval(bindAndCatch("setInterval callback", f), duration);
-  },
-
-  /**
-   * @memberOf Meteor
-   * @summary Cancel a repeating function call scheduled by `Meteor.setInterval`.
-   * @locus Anywhere
-   * @param {Object} id The handle returned by `Meteor.setInterval`
-   */
-  clearInterval: function(x) {
-    return clearInterval(x);
-  },
-
-  /**
-   * @memberOf Meteor
-   * @summary Cancel a function call scheduled by `Meteor.setTimeout`.
-   * @locus Anywhere
-   * @param {Object} id The handle returned by `Meteor.setTimeout`
-   */
-  clearTimeout: function(x) {
-    return clearTimeout(x);
-  },
-
-  // XXX consider making this guarantee ordering of defer'd callbacks, like
-  // Tracker.afterFlush or Node's nextTick (in practice). Then tests can do:
-  //    callSomethingThatDefersSomeWork();
-  //    Meteor.defer(expect(somethingThatValidatesThatTheWorkHappened));
-
-  /**
-   * @memberOf Meteor
-   * @summary Defer execution of a function to run asynchronously in the background (similar to `Meteor.setTimeout(func, 0)`.
-   * @locus Anywhere
-   * @param {Function} func The function to run
-   */
-  defer: function (f) {
-    Meteor._setImmediate(bindAndCatch("defer callback", f));
   }
-});
+}
+
+function bindAndCatch(context, f) {
+  return Meteor.bindEnvironment(withoutInvocation(f), context);
+}
+
+// Meteor.setTimeout and Meteor.setInterval callbacks scheduled
+// inside a server method are not part of the method invocation and
+// should clear out the CurrentMethodInvocation environment variable.
+
+/**
+ * @memberOf Meteor
+ * @summary Call a function in the future after waiting for a specified delay.
+ * @locus Anywhere
+ * @param {Function} func The function to run
+ * @param {Number} delay Number of milliseconds to wait before calling function
+ */
+Meteor.setTimeout = function (f, duration) {
+  return setTimeout(bindAndCatch("setTimeout callback", f), duration);
+};
+
+/**
+ * @memberOf Meteor
+ * @summary Call a function repeatedly, with a time delay between calls.
+ * @locus Anywhere
+ * @param {Function} func The function to run
+ * @param {Number} delay Number of milliseconds to wait between each function call.
+ */
+Meteor.setInterval = function (f, duration) {
+  return setInterval(bindAndCatch("setInterval callback", f), duration);
+};
+
+/**
+ * @memberOf Meteor
+ * @summary Cancel a repeating function call scheduled by `Meteor.setInterval`.
+ * @locus Anywhere
+ * @param {Object} id The handle returned by `Meteor.setInterval`
+ */
+Meteor.clearInterval = function(x) {
+  return clearInterval(x);
+};
+
+/**
+ * @memberOf Meteor
+ * @summary Cancel a function call scheduled by `Meteor.setTimeout`.
+ * @locus Anywhere
+ * @param {Object} id The handle returned by `Meteor.setTimeout`
+ */
+Meteor.clearTimeout = function(x) {
+  return clearTimeout(x);
+};
+
+// XXX consider making this guarantee ordering of defer'd callbacks, like
+// Tracker.afterFlush or Node's nextTick (in practice). Then tests can do:
+//    callSomethingThatDefersSomeWork();
+//    Meteor.defer(expect(somethingThatValidatesThatTheWorkHappened));
+
+/**
+ * @memberOf Meteor
+ * @summary Defer execution of a function to run asynchronously in the background (similar to `Meteor.setTimeout(func, 0)`.
+ * @locus Anywhere
+ * @param {Function} func The function to run
+ */
+Meteor.defer = function (f) {
+  Meteor._setImmediate(bindAndCatch("defer callback", f));
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -718,121 +724,123 @@ Meteor._SynchronousQueue = function () {
   self._draining = false;
 };
 
-_.extend(Meteor._SynchronousQueue.prototype, {
-  runTask: function (task) {
-    var self = this;
+var SQp = Meteor._SynchronousQueue.prototype;
 
-    if (!self.safeToRunTask()) {
-      if (Fiber.current)
-        throw new Error("Can't runTask from another task in the same fiber");
-      else
-        throw new Error("Can only call runTask in a Fiber");
-    }
+SQp.runTask = function (task) {
+  var self = this;
 
-    var fut = new Future;
-    var handle = {
-      task: Meteor.bindEnvironment(task, function (e) {
-        Meteor._debug("Exception from task:", e && e.stack || e);
-        throw e;
-      }),
-      future: fut,
-      name: task.name
-    };
-    self._taskHandles.push(handle);
-    self._scheduleRun();
-    // Yield. We'll get back here after the task is run (and will throw if the
-    // task throws).
-    fut.wait();
-  },
-  queueTask: function (task) {
-    var self = this;
-    self._taskHandles.push({
-      task: task,
-      name: task.name
-    });
-    self._scheduleRun();
-    // No need to block.
-  },
+  if (!self.safeToRunTask()) {
+    if (Fiber.current)
+      throw new Error("Can't runTask from another task in the same fiber");
+    else
+      throw new Error("Can only call runTask in a Fiber");
+  }
 
-  flush: function () {
-    var self = this;
-    self.runTask(function () {});
-  },
+  var fut = new Future;
+  var handle = {
+    task: Meteor.bindEnvironment(task, function (e) {
+      Meteor._debug("Exception from task:", e && e.stack || e);
+      throw e;
+    }),
+    future: fut,
+    name: task.name
+  };
+  self._taskHandles.push(handle);
+  self._scheduleRun();
+  // Yield. We'll get back here after the task is run (and will throw if the
+  // task throws).
+  fut.wait();
+};
 
-  safeToRunTask: function () {
-    var self = this;
-    return Fiber.current && self._currentTaskFiber !== Fiber.current;
-  },
+SQp.queueTask = function (task) {
+  var self = this;
+  self._taskHandles.push({
+    task: task,
+    name: task.name
+  });
+  self._scheduleRun();
+  // No need to block.
+};
 
-  drain: function () {
-    var self = this;
-    if (self._draining)
-      return;
-    if (!self.safeToRunTask())
-      return;
-    self._draining = true;
-    while (! self._taskHandles.isEmpty()) {
-      self.flush();
-    }
-    self._draining = false;
-  },
+SQp.flush = function () {
+  var self = this;
+  self.runTask(function () {});
+};
 
-  _scheduleRun: function () {
-    var self = this;
-    // Already running or scheduled? Do nothing.
-    if (self._runningOrRunScheduled)
-      return;
+SQp.safeToRunTask = function () {
+  var self = this;
+  return Fiber.current && self._currentTaskFiber !== Fiber.current;
+};
 
-    self._runningOrRunScheduled = true;
-    setImmediate(function () {
-      Fiber(function () {
-        self._run();
-      }).run();
-    });
-  },
-  _run: function () {
-    var self = this;
+SQp.drain = function () {
+  var self = this;
+  if (self._draining)
+    return;
+  if (!self.safeToRunTask())
+    return;
+  self._draining = true;
+  while (! self._taskHandles.isEmpty()) {
+    self.flush();
+  }
+  self._draining = false;
+};
 
-    if (!self._runningOrRunScheduled)
-      throw new Error("expected to be _runningOrRunScheduled");
+SQp._scheduleRun = function () {
+  var self = this;
+  // Already running or scheduled? Do nothing.
+  if (self._runningOrRunScheduled)
+    return;
 
-    if (self._taskHandles.isEmpty()) {
-      // Done running tasks! Don't immediately schedule another run, but
-      // allow future tasks to do so.
-      self._runningOrRunScheduled = false;
-      return;
-    }
-    var taskHandle = self._taskHandles.shift();
+  self._runningOrRunScheduled = true;
+  setImmediate(function () {
+    Fiber(function () {
+      self._run();
+    }).run();
+  });
+};
 
-    // Run the task.
-    self._currentTaskFiber = Fiber.current;
-    var exception = undefined;
-    try {
-      taskHandle.task();
-    } catch (err) {
-      if (taskHandle.future) {
-        // We'll throw this exception through runTask.
-        exception = err;
-      } else {
-        Meteor._debug("Exception in queued task: " + (err.stack || err));
-      }
-    }
-    self._currentTaskFiber = undefined;
+SQp._run = function () {
+  var self = this;
 
-    // Soon, run the next task, if there is any.
+  if (!self._runningOrRunScheduled)
+    throw new Error("expected to be _runningOrRunScheduled");
+
+  if (self._taskHandles.isEmpty()) {
+    // Done running tasks! Don't immediately schedule another run, but
+    // allow future tasks to do so.
     self._runningOrRunScheduled = false;
-    self._scheduleRun();
+    return;
+  }
+  var taskHandle = self._taskHandles.shift();
 
-    // If this was queued with runTask, let the runTask call return (throwing if
-    // the task threw).
+  // Run the task.
+  self._currentTaskFiber = Fiber.current;
+  var exception = undefined;
+  try {
+    taskHandle.task();
+  } catch (err) {
     if (taskHandle.future) {
-      if (exception)
-        taskHandle.future['throw'](exception);
-      else
-        taskHandle.future['return']();
+      // We'll throw this exception through runTask.
+      exception = err;
+    } else {
+      Meteor._debug("Exception in queued task: " + (err.stack || err));
     }
   }
-});
+  self._currentTaskFiber = undefined;
+
+  // Soon, run the next task, if there is any.
+  self._runningOrRunScheduled = false;
+  self._scheduleRun();
+
+  // If this was queued with runTask, let the runTask call return (throwing if
+  // the task threw).
+  if (taskHandle.future) {
+    if (exception)
+      taskHandle.future['throw'](exception);
+    else
+      taskHandle.future['return']();
+  }
+};
 
 // Sleep. Mostly used for debugging (eg, inserting latency into server
 // methods).
@@ -1086,51 +1094,51 @@ Meteor.EnvironmentVariable = function () {
   this.slot = nextSlot++;
 };
 
-_.extend(Meteor.EnvironmentVariable.prototype, {
-  get: function () {
-    Meteor._nodeCodeMustBeInFiber();
+var EVp = Meteor.EnvironmentVariable.prototype;
 
-    return Fiber.current._meteor_dynamics &&
-      Fiber.current._meteor_dynamics[this.slot];
-  },
+EVp.get = function () {
+  Meteor._nodeCodeMustBeInFiber();
 
-  // Most Meteor code ought to run inside a fiber, and the
-  // _nodeCodeMustBeInFiber assertion helps you remember to include appropriate
-  // bindEnvironment calls (which will get you the *right value* for your
-  // environment variables, on the server).
-  //
-  // In some very special cases, it's more important to run Meteor code on the
-  // server in non-Fiber contexts rather than to strongly enforce the safeguard
-  // against forgetting to use bindEnvironment. For example, using `check` in
-  // some top-level constructs like connect handlers without needing unnecessary
-  // Fibers on every request is more important that possibly failing to find the
-  // correct argumentChecker. So this function is just like get(), but it
-  // returns null rather than throwing when called from outside a Fiber. (On the
-  // client, it is identical to get().)
-  getOrNullIfOutsideFiber: function () {
-    if (!Fiber.current)
-      return null;
-    return this.get();
-  },
+  return Fiber.current._meteor_dynamics &&
+    Fiber.current._meteor_dynamics[this.slot];
+};
 
-  withValue: function (value, func) {
-    Meteor._nodeCodeMustBeInFiber();
+// Most Meteor code ought to run inside a fiber, and the
+// _nodeCodeMustBeInFiber assertion helps you remember to include appropriate
+// bindEnvironment calls (which will get you the *right value* for your
+// environment variables, on the server).
+//
+// In some very special cases, it's more important to run Meteor code on the
+// server in non-Fiber contexts rather than to strongly enforce the safeguard
+// against forgetting to use bindEnvironment. For example, using `check` in
+// some top-level constructs like connect handlers without needing unnecessary
+// Fibers on every request is more important that possibly failing to find the
+// correct argumentChecker. So this function is just like get(), but it
+// returns null rather than throwing when called from outside a Fiber. (On the
+// client, it is identical to get().)
+EVp.getOrNullIfOutsideFiber = function () {
+  if (!Fiber.current)
+    return null;
+  return this.get();
+};
 
-    if (!Fiber.current._meteor_dynamics)
-      Fiber.current._meteor_dynamics = [];
-    var currentValues = Fiber.current._meteor_dynamics;
+EVp.withValue = function (value, func) {
+  Meteor._nodeCodeMustBeInFiber();
 
-    var saved = currentValues[this.slot];
-    try {
-      currentValues[this.slot] = value;
-      var ret = func();
-    } finally {
-      currentValues[this.slot] = saved;
-    }
+  if (!Fiber.current._meteor_dynamics)
+    Fiber.current._meteor_dynamics = [];
+  var currentValues = Fiber.current._meteor_dynamics;
 
-    return ret;
+  var saved = currentValues[this.slot];
+  try {
+    currentValues[this.slot] = value;
+    var ret = func();
+  } finally {
+    currentValues[this.slot] = saved;
   }
-});
+
+  return ret;
+};
 
 // Meteor application code is always supposed to be run inside a
 // fiber. bindEnvironment ensures that the function it wraps is run from
@@ -1154,7 +1162,8 @@ _.extend(Meteor.EnvironmentVariable.prototype, {
 Meteor.bindEnvironment = function (func, onException, _this) {
   Meteor._nodeCodeMustBeInFiber();
 
-  var boundValues = _.clone(Fiber.current._meteor_dynamics || []);
+  var dynamics = Fiber.current._meteor_dynamics;
+  var boundValues = dynamics ? dynamics.slice() : [];
 
   if (!onException || typeof(onException) === 'string') {
     var description = onException || "callback of async function";
@@ -1169,14 +1178,14 @@ Meteor.bindEnvironment = function (func, onException, _this) {
   }
 
   return function (/* arguments */) {
-    var args = _.toArray(arguments);
+    var args = Array.prototype.slice.call(arguments);
 
     var runWithEnvironment = function () {
       var savedValues = Fiber.current._meteor_dynamics;
       try {
         // Need to clone boundValues in case two fibers invoke this
         // function at the same time
-        Fiber.current._meteor_dynamics = _.clone(boundValues);
+        Fiber.current._meteor_dynamics = boundValues.slice();
         var ret = func.apply(_this, args);
       } catch (e) {
         // note: callback-hook currently relies on the fact that if onException
@@ -1265,7 +1274,7 @@ Meteor.absoluteUrl = function (path, options) {
     path = undefined;
   }
   // merge options with defaults
-  options = _.extend({}, Meteor.absoluteUrl.defaultOptions, options || {});
+  options = Object.assign({}, Meteor.absoluteUrl.defaultOptions, options || {});
 
   var url = options.rootUrl;
   if (!url)
