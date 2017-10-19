@@ -50,29 +50,52 @@ module.export({                                                                 
     return BlazeRenderer;                                                                         // 1
   }                                                                                               // 1
 });                                                                                               // 1
+var Meteor = void 0;                                                                              // 1
+module.watch(require("meteor/meteor"), {                                                          // 1
+  Meteor: function (v) {                                                                          // 1
+    Meteor = v;                                                                                   // 1
+  }                                                                                               // 1
+}, 0);                                                                                            // 1
 var Router = void 0;                                                                              // 1
 module.watch(require("./router.js"), {                                                            // 1
   "default": function (v) {                                                                       // 1
     Router = v;                                                                                   // 1
   }                                                                                               // 1
-}, 0);                                                                                            // 1
+}, 1);                                                                                            // 1
 var Route = void 0;                                                                               // 1
 module.watch(require("./route.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Route = v;                                                                                    // 1
   }                                                                                               // 1
-}, 1);                                                                                            // 1
+}, 2);                                                                                            // 1
 var Group = void 0;                                                                               // 1
 module.watch(require("./group.js"), {                                                             // 1
   "default": function (v) {                                                                       // 1
     Group = v;                                                                                    // 1
   }                                                                                               // 1
-}, 2);                                                                                            // 1
-var Triggers = {};                                                                                // 5
-var BlazeRenderer = {};                                                                           // 6
-var FlowRouter = new Router();                                                                    // 8
-FlowRouter.Router = Router;                                                                       // 9
-FlowRouter.Route = Route;                                                                         // 10
+}, 3);                                                                                            // 1
+                                                                                                  //
+if (Package['meteorhacks:inject-data']) {                                                         // 6
+  Meteor._debug('`meteorhacks:inject-data` is deprecated, please remove it and install its successor - `staringatlights:inject-data`');
+                                                                                                  //
+  Meteor._debug('meteor remove meteorhacks:inject-data');                                         // 8
+                                                                                                  //
+  Meteor._debug('meteor add staringatlights:inject-data');                                        // 9
+}                                                                                                 // 10
+                                                                                                  //
+if (Package['meteorhacks:fast-render']) {                                                         // 12
+  Meteor._debug('`meteorhacks:fast-render` is deprecated, please remove it and install its successor - `staringatlights:fast-render`');
+                                                                                                  //
+  Meteor._debug('meteor remove meteorhacks:fast-render');                                         // 14
+                                                                                                  //
+  Meteor._debug('meteor add staringatlights:fast-render');                                        // 15
+}                                                                                                 // 16
+                                                                                                  //
+var Triggers = {};                                                                                // 18
+var BlazeRenderer = {};                                                                           // 19
+var FlowRouter = new Router();                                                                    // 21
+FlowRouter.Router = Router;                                                                       // 22
+FlowRouter.Route = Route;                                                                         // 23
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"group.js":function(require,exports,module){
@@ -273,11 +296,10 @@ module.watch(require("meteor/meteor"), {                                        
                                                                                                   //
 var qs = require('qs');                                                                           // 6
                                                                                                   //
-var pathRegExp = /(:[\w\(\)\\\+\*\.\?\[\]\-]+)+/g;                                                // 7
-                                                                                                  //
 var Router = function () {                                                                        //
-  function Router() {                                                                             // 10
-    (0, _classCallCheck3.default)(this, Router);                                                  // 10
+  function Router() {                                                                             // 9
+    (0, _classCallCheck3.default)(this, Router);                                                  // 9
+    this.pathRegExp = /(:[\w\(\)\\\+\*\.\?\[\]\-]+)+/g;                                           // 10
     this._routes = [];                                                                            // 11
     this._routesMap = {};                                                                         // 12
     this.subscriptions = Function.prototype; // holds onRoute callbacks                           // 13
@@ -332,7 +354,7 @@ var Router = function () {                                                      
         pathDef = this._routesMap[pathDef].path;                                                  // 50
       }                                                                                           // 51
                                                                                                   //
-      var path = pathDef.replace(pathRegExp, function (key) {                                     // 53
+      var path = pathDef.replace(this.pathRegExp, function (key) {                                // 53
         var firstRegexpChar = key.indexOf('('); // get the content behind : and (\\d+/)           // 54
                                                                                                   //
         key = key.substring(1, firstRegexpChar > 0 ? firstRegexpChar : undefined); // remove +?*  // 56
@@ -481,12 +503,12 @@ module.exportDefault(Router);                                                   
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                //
-// ../../.3.3.3.1ll0qur++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
+// ../../.3.4.0.1esned6++os+web.browser+web.cordova/npm/node_modules/qs/package.json              //
 //                                                                                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                   //
 exports.name = "qs";
-exports.version = "6.5.0";
+exports.version = "6.5.1";
 exports.main = "lib/index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

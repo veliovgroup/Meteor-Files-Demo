@@ -84,6 +84,7 @@ install("tracker");
 install("minimongo", "meteor/minimongo/minimongo_server.js");
 install("check", "meteor/check/match.js");
 install("retry");
+install("callback-hook");
 install("ddp-common");
 install("ddp-client", "meteor/ddp-client/namespace.js");
 install("rate-limit");
@@ -94,7 +95,6 @@ install("boilerplate-generator", "meteor/boilerplate-generator/generator.js");
 install("webapp-hashing");
 install("webapp", "meteor/webapp/webapp_server.js");
 install("audit-argument-checks");
-install("callback-hook");
 install("ddp-server");
 install("ddp");
 install("allow-deny");
@@ -126,9 +126,8 @@ install("templating-runtime");
 install("templating");
 install("perak:markdown");
 install("meteorhacks:subs-manager");
-install("coffeescript");
 install("ostrio:cookies", "meteor/ostrio:cookies/cookies.js");
-install("ostrio:files", "meteor/ostrio:files/server.coffee.js");
+install("ostrio:files", "meteor/ostrio:files/server.js");
 install("ostrio:cstorage");
 install("ostrio:templatehelpers");
 install("reactive-dict");
@@ -369,8 +368,8 @@ function moduleMakeNsSetter() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "fs-extra";
-exports.version = "4.0.1";
-exports.main = "./lib/index";
+exports.version = "4.0.2";
+exports.main = "./lib/index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -447,7 +446,7 @@ module.exports = AWS.S3;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "request";
-exports.version = "2.81.0";
+exports.version = "2.83.0";
 exports.main = "index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -476,15 +475,14 @@ exports.main = "index.js";
 
 'use strict'
 
-var extend                = require('extend')
-  , cookies               = require('./lib/cookies')
-  , helpers               = require('./lib/helpers')
+var extend = require('extend')
+var cookies = require('./lib/cookies')
+var helpers = require('./lib/helpers')
 
 var paramsHaveRequestBody = helpers.paramsHaveRequestBody
 
-
 // organize params for patch, post, put, head, del
-function initParams(uri, options, callback) {
+function initParams (uri, options, callback) {
   if (typeof options === 'function') {
     callback = options
   }
@@ -528,6 +526,7 @@ function verbFunc (verb) {
 // define like this to please codeintel/intellisense IDEs
 request.get = verbFunc('get')
 request.head = verbFunc('head')
+request.options = verbFunc('options')
 request.post = verbFunc('post')
 request.put = verbFunc('put')
 request.patch = verbFunc('patch')
@@ -543,7 +542,6 @@ request.cookie = function (str) {
 }
 
 function wrapRequestMethod (method, options, requester, verb) {
-
   return function (uri, opts, callback) {
     var params = initParams(uri, opts, callback)
 
@@ -574,15 +572,15 @@ request.defaults = function (options, requester) {
     options = {}
   }
 
-  var defaults      = wrapRequestMethod(self, options, requester)
+  var defaults = wrapRequestMethod(self, options, requester)
 
   var verbs = ['get', 'head', 'post', 'put', 'patch', 'del', 'delete']
-  verbs.forEach(function(verb) {
-    defaults[verb]  = wrapRequestMethod(self[verb], options, requester, verb)
+  verbs.forEach(function (verb) {
+    defaults[verb] = wrapRequestMethod(self[verb], options, requester, verb)
   })
 
-  defaults.cookie   = wrapRequestMethod(self.cookie, options, requester)
-  defaults.jar      = self.jar
+  defaults.cookie = wrapRequestMethod(self.cookie, options, requester)
+  defaults.jar = self.jar
   defaults.defaults = self.defaults
   return defaults
 }
@@ -608,11 +606,11 @@ request.initParams = initParams
 
 // Backwards compatibility for request.debug
 Object.defineProperty(request, 'debug', {
-  enumerable : true,
-  get : function() {
+  enumerable: true,
+  get: function () {
     return request.Request.debug
   },
-  set : function(debug) {
+  set: function (debug) {
     request.Request.debug = debug
   }
 })

@@ -91,6 +91,9 @@
       "path": "packages/retry.js"
     },
     {
+      "path": "packages/callback-hook.js"
+    },
+    {
       "path": "packages/ddp-common.js"
     },
     {
@@ -126,9 +129,6 @@
     },
     {
       "path": "packages/audit-argument-checks.js"
-    },
-    {
-      "path": "packages/callback-hook.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ddp-server/node_modules",
@@ -232,9 +232,6 @@
     },
     {
       "path": "packages/meteorhacks_subs-manager.js"
-    },
-    {
-      "path": "packages/coffeescript.js"
     },
     {
       "sourceMap": "packages/ostrio_cookies.js.map",

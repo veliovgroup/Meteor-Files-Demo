@@ -33,12 +33,12 @@ module.exportDefault(Spiderable);                                               
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
-// ../../.1.2.1.1hnme6j++os+web.browser+web.cordova/npm/node_modules/spiderable-middleware/package.json             //
+// ../../.1.2.2.4bbdgy++os+web.browser+web.cordova/npm/node_modules/spiderable-middleware/package.json              //
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
 exports.name = "spiderable-middleware";
-exports.version = "1.2.1";
+exports.version = "1.2.2";
 exports.main = "./lib/index.js";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

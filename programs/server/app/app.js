@@ -128,11 +128,11 @@ if (dbConf && dbConf.key && dbConf.secret && dbConf.token) {                    
                                                                                                                      //
 Collections.files = new FilesCollection({                                                                            // 59
   // debug: true,                                                                                                    // 60
-  // throttle: false,                                                                                                // 61
-  chunkSize: 1024 * 768,                                                                                             // 62
-  storagePath: 'assets/app/uploads/uploadedFiles',                                                                   // 63
-  collectionName: 'uploadedFiles',                                                                                   // 64
-  allowClientCode: true,                                                                                             // 65
+  storagePath: 'assets/app/uploads/uploadedFiles',                                                                   // 61
+  collectionName: 'uploadedFiles',                                                                                   // 62
+  allowClientCode: true,                                                                                             // 63
+  // disableUpload: true,                                                                                            // 64
+  // disableDownload: true,                                                                                          // 65
   "protected": function (fileObj) {                                                                                  // 59
     if (fileObj) {                                                                                                   // 67
       if (!(fileObj.meta && fileObj.meta.secured)) {                                                                 // 68
