@@ -8,9 +8,6 @@ var ECMAScript = Package.ecmascript.ECMAScript;
 var meteorInstall = Package.modules.meteorInstall;
 var meteorBabelHelpers = Package['babel-runtime'].meteorBabelHelpers;
 var Promise = Package.promise.Promise;
-var Symbol = Package['ecmascript-runtime-server'].Symbol;
-var Map = Package['ecmascript-runtime-server'].Map;
-var Set = Package['ecmascript-runtime-server'].Set;
 
 var require = meteorInstall({"node_modules":{"meteor":{"ostrio:spiderable-middleware":{"lib":{"meteor.js":function(require,exports,module){
 
@@ -20,13 +17,14 @@ var require = meteorInstall({"node_modules":{"meteor":{"ostrio:spiderable-middle
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
-var Spiderable = void 0;                                                                                            // 1
-module.watch(require("spiderable-middleware"), {                                                                    // 1
-  "default": function (v) {                                                                                         // 1
-    Spiderable = v;                                                                                                 // 1
-  }                                                                                                                 // 1
-}, 0);                                                                                                              // 1
-module.exportDefault(Spiderable);                                                                                   // 1
+let Spiderable;
+module.watch(require("spiderable-middleware"), {
+  default(v) {
+    Spiderable = v;
+  }
+
+}, 0);
+module.exportDefault(Spiderable);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }},"node_modules":{"spiderable-middleware":{"package.json":function(require,exports){
@@ -236,4 +234,5 @@ Package['ostrio:spiderable-middleware'] = exports;
 
 })();
 
-//# sourceMappingURL=ostrio_spiderable-middleware.js.map
+//# sourceURL=meteor://💻app/packages/ostrio_spiderable-middleware.js
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1ldGVvcjovL/CfkrthcHAvcGFja2FnZXMvb3N0cmlvOnNwaWRlcmFibGUtbWlkZGxld2FyZS9saWIvbWV0ZW9yLmpzIl0sIm5hbWVzIjpbIlNwaWRlcmFibGUiLCJtb2R1bGUiLCJ3YXRjaCIsInJlcXVpcmUiLCJkZWZhdWx0IiwidiIsImV4cG9ydERlZmF1bHQiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxJQUFJQSxVQUFKO0FBQWVDLE9BQU9DLEtBQVAsQ0FBYUMsUUFBUSx1QkFBUixDQUFiLEVBQThDO0FBQUNDLFVBQVFDLENBQVIsRUFBVTtBQUFDTCxpQkFBV0ssQ0FBWDtBQUFhOztBQUF6QixDQUE5QyxFQUF5RSxDQUF6RTtBQUFmSixPQUFPSyxhQUFQLENBQ2VOLFVBRGYsRSIsImZpbGUiOiIvcGFja2FnZXMvb3N0cmlvX3NwaWRlcmFibGUtbWlkZGxld2FyZS5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBTcGlkZXJhYmxlIGZyb20gJ3NwaWRlcmFibGUtbWlkZGxld2FyZSc7XG5leHBvcnQgZGVmYXVsdCBTcGlkZXJhYmxlO1xuIl19

@@ -2,31 +2,31 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "77ccf92a0c8c8728a958ff6058fa4a9f871ae3d6.js",
+      "path": "b75b8e40e9e2d31daf5287021f6758e0bf9a1a12.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/77ccf92a0c8c8728a958ff6058fa4a9f871ae3d6.js?meteor_js_resource=true",
-      "size": 821493,
-      "hash": "77ccf92a0c8c8728a958ff6058fa4a9f871ae3d6"
+      "url": "/b75b8e40e9e2d31daf5287021f6758e0bf9a1a12.js?meteor_js_resource=true",
+      "size": 823351,
+      "hash": "b75b8e40e9e2d31daf5287021f6758e0bf9a1a12"
     },
     {
-      "path": "77ccf92a0c8c8728a958ff6058fa4a9f871ae3d6.stats.json",
+      "path": "b75b8e40e9e2d31daf5287021f6758e0bf9a1a12.stats.json",
       "where": "client",
       "type": "json",
       "cacheable": true,
-      "url": "/77ccf92a0c8c8728a958ff6058fa4a9f871ae3d6.stats.json?meteor_js_resource=true",
-      "size": 27354,
-      "hash": "90d43982a3cf9281bf993f82367773e3b3ad40a3"
+      "url": "/b75b8e40e9e2d31daf5287021f6758e0bf9a1a12.stats.json?meteor_js_resource=true",
+      "size": 27108,
+      "hash": "c004c54f66d6faf78392a9c7b7e08ed3e00507d2"
     },
     {
       "path": "dynamic/imports/client/file/file.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/file.jade?hash=ad6abc8e6ec154ceace359f708cd7d5dd0a310b4",
-      "size": 52,
-      "hash": "ad6abc8e6ec154ceace359f708cd7d5dd0a310b4"
+      "url": "/dynamic/imports/client/file/file.jade?hash=2a398cdadc25795dad60ba5b9d25ef4eaf7d5ab0",
+      "size": 74,
+      "hash": "2a398cdadc25795dad60ba5b9d25ef4eaf7d5ab0"
     },
     {
       "path": "dynamic/imports/client/file/template.file.js",
@@ -42,9 +42,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/index/index.jade?hash=d41238c52932dd85843a24e0143f155b1a180600",
-      "size": 53,
-      "hash": "d41238c52932dd85843a24e0143f155b1a180600"
+      "url": "/dynamic/imports/client/index/index.jade?hash=f4f5ccd851965b68c518ec49e01655f2332683ee",
+      "size": 75,
+      "hash": "f4f5ccd851965b68c518ec49e01655f2332683ee"
     },
     {
       "path": "dynamic/imports/client/index/template.index.js",
@@ -60,9 +60,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/listing/listing-row.jade?hash=27c63f2465ca684a9d53348cc3fe37b0069068bb",
-      "size": 59,
-      "hash": "27c63f2465ca684a9d53348cc3fe37b0069068bb"
+      "url": "/dynamic/imports/client/listing/listing-row.jade?hash=20abca0bf3ffcf8d7bac9572c05da30687ee6e5a",
+      "size": 81,
+      "hash": "20abca0bf3ffcf8d7bac9572c05da30687ee6e5a"
     },
     {
       "path": "dynamic/imports/client/listing/template.listing-row.js",
@@ -78,9 +78,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/upload/upload-row.jade?hash=4827a3acc1bb418469ad681be5107bc5a3f6e058",
-      "size": 58,
-      "hash": "4827a3acc1bb418469ad681be5107bc5a3f6e058"
+      "url": "/dynamic/imports/client/upload/upload-row.jade?hash=f64964caf6a9a580031f7f1dde18a7292b31ce1b",
+      "size": 80,
+      "hash": "f64964caf6a9a580031f7f1dde18a7292b31ce1b"
     },
     {
       "path": "dynamic/imports/client/upload/template.upload-row.js",
@@ -96,9 +96,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/login.jade?hash=062d1ca9eb9dd38bbb1827a620a0f4b47cfa452d",
-      "size": 53,
-      "hash": "062d1ca9eb9dd38bbb1827a620a0f4b47cfa452d"
+      "url": "/dynamic/imports/client/user-account/login.jade?hash=5750d392609441c1b439aec08bae39039efb0984",
+      "size": 75,
+      "hash": "5750d392609441c1b439aec08bae39039efb0984"
     },
     {
       "path": "dynamic/imports/client/user-account/template.login.js",
@@ -114,9 +114,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/logout.jade?hash=4885a7c99af653acff322543ae1a2aa24579100c",
-      "size": 54,
-      "hash": "4885a7c99af653acff322543ae1a2aa24579100c"
+      "url": "/dynamic/imports/client/user-account/logout.jade?hash=23710872bf2d55dbc0773b7e22278ccc6df07bd5",
+      "size": 76,
+      "hash": "23710872bf2d55dbc0773b7e22278ccc6df07bd5"
     },
     {
       "path": "dynamic/imports/client/user-account/template.logout.js",

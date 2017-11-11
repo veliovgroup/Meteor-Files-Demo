@@ -62,12 +62,12 @@ exports.Promise.prototype.done = function (onFulfilled, onRejected) {
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// ../../.0.9.0.a4wtlf++os+web.browser+web.cordova/npm/node_modules/meteor-p //
+// ../../.0.10.0.9qeggj.1a1yj++os+web.browser+web.cordova/npm/node_modules/m //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
 exports.name = "meteor-promise";
-exports.version = "0.8.5";
+exports.version = "0.8.6";
 exports.main = "promise_server.js";
 
 ///////////////////////////////////////////////////////////////////////////////

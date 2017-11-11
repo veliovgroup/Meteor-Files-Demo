@@ -42,7 +42,4 @@ Facebook = Package['facebook-oauth'].Facebook;
 MeteorDeveloperAccounts = Package['meteor-developer-oauth'].MeteorDeveloperAccounts;
 Autoupdate = Package.autoupdate.Autoupdate;
 HTML = Package.htmljs.HTML;
-Symbol = Package['ecmascript-runtime-server'].Symbol;
-Map = Package['ecmascript-runtime-server'].Map;
-Set = Package['ecmascript-runtime-server'].Set;
 

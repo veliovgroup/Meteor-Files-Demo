@@ -12,12 +12,12 @@ var meteorBabelHelpers;
 
 var require = meteorInstall({"node_modules":{"meteor":{"babel-runtime":{"babel-runtime.js":function(require,exports){
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// packages/babel-runtime/babel-runtime.js                                    //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-                                                                              //
+/////////////////////////////////////////////////////////////////////////////////////
+//                                                                                 //
+// packages/babel-runtime/babel-runtime.js                                         //
+//                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////
+                                                                                   //
 exports.meteorBabelHelpers = require("meteor-babel-helpers");
 
 // Returns true if a given absolute identifier will be provided at runtime
@@ -30,6 +30,7 @@ exports.checkHelper = function checkHelper(id) {
 };
 
 try {
+  var babelRuntimeVersion = require("babel-runtime/package.json").version;
   var regeneratorRuntime = require("babel-runtime/regenerator");
 } catch (e) {
   throw new Error([
@@ -37,6 +38,18 @@ try {
     "directory. Please run the following command to install it:",
     "",
     "  meteor npm install --save babel-runtime",
+    ""
+  ].join("\n"));
+}
+
+if (parseInt(babelRuntimeVersion, 10) < 6) {
+  throw new Error([
+    "The version of babel-runtime installed in your node_modules directory ",
+    "(" + babelRuntimeVersion + ") is out of date. Please upgrade it by running ",
+    "",
+    "  meteor npm install --save babel-runtime",
+    "",
+    "in your application directory.",
     ""
   ].join("\n"));
 }
@@ -53,30 +66,30 @@ if (regeneratorRuntime &&
   };
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 },"node_modules":{"meteor-babel-helpers":{"package.json":function(require,exports){
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// ../../.1.0.1.169s5kq++os+web.browser+web.cordova/npm/node_modules/meteor-b //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-                                                                              //
+/////////////////////////////////////////////////////////////////////////////////////
+//                                                                                 //
+// ../../.1.1.1.1pxtfaq.65s6++os+web.browser+web.cordova/npm/node_modules/meteor-b //
+//                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////
+                                                                                   //
 exports.name = "meteor-babel-helpers";
 exports.version = "0.0.3";
 exports.main = "index.js";
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 },"index.js":function(require,exports,module){
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// node_modules/meteor/babel-runtime/node_modules/meteor-babel-helpers/index. //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-                                                                              //
+/////////////////////////////////////////////////////////////////////////////////////
+//                                                                                 //
+// node_modules/meteor/babel-runtime/node_modules/meteor-babel-helpers/index.js    //
+//                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////
+                                                                                   //
 function canDefineNonEnumerableProperties() {
   var testObj = {};
   var testPropName = "t";
@@ -131,7 +144,7 @@ meteorBabelHelpers = module.exports = {
   _sanitizeForInObjectHard: sanitizeHard
 };
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 }}}}}}},{
   "extensions": [

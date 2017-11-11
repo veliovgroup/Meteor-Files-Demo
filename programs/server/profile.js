@@ -437,8 +437,8 @@ var leafTotals = function (leafName) {
   });
 
   return {
-    time: time,
-    count: count
+    time,
+    count
   };
 };
 
@@ -465,7 +465,7 @@ var reportHotLeaves = function () {
       return;
     }
 
-    print(leftRightDots(total.name, formatMs(total.time), 65) + (" (" + total.count + ")"));
+    print(leftRightDots(total.name, formatMs(total.time), 65) + ` (${total.count})`);
   });
 };
 
@@ -501,7 +501,7 @@ var report = function () {
   print('');
   reportHotLeaves();
   print('');
-  print("(#" + reportNum + ") Total: " + formatMs(getTopLevelTotal()) + (" (" + runningName + ")"));
+  print(`(#${reportNum}) Total: ${formatMs(getTopLevelTotal())}` + ` (${runningName})`);
   print('');
 };
 
@@ -515,7 +515,7 @@ var run = function (bucketName, f) {
     return time(bucketName, f);
   } else {
     runningName = bucketName;
-    print("(#" + reportNum + ") Profiling: " + runningName);
+    print(`(#${reportNum}) Profiling: ${runningName}`);
     start();
 
     try {

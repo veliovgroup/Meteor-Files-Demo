@@ -4,9 +4,6 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
-var Symbol = Package['ecmascript-runtime-server'].Symbol;
-var Map = Package['ecmascript-runtime-server'].Map;
-var Set = Package['ecmascript-runtime-server'].Set;
 
 /* Package-scope variables */
 var Babel, BabelCompiler;
@@ -159,6 +156,12 @@ BCp.processOneFileForTarget = function (inputFile, source) {
 
     var extraFeatures = Object.assign({}, this.extraFeatures);
 
+    if (inputFile.getArch().startsWith("os.")) {
+      // Start with a much simpler set of Babel presets and plugins if
+      // we're compiling for Node 8.
+      extraFeatures.nodeMajorVersion = parseInt(process.versions.node);
+    }
+
     if (! extraFeatures.hasOwnProperty("jscript")) {
       // Perform some additional transformations to improve compatibility
       // in older browsers (e.g. wrapping named function expressions, per
@@ -247,8 +250,16 @@ BCp._inferFromBabelRc = function (inputFile, babelOptions, cacheDeps) {
   var babelrcPath = inputFile.findControlFile(".babelrc");
   if (babelrcPath) {
     if (! hasOwn.call(this._babelrcCache, babelrcPath)) {
-      this._babelrcCache[babelrcPath] =
-        JSON.parse(inputFile.readAndWatchFile(babelrcPath));
+      try {
+        this._babelrcCache[babelrcPath] =
+          JSON.parse(inputFile.readAndWatchFile(babelrcPath));
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          e.message = ".babelrc is not a valid JSON file: " + e.message;
+        }
+
+        throw e;
+      }
     }
 
     return this._inferHelper(

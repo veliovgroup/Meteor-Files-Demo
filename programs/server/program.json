@@ -29,10 +29,6 @@
       "path": "packages/ecmascript-runtime.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/promise/node_modules",
-      "path": "packages/promise.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
       "path": "packages/ecmascript-runtime-server.js"
     },
@@ -49,6 +45,10 @@
     },
     {
       "path": "packages/base64.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "path": "packages/promise.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
