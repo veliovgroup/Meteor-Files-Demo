@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package.templating = {};
+Package._define("templating");
 
 })();

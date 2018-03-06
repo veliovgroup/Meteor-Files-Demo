@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['ostrio:templatehelpers'] = {};
+Package._define("ostrio:templatehelpers");
 
 })();

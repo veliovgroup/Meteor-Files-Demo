@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['fourseven:scss'] = {};
+Package._define("fourseven:scss");
 
 })();

@@ -57,8 +57,10 @@ makeInstaller = function (options) {
     // might make sense to support the object version, a la browserify.
     (options.browser ? ["browser", "main"] : ["main"]);
 
-  // Called below as hasOwn.call(obj, key).
   var hasOwn = {}.hasOwnProperty;
+  function strictHasOwn(obj, key) {
+    return isObject(obj) && isString(key) && hasOwn.call(obj, key);
+  }
 
   // Cache for looking up File objects given absolute module identifiers.
   // Invariants:
@@ -111,16 +113,18 @@ makeInstaller = function (options) {
     return this.require.resolve(id);
   };
 
-  var resolvedPromise;
+  // Used to keep module.prefetch promise resolutions well-ordered.
   var lastPrefetchPromise;
+
+  // May be shared by multiple sequential calls to module.prefetch.
+  // Initialized to {} only when necessary.
+  var missing;
 
   Module.prototype.prefetch = function (id) {
     var module = this;
     var parentFile = getOwn(filesByModuleId, module.id);
-    var missing; // Initialized to {} only if necessary.
 
-    resolvedPromise = resolvedPromise || Promise.resolve();
-    lastPrefetchPromise = lastPrefetchPromise || resolvedPromise;
+    lastPrefetchPromise = lastPrefetchPromise || Promise.resolve();
     var previousPromise = lastPrefetchPromise;
 
     function walk(module) {
@@ -169,9 +173,15 @@ makeInstaller = function (options) {
       }
     }
 
-    return lastPrefetchPromise = resolvedPromise.then(function () {
+    return lastPrefetchPromise = new Promise(function (resolve) {
       var absChildId = module.resolve(id);
       each(module.childrenById, walk);
+      resolve(absChildId);
+
+    }).then(function (absChildId) {
+      // Grab the current missing object and fetch its contents.
+      var toBeFetched = missing;
+      missing = null;
 
       return Promise.resolve(
         // The install.fetch function takes an object mapping missing
@@ -179,11 +189,11 @@ makeInstaller = function (options) {
         // return a Promise that resolves to a module tree that can be
         // installed. As an optimization, if there were no missing dynamic
         // modules, then we can skip calling install.fetch entirely.
-        missing && install.fetch(missing)
+        toBeFetched && install.fetch(toBeFetched)
 
       ).then(function (tree) {
         function both() {
-          if (tree) install(tree);
+          install(tree);
           return absChildId;
         }
 
@@ -202,11 +212,11 @@ makeInstaller = function (options) {
   install.Module = Module;
 
   function getOwn(obj, key) {
-    return hasOwn.call(obj, key) && obj[key];
+    return strictHasOwn(obj, key) && obj[key];
   }
 
   function isObject(value) {
-    return typeof value === "object" && value !== null;
+    return value !== null && typeof value === "object";
   }
 
   function isFunction(value) {
@@ -301,7 +311,7 @@ makeInstaller = function (options) {
 
   function fileEvaluate(file, parentModule) {
     var module = file.module;
-    if (! hasOwn.call(module, "exports")) {
+    if (! strictHasOwn(module, "exports")) {
       var contents = file.contents;
       if (! contents) {
         // If this file was installed with array notation, and the array
@@ -516,17 +526,17 @@ makeInstaller = function (options) {
             mainFields.some(function (name) {
               return isString(main = pkg[name]);
             })) {
-          recordChild(parentModule, pkgJsonFile);
-
           // The "main" field of package.json does not have to begin with
           // ./ to be considered relative, so first we try simply
           // appending it to the directory path before falling back to a
           // full fileResolve, which might return a package from a
           // node_modules directory.
-          file = fileAppendId(file, main, extensions) ||
+          var mainFile = fileAppendId(file, main, extensions) ||
             fileResolve(file, main, parentModule, seenDirFiles);
 
-          if (file) {
+          if (mainFile) {
+            file = mainFile;
+            recordChild(parentModule, pkgJsonFile);
             // The fileAppendId call above may have returned a directory,
             // so continue the loop to make sure we resolve it to a
             // non-directory file.
@@ -695,11 +705,7 @@ Module.prototype.useNode = function () {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['modules-runtime'] = {}, {
+Package._define("modules-runtime", {
   meteorInstall: meteorInstall
 });
 

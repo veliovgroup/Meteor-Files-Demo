@@ -359,11 +359,7 @@ _.extend(MinMaxHeap.prototype, {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['binary-heap'] = {}, {
+Package._define("binary-heap", {
   MaxHeap: MaxHeap,
   MinHeap: MinHeap,
   MinMaxHeap: MinMaxHeap

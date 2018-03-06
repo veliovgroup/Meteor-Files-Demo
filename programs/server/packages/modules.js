@@ -62,38 +62,45 @@ function install(name, mainModule) {
 install("meteor");
 install("modules-runtime");
 install("modules", "meteor/modules/server.js");
-install("es5-shim", "meteor/es5-shim/server.js");
-install("meteor-base");
-install("npm-mongo");
 install("ecmascript-runtime");
 install("ecmascript-runtime-server", "meteor/ecmascript-runtime-server/runtime.js");
 install("babel-compiler");
 install("ecmascript");
 install("underscore");
-install("base64");
-install("promise", "meteor/promise/server.js");
 install("babel-runtime", "meteor/babel-runtime/babel-runtime.js");
+install("promise", "meteor/promise/server.js");
+install("url", "meteor/url/url_server.js");
+install("http", "meteor/http/httpcall_server.js");
+install("dynamic-import", "meteor/dynamic-import/server.js");
+install("base64", "meteor/base64/base64.js");
 install("ejson", "meteor/ejson/ejson.js");
-install("diff-sequence");
-install("geojson-utils", "meteor/geojson-utils/main.js");
-install("id-map");
-install("random");
-install("mongo-id");
-install("ordered-dict");
-install("tracker");
-install("minimongo", "meteor/minimongo/minimongo_server.js");
-install("check", "meteor/check/match.js");
-install("retry");
-install("callback-hook");
-install("ddp-common");
-install("ddp-client", "meteor/ddp-client/namespace.js");
-install("rate-limit");
-install("ddp-rate-limiter");
 install("logging");
 install("routepolicy");
 install("boilerplate-generator", "meteor/boilerplate-generator/generator.js");
 install("webapp-hashing");
 install("webapp", "meteor/webapp/webapp_server.js");
+install("server-render", "meteor/server-render/server.js");
+install("shim-common", "meteor/shim-common/server.js");
+install("es5-shim", "meteor/es5-shim/server.js");
+install("meteor-base");
+install("npm-mongo");
+install("diff-sequence", "meteor/diff-sequence/diff.js");
+install("geojson-utils", "meteor/geojson-utils/main.js");
+install("id-map", "meteor/id-map/id-map.js");
+install("random");
+install("mongo-id");
+install("ordered-dict", "meteor/ordered-dict/ordered_dict.js");
+install("tracker");
+install("minimongo", "meteor/minimongo/minimongo_server.js");
+install("check", "meteor/check/match.js");
+install("retry", "meteor/retry/retry.js");
+install("callback-hook", "meteor/callback-hook/hook.js");
+install("ddp-common");
+install("reload");
+install("socket-stream-client", "meteor/socket-stream-client/node.js");
+install("ddp-client", "meteor/ddp-client/server/server.js");
+install("rate-limit", "meteor/rate-limit/rate-limit.js");
+install("ddp-rate-limiter");
 install("audit-argument-checks");
 install("ddp-server");
 install("ddp");
@@ -102,16 +109,11 @@ install("binary-heap");
 install("mongo");
 install("blaze-html-templates");
 install("jquery");
-install("reload");
 install("seba:minifiers-autoprefixer");
 install("standard-minifier-js");
-install("dynamic-import", "meteor/dynamic-import/server.js");
 install("reactive-var");
 install("mrt:filesize");
 install("markdown");
-install("url");
-install("http");
-install("fortawesome:fontawesome");
 install("simple:highlight.js");
 install("observe-sequence");
 install("deps");
@@ -343,14 +345,15 @@ function runSetters(valueToPassThrough) {
 
 // Returns a function that takes a namespace object and copies the
 // properties of the namespace to module.exports, excluding any "default"
-// property, which is useful for implementing `export * from "module"`.
-function moduleMakeNsSetter() {
+// property (by default, unless includeDefault is truthy), which is useful
+// for implementing `export * from "module"`.
+function moduleMakeNsSetter(includeDefault) {
   var module = this;
   // Discussion of why the "default" property is skipped:
   // https://github.com/tc39/ecma262/issues/948
   return function (namespace) {
     Object.keys(namespace).forEach(function (key) {
-      if (key !== "default") {
+      if (includeDefault || key !== "default") {
         utils.copyKey(key, module.exports, namespace);
       }
     });
@@ -368,7 +371,7 @@ function moduleMakeNsSetter() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "fs-extra";
-exports.version = "4.0.2";
+exports.version = "5.0.0";
 exports.main = "./lib/index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4528,7 +4531,7 @@ exports.main = "lib/dropbox.js";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "gm";
-exports.version = "1.23.0";
+exports.version = "1.23.1";
 exports.main = "./index";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4673,176 +4676,108 @@ module.exports.version = require('./package.json').version;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}},"babel-runtime":{"package.json":function(require,exports,module){
+}},"@babel":{"runtime":{"package.json":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
-// node_modules/babel-runtime/package.json                                                                            //
+// node_modules/@babel/runtime/package.json                                                                           //
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 module.exports = {
-  "_args": [
-    [
-      {
-        "raw": "babel-runtime@6.26.0",
-        "scope": null,
-        "escapedName": "babel-runtime",
-        "name": "babel-runtime",
-        "rawSpec": "6.26.0",
-        "spec": "6.26.0",
-        "type": "version"
-      },
-      "/Users/drdimitru/Sites/meteor-files-demo/demo"
-    ]
-  ],
-  "_from": "babel-runtime@6.26.0",
-  "_id": "babel-runtime@6.26.0",
-  "_inCache": true,
-  "_location": "/babel-runtime",
-  "_nodeVersion": "6.9.0",
-  "_npmOperationalInternal": {
-    "host": "s3://npm-registry-packages",
-    "tmp": "tmp/babel-runtime-6.26.0.tgz_1502898849886_0.663184720557183"
-  },
-  "_npmUser": {
-    "name": "hzoo",
-    "email": "hi@henryzoo.com"
-  },
-  "_npmVersion": "4.6.1",
+  "_from": "@babel/runtime@7.0.0-beta.40",
+  "_id": "@babel/runtime@7.0.0-beta.40",
+  "_inBundle": false,
+  "_integrity": "sha512-vIM68NUCWauZJTFoVUG1lggva1I8FLB9zFKwWG7Xjin4FkHpEKJv2y4x1DGVPVt93S5/zHSBj1bXYEuxOkFGzg==",
+  "_location": "/@babel/runtime",
   "_phantomChildren": {},
   "_requested": {
-    "raw": "babel-runtime@6.26.0",
-    "scope": null,
-    "escapedName": "babel-runtime",
-    "name": "babel-runtime",
-    "rawSpec": "6.26.0",
-    "spec": "6.26.0",
-    "type": "version"
+    "type": "version",
+    "registry": true,
+    "raw": "@babel/runtime@7.0.0-beta.40",
+    "name": "@babel/runtime",
+    "escapedName": "@babel%2fruntime",
+    "scope": "@babel",
+    "rawSpec": "7.0.0-beta.40",
+    "saveSpec": null,
+    "fetchSpec": "7.0.0-beta.40"
   },
   "_requiredBy": [
     "#USER",
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.26.0.tgz",
-  "_shasum": "965c7058668e82b55d7bfe04ff2337bc8b5647fe",
-  "_shrinkwrap": null,
-  "_spec": "babel-runtime@6.26.0",
+  "_resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.0.0-beta.40.tgz",
+  "_shasum": "8e3b8f1d2d8639d010e991a7e99c1d9ef578f886",
+  "_spec": "@babel/runtime@7.0.0-beta.40",
   "_where": "/Users/drdimitru/Sites/meteor-files-demo/demo",
   "author": {
     "name": "Sebastian McKenzie",
     "email": "sebmck@gmail.com"
   },
+  "bundleDependencies": false,
   "dependencies": {
-    "core-js": "^2.4.0",
-    "regenerator-runtime": "^0.11.0"
+    "core-js": "^2.5.3",
+    "regenerator-runtime": "^0.11.1"
   },
+  "deprecated": false,
   "description": "babel selfContained runtime",
   "devDependencies": {
-    "babel-helpers": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.23.0"
-  },
-  "directories": {},
-  "dist": {
-    "shasum": "965c7058668e82b55d7bfe04ff2337bc8b5647fe",
-    "tarball": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.26.0.tgz"
+    "@babel/core": "7.0.0-beta.40",
+    "@babel/helpers": "7.0.0-beta.40",
+    "@babel/plugin-transform-runtime": "7.0.0-beta.40",
+    "@babel/preset-env": "7.0.0-beta.40",
+    "@babel/types": "7.0.0-beta.40"
   },
   "license": "MIT",
-  "maintainers": [
-    {
-      "name": "thejameskyle",
-      "email": "me@thejameskyle.com"
-    },
-    {
-      "name": "sebmck",
-      "email": "sebmck@gmail.com"
-    },
-    {
-      "name": "danez",
-      "email": "daniel@tschinder.de"
-    },
-    {
-      "name": "hzoo",
-      "email": "hi@henryzoo.com"
-    },
-    {
-      "name": "loganfsmyth",
-      "email": "loganfsmyth@gmail.com"
-    }
-  ],
-  "name": "babel-runtime",
-  "optionalDependencies": {},
-  "readme": "# babel-runtime\n\n",
-  "readmeFilename": "README.md",
+  "name": "@babel/runtime",
   "repository": {
     "type": "git",
     "url": "https://github.com/babel/babel/tree/master/packages/babel-runtime"
   },
-  "scripts": {},
-  "version": "6.26.0"
+  "version": "7.0.0-beta.40"
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"regenerator":{"index.js":function(require,exports,module){
+},"helpers":{"builtin":{"extends.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
-// node_modules/babel-runtime/regenerator/index.js                                                                    //
-//                                                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                      //
-module.exports = require("regenerator-runtime");
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-}},"helpers":{"extends.js":function(require,exports){
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                    //
-// node_modules/babel-runtime/helpers/extends.js                                                                      //
+// node_modules/@babel/runtime/helpers/builtin/extends.js                                                             //
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
-"use strict";
+function _extends() {
+  module.exports = _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
 
-exports.__esModule = true;
-
-var _assign = require("../core-js/object/assign");
-
-var _assign2 = _interopRequireDefault(_assign);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _assign2.default || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
       }
     }
-  }
 
-  return target;
-};
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+module.exports = _extends;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}},{
+}}}}}}},{
   "extensions": [
     ".js",
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/modules/server.js");
+var exports = require("/node_modules/meteor/modules/server.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.modules = exports, {
+Package._define("modules", exports, {
   meteorInstall: meteorInstall
 });
 

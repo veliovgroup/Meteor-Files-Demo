@@ -314,7 +314,7 @@ Log.objFromText = function (line, override) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                     //
-// ../../.1.1.19.1bajlw++os+web.browser+web.cordova/npm/node_modules/cli-color/package //
+// node_modules/meteor/logging/node_modules/cli-color/package.json                     //
 //                                                                                     //
 /////////////////////////////////////////////////////////////////////////////////////////
                                                                                        //
@@ -476,14 +476,10 @@ module.exports = defineProperties(getFn(), {
     ".json"
   ]
 });
-require("./node_modules/meteor/logging/logging.js");
+require("/node_modules/meteor/logging/logging.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.logging = {}, {
+Package._define("logging", {
   Log: Log
 });
 

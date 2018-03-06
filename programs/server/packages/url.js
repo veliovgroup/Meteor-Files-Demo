@@ -4,24 +4,48 @@
 var Meteor = Package.meteor.Meteor;
 var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
-var _ = Package.underscore._;
+var meteorInstall = Package.modules.meteorInstall;
 
 /* Package-scope variables */
-var URL, buildUrl;
+var URL;
 
-(function(){
+var require = meteorInstall({"node_modules":{"meteor":{"url":{"url_server.js":function(require,exports){
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// packages/url/url_common.js                                             //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-                                                                          //
-URL = {};
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+// packages/url/url_server.js                                                  //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
+                                                                               //
+var url_util = require('url');
+var common = require("./url_common.js");
+var URL = exports.URL = common.URL;
 
-var encodeString = function (str) {
-  return encodeURIComponent(str).replace(/\*/g, '%2A');
+URL._constructUrl = function (url, query, params) {
+  var url_parts = url_util.parse(url);
+  return common.buildUrl(
+    url_parts.protocol + "//" + url_parts.host + url_parts.pathname,
+    url_parts.search,
+    query,
+    params
+  );
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+
+},"url_common.js":function(require,exports){
+
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+// packages/url/url_common.js                                                  //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
+                                                                               //
+var URL = exports.URL = {};
+
+function encodeString(str) {
+  return encodeURIComponent(str).replace(/\*/g, '%2A');
+}
 
 // Encode URL paramaters into a query string, handling nested objects and
 // arrays properly.
@@ -44,7 +68,7 @@ URL._encodeParams = function (params, prefix) {
   return str.join('&').replace(/%20/g, '+');
 };
 
-buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
+exports.buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
   var url_without_query = before_qmark;
   var query = from_qmark ? from_qmark.slice(1) : null;
 
@@ -66,43 +90,18 @@ buildUrl = function(before_qmark, from_qmark, opt_query, opt_params) {
   return url;
 };
 
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
-}).call(this);
-
-
-
-
-
-
-(function(){
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// packages/url/url_server.js                                             //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-                                                                          //
-var url_util = Npm.require('url');
-
-URL._constructUrl = function (url, query, params) {
-  var url_parts = url_util.parse(url);
-  return buildUrl(
-    url_parts.protocol + "//" + url_parts.host + url_parts.pathname,
-    url_parts.search, query, params);
-};
-
-////////////////////////////////////////////////////////////////////////////
-
-}).call(this);
-
+}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
+var exports = require("/node_modules/meteor/url/url_server.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.url = {}, {
+Package._define("url", exports, {
   URL: URL
 });
 

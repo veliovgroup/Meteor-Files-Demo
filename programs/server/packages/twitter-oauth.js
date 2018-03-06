@@ -97,11 +97,7 @@ Twitter.retrieveCredential = function(credentialToken, credentialSecret) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['twitter-oauth'] = {}, {
+Package._define("twitter-oauth", {
   Twitter: Twitter
 });
 

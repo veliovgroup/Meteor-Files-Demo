@@ -140,7 +140,6 @@ Accounts.registerLoginHandler(function (options) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['accounts-oauth'] = {};
+Package._define("accounts-oauth");
 
 })();

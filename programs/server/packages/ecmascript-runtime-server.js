@@ -88,10 +88,9 @@ $export($export.P, 'String', {
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/ecmascript-runtime-server/runtime.js");
+var exports = require("/node_modules/meteor/ecmascript-runtime-server/runtime.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['ecmascript-runtime-server'] = exports;
+Package._define("ecmascript-runtime-server", exports);
 
 })();

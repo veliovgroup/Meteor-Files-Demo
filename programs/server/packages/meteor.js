@@ -935,8 +935,10 @@ Meteor.startup = function startup(callback) {
       .replace(/^Error: /, ""); // Not really an Error per se.
   }
 
-  if (__meteor_bootstrap__.startupHooks) {
-    __meteor_bootstrap__.startupHooks.push(callback);
+  var bootstrap = global.__meteor_bootstrap__;
+  if (bootstrap &&
+      bootstrap.startupHooks) {
+    bootstrap.startupHooks.push(callback);
   } else {
     // We already started up. Just call it now.
     callback();
@@ -1181,12 +1183,10 @@ EVp.withValue = function (value, func) {
   var saved = currentValues[this.slot];
   try {
     currentValues[this.slot] = value;
-    var ret = func();
+    return Promise.await(func());
   } finally {
     currentValues[this.slot] = saved;
   }
-
-  return ret;
 };
 
 // Meteor application code is always supposed to be run inside a
@@ -1276,7 +1276,7 @@ if (process.env.ROOT_URL &&
   if (__meteor_runtime_config__.ROOT_URL) {
     var parsedUrl = Npm.require('url').parse(__meteor_runtime_config__.ROOT_URL);
     // Sometimes users try to pass, eg, ROOT_URL=mydomain.com.
-    if (!parsedUrl.host) {
+    if (!parsedUrl.host || ['http:', 'https:'].indexOf(parsedUrl.protocol) === -1) {
       throw Error("$ROOT_URL, if specified, must be an URL");
     }
     var pathPrefix = parsedUrl.pathname;
@@ -1429,11 +1429,7 @@ if (process.platform === "win32") {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.meteor = {}, {
+Package._define("meteor", {
   Meteor: Meteor,
   global: global,
   meteorEnv: meteorEnv

@@ -356,14 +356,10 @@ class ReactiveDict {
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/reactive-dict/migration.js");
+var exports = require("/node_modules/meteor/reactive-dict/migration.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['reactive-dict'] = exports, {
+Package._define("reactive-dict", exports, {
   ReactiveDict: ReactiveDict
 });
 

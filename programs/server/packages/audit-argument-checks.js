@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['audit-argument-checks'] = {};
+Package._define("audit-argument-checks");
 
 })();

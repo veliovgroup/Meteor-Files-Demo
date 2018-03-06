@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['blaze-html-templates'] = {};
+Package._define("blaze-html-templates");
 
 })();

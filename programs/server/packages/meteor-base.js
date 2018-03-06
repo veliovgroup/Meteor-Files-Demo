@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['meteor-base'] = {};
+Package._define("meteor-base");
 
 })();

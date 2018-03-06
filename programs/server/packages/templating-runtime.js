@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['templating-runtime'] = {};
+Package._define("templating-runtime");
 
 })();

@@ -85,7 +85,6 @@ if (! Meteor._localStorage) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package.localstorage = {};
+Package._define("localstorage");
 
 })();

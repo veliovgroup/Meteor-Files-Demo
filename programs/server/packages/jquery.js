@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package.jquery = {};
+Package._define("jquery");
 
 })();

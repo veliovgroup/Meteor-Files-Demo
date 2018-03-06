@@ -49,7 +49,6 @@ OAuth._requestHandlers['2'] = function (service, query, res) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package.oauth2 = {};
+Package._define("oauth2");
 
 })();

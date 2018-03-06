@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['standard-minifier-js'] = {};
+Package._define("standard-minifier-js");
 
 })();

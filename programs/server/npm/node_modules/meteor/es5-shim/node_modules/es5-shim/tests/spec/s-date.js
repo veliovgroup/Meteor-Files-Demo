@@ -132,8 +132,8 @@ describe('Date', function () {
             expect(+new Date('2011-03-01T12:00:00.000Z')).toBe(1298980800000); //    1298980800000 1298980800000 1298980800000 1298980800000 1298980800000
 
             // https://github.com/es-shims/es5-shim/issues/80 Safari bug with leap day
-            expect(new Date('2034-03-01T00:00:00.000Z') -
-                new Date('2034-02-27T23:59:59.999Z')).toBe(86400001); //          86400001      86400001      86400001      86400001             1
+            expect(new Date('2034-03-01T00:00:00.000Z')
+                - new Date('2034-02-27T23:59:59.999Z')).toBe(86400001); //           86400001      86400001      86400001      86400001             1
 
         });
 
@@ -221,8 +221,8 @@ describe('Date', function () {
             }
 
             // https://github.com/es-shims/es5-shim/issues/80 Safari bug with leap day
-            expect(Date.parse('2034-03-01T00:00:00.000Z') -
-                Date.parse('2034-02-27T23:59:59.999Z')).toBe(86400001); //         86400001      86400001      86400001      86400001             1
+            expect(Date.parse('2034-03-01T00:00:00.000Z')
+                - Date.parse('2034-02-27T23:59:59.999Z')).toBe(86400001); //       86400001      86400001      86400001      86400001             1
 
         });
 
@@ -457,7 +457,7 @@ describe('Date', function () {
                 item.dates.forEach(function (date) {
                     var off = date.getTimezoneOffset();
                     var offHours = Math.floor(off / 60);
-                    var offMins = off - offHours * 60;
+                    var offMins = off - (offHours * 60);
                     expect(date.getMinutes() + offMins).toBe(59);
                 });
             });
@@ -521,7 +521,7 @@ describe('Date', function () {
     describe('#toString()', function () {
         it('should return correct dates', function () {
             var actual = new Date(1449662400000).toString();
-            var re = /^Wed Dec 09 2015 \d\d:\d\d:\d\d GMT[-\+]\d\d\d\d(?: |$)/;
+            var re = /^Wed Dec 09 2015 \d\d:\d\d:\d\d GMT[-+]\d\d\d\d(?: |$)/;
             expect(re.test(actual)).toBe(true, actual);
         });
     });

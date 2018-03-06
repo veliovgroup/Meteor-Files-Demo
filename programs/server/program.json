@@ -15,17 +15,6 @@
       "path": "packages/modules.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
-      "path": "packages/es5-shim.js"
-    },
-    {
-      "path": "packages/meteor-base.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
-      "path": "packages/npm-mongo.js"
-    },
-    {
       "path": "packages/ecmascript-runtime.js"
     },
     {
@@ -44,68 +33,30 @@
       "path": "packages/underscore.js"
     },
     {
-      "path": "packages/base64.js"
+      "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
+      "path": "packages/babel-runtime.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/promise/node_modules",
       "path": "packages/promise.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
-      "path": "packages/babel-runtime.js"
+      "path": "packages/url.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/http/node_modules",
+      "path": "packages/http.js"
+    },
+    {
+      "path": "packages/dynamic-import.js"
+    },
+    {
+      "sourceMap": "packages/base64.js.map",
+      "path": "packages/base64.js"
     },
     {
       "sourceMap": "packages/ejson.js.map",
       "path": "packages/ejson.js"
-    },
-    {
-      "path": "packages/diff-sequence.js"
-    },
-    {
-      "path": "packages/geojson-utils.js"
-    },
-    {
-      "path": "packages/id-map.js"
-    },
-    {
-      "sourceMap": "packages/random.js.map",
-      "path": "packages/random.js"
-    },
-    {
-      "path": "packages/mongo-id.js"
-    },
-    {
-      "path": "packages/ordered-dict.js"
-    },
-    {
-      "path": "packages/tracker.js"
-    },
-    {
-      "sourceMap": "packages/minimongo.js.map",
-      "path": "packages/minimongo.js"
-    },
-    {
-      "path": "packages/check.js"
-    },
-    {
-      "path": "packages/retry.js"
-    },
-    {
-      "path": "packages/callback-hook.js"
-    },
-    {
-      "path": "packages/ddp-common.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
-      "sourceMap": "packages/ddp-client.js.map",
-      "path": "packages/ddp-client.js"
-    },
-    {
-      "path": "packages/rate-limit.js"
-    },
-    {
-      "path": "packages/ddp-rate-limiter.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
@@ -115,6 +66,7 @@
       "path": "packages/routepolicy.js"
     },
     {
+      "node_modules": "npm/node_modules/meteor/boilerplate-generator/node_modules",
       "sourceMap": "packages/boilerplate-generator.js.map",
       "path": "packages/boilerplate-generator.js"
     },
@@ -126,6 +78,91 @@
       "node_modules": "npm/node_modules/meteor/webapp/node_modules",
       "sourceMap": "packages/webapp.js.map",
       "path": "packages/webapp.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/server-render/node_modules",
+      "sourceMap": "packages/server-render.js.map",
+      "path": "packages/server-render.js"
+    },
+    {
+      "sourceMap": "packages/shim-common.js.map",
+      "path": "packages/shim-common.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
+      "path": "packages/es5-shim.js"
+    },
+    {
+      "path": "packages/meteor-base.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
+      "path": "packages/npm-mongo.js"
+    },
+    {
+      "sourceMap": "packages/diff-sequence.js.map",
+      "path": "packages/diff-sequence.js"
+    },
+    {
+      "path": "packages/geojson-utils.js"
+    },
+    {
+      "sourceMap": "packages/id-map.js.map",
+      "path": "packages/id-map.js"
+    },
+    {
+      "sourceMap": "packages/random.js.map",
+      "path": "packages/random.js"
+    },
+    {
+      "path": "packages/mongo-id.js"
+    },
+    {
+      "sourceMap": "packages/ordered-dict.js.map",
+      "path": "packages/ordered-dict.js"
+    },
+    {
+      "path": "packages/tracker.js"
+    },
+    {
+      "sourceMap": "packages/minimongo.js.map",
+      "path": "packages/minimongo.js"
+    },
+    {
+      "sourceMap": "packages/check.js.map",
+      "path": "packages/check.js"
+    },
+    {
+      "sourceMap": "packages/retry.js.map",
+      "path": "packages/retry.js"
+    },
+    {
+      "sourceMap": "packages/callback-hook.js.map",
+      "path": "packages/callback-hook.js"
+    },
+    {
+      "sourceMap": "packages/ddp-common.js.map",
+      "path": "packages/ddp-common.js"
+    },
+    {
+      "path": "packages/reload.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/socket-stream-client/node_modules",
+      "sourceMap": "packages/socket-stream-client.js.map",
+      "path": "packages/socket-stream-client.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
+      "sourceMap": "packages/ddp-client.js.map",
+      "path": "packages/ddp-client.js"
+    },
+    {
+      "sourceMap": "packages/rate-limit.js.map",
+      "path": "packages/rate-limit.js"
+    },
+    {
+      "path": "packages/ddp-rate-limiter.js"
     },
     {
       "path": "packages/audit-argument-checks.js"
@@ -157,17 +194,10 @@
       "path": "packages/jquery.js"
     },
     {
-      "path": "packages/reload.js"
-    },
-    {
       "path": "packages/seba_minifiers-autoprefixer.js"
     },
     {
       "path": "packages/standard-minifier-js.js"
-    },
-    {
-      "sourceMap": "packages/dynamic-import.js.map",
-      "path": "packages/dynamic-import.js"
     },
     {
       "path": "packages/reactive-var.js"
@@ -177,18 +207,6 @@
     },
     {
       "path": "packages/markdown.js"
-    },
-    {
-      "path": "packages/url.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/http/node_modules",
-      "sourceMap": "packages/http.js.map",
-      "path": "packages/http.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/fortawesome_fontawesome/node_modules",
-      "path": "packages/fortawesome_fontawesome.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/simple_highlight.js/node_modules",
@@ -296,6 +314,7 @@
       "path": "packages/github-oauth.js"
     },
     {
+      "sourceMap": "packages/accounts-github.js.map",
       "path": "packages/accounts-github.js"
     },
     {
@@ -305,18 +324,21 @@
       "path": "packages/twitter-oauth.js"
     },
     {
+      "sourceMap": "packages/accounts-twitter.js.map",
       "path": "packages/accounts-twitter.js"
     },
     {
       "path": "packages/facebook-oauth.js"
     },
     {
+      "sourceMap": "packages/accounts-facebook.js.map",
       "path": "packages/accounts-facebook.js"
     },
     {
       "path": "packages/meteor-developer-oauth.js"
     },
     {
+      "sourceMap": "packages/accounts-meteor-developer.js.map",
       "path": "packages/accounts-meteor-developer.js"
     },
     {
@@ -329,11 +351,12 @@
       "path": "packages/ui.js"
     },
     {
+      "sourceMap": "packages/autoupdate.js.map",
       "path": "packages/autoupdate.js"
     },
     {
       "node_modules": "npm/node_modules",
-      "path": "packages/global-imports.js"
+      "path": "app/global-imports.js"
     },
     {
       "node_modules": "npm/node_modules",

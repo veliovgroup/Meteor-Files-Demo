@@ -7,11 +7,7 @@ var DDPServer = Package['ddp-server'].DDPServer;
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.ddp = {}, {
+Package._define("ddp", {
   DDP: DDP,
   DDPServer: DDPServer
 });

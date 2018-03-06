@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['ostrio:flow-router-meta'] = {};
+Package._define("ostrio:flow-router-meta");
 
 })();

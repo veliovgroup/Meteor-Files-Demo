@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package.reload = {};
+Package._define("reload");
 
 })();

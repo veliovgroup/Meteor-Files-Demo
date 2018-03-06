@@ -8,11 +8,7 @@ var Handlebars = Package.blaze.Handlebars;
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.ui = {}, {
+Package._define("ui", {
   Blaze: Blaze,
   UI: UI,
   Handlebars: Handlebars

@@ -152,11 +152,7 @@ RoutePolicy = new RoutePolicyConstructor();
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.routepolicy = {}, {
+Package._define("routepolicy", {
   RoutePolicy: RoutePolicy,
   RoutePolicyTest: RoutePolicyTest
 });

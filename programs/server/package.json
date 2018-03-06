@@ -1,6 +1,6 @@
 {
   "name": "meteor-dev-bundle",
-  "version": "0.0.0",
+  "private": true,
   "dependencies": {
     "meteor-promise": "0.8.6",
     "fibers": "2.0.0",

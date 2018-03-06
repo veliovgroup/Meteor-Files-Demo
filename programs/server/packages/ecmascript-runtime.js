@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['ecmascript-runtime'] = {};
+Package._define("ecmascript-runtime");
 
 })();

@@ -468,11 +468,7 @@ OAuth._retrieveRequestToken = function (key) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.oauth1 = {}, {
+Package._define("oauth1", {
   OAuth1Binding: OAuth1Binding,
   OAuth1Test: OAuth1Test
 });

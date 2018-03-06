@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['seba:minifiers-autoprefixer'] = {};
+Package._define("seba:minifiers-autoprefixer");
 
 })();

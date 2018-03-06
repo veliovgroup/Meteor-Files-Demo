@@ -155,11 +155,7 @@ MeteorDeveloperAccounts.retrieveCredential = function (credentialToken,
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['meteor-developer-oauth'] = {}, {
+Package._define("meteor-developer-oauth", {
   MeteorDeveloperAccounts: MeteorDeveloperAccounts
 });
 

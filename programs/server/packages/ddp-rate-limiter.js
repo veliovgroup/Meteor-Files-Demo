@@ -121,11 +121,7 @@ DDPRateLimiter._check = function (input) {
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['ddp-rate-limiter'] = {}, {
+Package._define("ddp-rate-limiter", {
   DDPRateLimiter: DDPRateLimiter
 });
 

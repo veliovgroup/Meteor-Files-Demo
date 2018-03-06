@@ -3,7 +3,6 @@
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-Package['ostrio:cstorage'] = {};
+Package._define("ostrio:cstorage");
 
 })();

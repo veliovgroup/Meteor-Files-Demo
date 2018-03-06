@@ -1,8 +1,7 @@
 {
   "name": "meteor-dev-bundle",
-  "version": "0.0.0",
-  "lockfileVersion": 1,
   "requires": true,
+  "lockfileVersion": 1,
   "dependencies": {
     "amdefine": {
       "version": "1.0.1",
@@ -157,7 +156,7 @@
     },
     "source-map-support": {
       "version": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",
-      "integrity": "sha1-lXlwHnhucx9w34T7EHqIxu469bQ=",
+      "integrity": "sha512-2A3Rox3Zq2hUrDE/Vi3LEa/zLCOMj8F1HlMttze0jZmmQLzJjosp1mVtUCMbOTKIurqVm5xOatncI+6KJrngCg==",
       "requires": {
         "source-map": "0.1.32"
       }

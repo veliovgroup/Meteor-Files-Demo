@@ -1334,11 +1334,7 @@ Markdown = mark;                                                                
 
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['perak:markdown'] = {}, {
+Package._define("perak:markdown", {
   Markdown: Markdown
 });
 

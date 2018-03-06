@@ -418,14 +418,10 @@ exports.GeoJSON = require("./geojson-utils.js");
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/geojson-utils/main.js");
+var exports = require("/node_modules/meteor/geojson-utils/main.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package['geojson-utils'] = exports, {
+Package._define("geojson-utils", exports, {
   GeoJSON: GeoJSON
 });
 

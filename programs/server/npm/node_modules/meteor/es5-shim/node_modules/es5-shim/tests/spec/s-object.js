@@ -140,7 +140,7 @@ describe('Object', function () {
 
         ifWindowIt('can serialize all objects on the `window`', function () {
             var windowItemKeys, exception;
-            var blacklistedKeys = ['window', 'console', 'parent', 'self', 'frame', 'frames', 'frameElement', 'external'];
+            var excludedKeys = ['window', 'console', 'parent', 'self', 'frame', 'frames', 'frameElement', 'external', 'height', 'width', 'top', 'localStorage'];
             if (supportsDescriptors) {
                 Object.defineProperty(window, 'thrower', {
                     configurable: true,
@@ -148,8 +148,9 @@ describe('Object', function () {
                 });
             }
             for (var k in window) {
-                windowItemKeys = exception = void 0;
-                if (blacklistedKeys.indexOf(k) === -1 && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+                exception = void 0;
+                windowItemKeys = exception;
+                if (excludedKeys.indexOf(k) === -1 && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
                     try {
                         windowItemKeys = Object.keys(window[k]);
                     } catch (e) {
@@ -228,9 +229,7 @@ describe('Object', function () {
         it('should not override the parent value', function () {
             var child = Object.create(obj, {});
 
-            Object.defineProperty(child, 'name', {
-                value: 'Other'
-            });
+            Object.defineProperty(child, 'name', { value: 'Other' });
 
             expect(obj.name).toBe('Testing');
             expect(child.name).toBe('Other');
@@ -339,11 +338,7 @@ describe('Object', function () {
     describe('.defineProperties()', function () {
         it('should define the constructor property', function () {
             var target = {};
-            var newProperties = {
-                constructor: {
-                    value: 'new constructor'
-                }
-            };
+            var newProperties = { constructor: { value: 'new constructor' } };
             Object.defineProperties(target, newProperties);
             expect(target.constructor).toBe('new constructor');
         });

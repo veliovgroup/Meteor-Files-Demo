@@ -35,14 +35,18 @@ require("meteor-promise").makeCompatible(
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
 var global = this;
+var hasOwn = Object.prototype.hasOwnProperty;
 
 if (typeof global.Promise === "function") {
   exports.Promise = global.Promise;
 } else {
-  exports.Promise = require("promise/lib/es6-extensions");
+  exports.Promise = global.Promise =
+    require("promise/lib/es6-extensions");
 }
 
-exports.Promise.prototype.done = function (onFulfilled, onRejected) {
+var proto = exports.Promise.prototype;
+
+proto.done = function (onFulfilled, onRejected) {
   var self = this;
 
   if (arguments.length > 0) {
@@ -56,13 +60,38 @@ exports.Promise.prototype.done = function (onFulfilled, onRejected) {
   });
 };
 
+if (! hasOwn.call(proto, "finally")) {
+  proto["finally"] = function (onFinally) {
+    var threw = false, result;
+    return this.then(function (value) {
+      result = value;
+      // Most implementations of Promise.prototype.finally call
+      // Promise.resolve(onFinally()) (or this.constructor.resolve or even
+      // this.constructor[Symbol.species].resolve, depending on how spec
+      // compliant they're trying to be), but this implementation simply
+      // relies on the standard Promise behavior of resolving any value
+      // returned from a .then callback function.
+      return onFinally();
+    }, function (error) {
+      // Make the final .then callback (below) re-throw the error instead
+      // of returning it.
+      threw = true;
+      result = error;
+      return onFinally();
+    }).then(function () {
+      if (threw) throw result;
+      return result;
+    });
+  };
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 },"node_modules":{"meteor-promise":{"package.json":function(require,exports){
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// ../../.0.10.0.9qeggj.1a1yj++os+web.browser+web.cordova/npm/node_modules/m //
+// node_modules/meteor/promise/node_modules/meteor-promise/package.json      //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
                                                                              //
@@ -428,14 +457,10 @@ Promise.prototype['catch'] = function (onRejected) {
     ".json"
   ]
 });
-var exports = require("./node_modules/meteor/promise/server.js");
+var exports = require("/node_modules/meteor/promise/server.js");
 
 /* Exports */
-if (typeof Package === 'undefined') Package = {};
-(function (pkg, symbols) {
-  for (var s in symbols)
-    (s in pkg) || (pkg[s] = symbols[s]);
-})(Package.promise = exports, {
+Package._define("promise", exports, {
   Promise: Promise
 });
 
