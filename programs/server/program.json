@@ -30,9 +30,6 @@
       "path": "packages/ecmascript.js"
     },
     {
-      "path": "packages/underscore.js"
-    },
-    {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
       "path": "packages/babel-runtime.js"
     },
@@ -59,10 +56,18 @@
       "path": "packages/ejson.js"
     },
     {
+      "path": "packages/ecmascript-runtime-client.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
+      "sourceMap": "packages/logging.js.map",
       "path": "packages/logging.js"
     },
     {
+      "path": "packages/underscore.js"
+    },
+    {
+      "sourceMap": "packages/routepolicy.js.map",
       "path": "packages/routepolicy.js"
     },
     {
@@ -115,6 +120,7 @@
       "path": "packages/random.js"
     },
     {
+      "sourceMap": "packages/mongo-id.js.map",
       "path": "packages/mongo-id.js"
     },
     {

@@ -66,7 +66,6 @@ install("ecmascript-runtime");
 install("ecmascript-runtime-server", "meteor/ecmascript-runtime-server/runtime.js");
 install("babel-compiler");
 install("ecmascript");
-install("underscore");
 install("babel-runtime", "meteor/babel-runtime/babel-runtime.js");
 install("promise", "meteor/promise/server.js");
 install("url", "meteor/url/url_server.js");
@@ -74,8 +73,10 @@ install("http", "meteor/http/httpcall_server.js");
 install("dynamic-import", "meteor/dynamic-import/server.js");
 install("base64", "meteor/base64/base64.js");
 install("ejson", "meteor/ejson/ejson.js");
-install("logging");
-install("routepolicy");
+install("ecmascript-runtime-client");
+install("logging", "meteor/logging/logging.js");
+install("underscore");
+install("routepolicy", "meteor/routepolicy/main.js");
 install("boilerplate-generator", "meteor/boilerplate-generator/generator.js");
 install("webapp-hashing");
 install("webapp", "meteor/webapp/webapp_server.js");
@@ -88,7 +89,7 @@ install("diff-sequence", "meteor/diff-sequence/diff.js");
 install("geojson-utils", "meteor/geojson-utils/main.js");
 install("id-map", "meteor/id-map/id-map.js");
 install("random");
-install("mongo-id");
+install("mongo-id", "meteor/mongo-id/id.js");
 install("ordered-dict", "meteor/ordered-dict/ordered_dict.js");
 install("tracker");
 install("minimongo", "meteor/minimongo/minimongo_server.js");
@@ -244,9 +245,9 @@ var Entry = require("./entry.js");
 // specific module objects, or for Module.prototype (where implemented),
 // to make the runtime available throughout the entire module system.
 exports.enable = function (mod) {
-  if (typeof mod.export !== "function" ||
+  if (typeof mod["export"] !== "function" ||
       typeof mod.importSync !== "function") {
-    mod.export = moduleExport;
+    mod["export"] = moduleExport;
     mod.exportDefault = moduleExportDefault;
     mod.runSetters = runSetters;
     mod.watch = moduleWatch;
@@ -300,7 +301,7 @@ function moduleExport(getters, constant) {
 
 // Register a getter function that always returns the given value.
 function moduleExportDefault(value) {
-  return this.export({
+  return this["export"]({
     default: function () {
       return value;
     }
@@ -449,7 +450,7 @@ module.exports = AWS.S3;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 exports.name = "request";
-exports.version = "2.83.0";
+exports.version = "2.85.0";
 exports.main = "index.js";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4685,30 +4686,30 @@ module.exports.version = require('./package.json').version;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
 module.exports = {
-  "_from": "@babel/runtime@7.0.0-beta.40",
-  "_id": "@babel/runtime@7.0.0-beta.40",
+  "_from": "@babel/runtime@7.0.0-beta.44",
+  "_id": "@babel/runtime@7.0.0-beta.44",
   "_inBundle": false,
-  "_integrity": "sha512-vIM68NUCWauZJTFoVUG1lggva1I8FLB9zFKwWG7Xjin4FkHpEKJv2y4x1DGVPVt93S5/zHSBj1bXYEuxOkFGzg==",
+  "_integrity": "sha512-4r2bym+kePWQH3eLne/IqVwqzbk43Lt6rzYQM+ARwSHfned1rFg9SX62SdKHtzSYq8NCoULxwHJS0T6a6r5hiA==",
   "_location": "/@babel/runtime",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "@babel/runtime@7.0.0-beta.40",
+    "raw": "@babel/runtime@7.0.0-beta.44",
     "name": "@babel/runtime",
     "escapedName": "@babel%2fruntime",
     "scope": "@babel",
-    "rawSpec": "7.0.0-beta.40",
+    "rawSpec": "7.0.0-beta.44",
     "saveSpec": null,
-    "fetchSpec": "7.0.0-beta.40"
+    "fetchSpec": "7.0.0-beta.44"
   },
   "_requiredBy": [
     "#USER",
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.0.0-beta.40.tgz",
-  "_shasum": "8e3b8f1d2d8639d010e991a7e99c1d9ef578f886",
-  "_spec": "@babel/runtime@7.0.0-beta.40",
+  "_resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.0.0-beta.44.tgz",
+  "_shasum": "ea5ad6c6fe9a2c1187b025bf42424d28050ee696",
+  "_spec": "@babel/runtime@7.0.0-beta.44",
   "_where": "/Users/drdimitru/Sites/meteor-files-demo/demo",
   "author": {
     "name": "Sebastian McKenzie",
@@ -4722,11 +4723,11 @@ module.exports = {
   "deprecated": false,
   "description": "babel selfContained runtime",
   "devDependencies": {
-    "@babel/core": "7.0.0-beta.40",
-    "@babel/helpers": "7.0.0-beta.40",
-    "@babel/plugin-transform-runtime": "7.0.0-beta.40",
-    "@babel/preset-env": "7.0.0-beta.40",
-    "@babel/types": "7.0.0-beta.40"
+    "@babel/core": "7.0.0-beta.44",
+    "@babel/helpers": "7.0.0-beta.44",
+    "@babel/plugin-transform-runtime": "7.0.0-beta.44",
+    "@babel/preset-env": "7.0.0-beta.44",
+    "@babel/types": "7.0.0-beta.44"
   },
   "license": "MIT",
   "name": "@babel/runtime",
@@ -4734,38 +4735,58 @@ module.exports = {
     "type": "git",
     "url": "https://github.com/babel/babel/tree/master/packages/babel-runtime"
   },
-  "version": "7.0.0-beta.40"
+  "version": "7.0.0-beta.44"
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"helpers":{"builtin":{"extends.js":function(require,exports,module){
+},"helpers":{"builtin":{"interopRequireDefault.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                    //
-// node_modules/@babel/runtime/helpers/builtin/extends.js                                                             //
+// node_modules/@babel/runtime/helpers/builtin/interopRequireDefault.js                                               //
 //                                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                       //
-function _extends() {
-  module.exports = _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : {
+    default: obj
   };
-
-  return _extends.apply(this, arguments);
 }
 
-module.exports = _extends;
+module.exports = _interopRequireDefault;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+},"objectSpread.js":function(require,exports,module){
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                    //
+// node_modules/@babel/runtime/helpers/builtin/objectSpread.js                                                        //
+//                                                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                      //
+var defineProperty = require("./defineProperty");
+
+function _objectSpread(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    var ownKeys = Object.keys(source);
+
+    if (typeof Object.getOwnPropertySymbols === 'function') {
+      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+      }));
+    }
+
+    ownKeys.forEach(function (key) {
+      defineProperty(target, key, source[key]);
+    });
+  }
+
+  return target;
+}
+
+module.exports = _objectSpread;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}}}},{
