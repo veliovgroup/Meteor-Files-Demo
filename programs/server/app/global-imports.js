@@ -1,5 +1,14 @@
 /* Imports for global scope */
 
+Meteor = Package.meteor.Meteor;
+global = Package.meteor.global;
+meteorEnv = Package.meteor.meteorEnv;
+WebApp = Package.webapp.WebApp;
+WebAppInternals = Package.webapp.WebAppInternals;
+main = Package.webapp.main;
+_ = Package.underscore._;
+DDP = Package['ddp-client'].DDP;
+DDPServer = Package['ddp-server'].DDPServer;
 MongoInternals = Package.mongo.MongoInternals;
 Mongo = Package.mongo.Mongo;
 Tracker = Package.tracker.Tracker;
@@ -20,15 +29,7 @@ SubsManager = Package['meteorhacks:subs-manager'].SubsManager;
 FilesCollection = Package['ostrio:files'].FilesCollection;
 ServiceConfiguration = Package['service-configuration'].ServiceConfiguration;
 Accounts = Package['accounts-base'].Accounts;
-Meteor = Package.meteor.Meteor;
-global = Package.meteor.global;
-meteorEnv = Package.meteor.meteorEnv;
-WebApp = Package.webapp.WebApp;
-WebAppInternals = Package.webapp.WebAppInternals;
-main = Package.webapp.main;
-_ = Package.underscore._;
-DDP = Package['ddp-client'].DDP;
-DDPServer = Package['ddp-server'].DDPServer;
+Autoupdate = Package.autoupdate.Autoupdate;
 Blaze = Package.ui.Blaze;
 UI = Package.ui.UI;
 Handlebars = Package.ui.Handlebars;
@@ -40,6 +41,5 @@ Github = Package['github-oauth'].Github;
 Twitter = Package['twitter-oauth'].Twitter;
 Facebook = Package['facebook-oauth'].Facebook;
 MeteorDeveloperAccounts = Package['meteor-developer-oauth'].MeteorDeveloperAccounts;
-Autoupdate = Package.autoupdate.Autoupdate;
 HTML = Package.htmljs.HTML;
 

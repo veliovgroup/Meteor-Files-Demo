@@ -7,15 +7,15 @@
       "path": "packages/meteor.js"
     },
     {
+      "path": "packages/ecmascript-runtime.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/modules-runtime/node_modules",
       "path": "packages/modules-runtime.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/modules/node_modules",
       "path": "packages/modules.js"
-    },
-    {
-      "path": "packages/ecmascript-runtime.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
@@ -85,62 +85,23 @@
       "path": "packages/webapp.js"
     },
     {
-      "node_modules": "npm/node_modules/meteor/server-render/node_modules",
-      "sourceMap": "packages/server-render.js.map",
-      "path": "packages/server-render.js"
-    },
-    {
-      "sourceMap": "packages/shim-common.js.map",
-      "path": "packages/shim-common.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/es5-shim/node_modules",
-      "path": "packages/es5-shim.js"
-    },
-    {
-      "path": "packages/meteor-base.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
-      "path": "packages/npm-mongo.js"
-    },
-    {
-      "sourceMap": "packages/diff-sequence.js.map",
-      "path": "packages/diff-sequence.js"
-    },
-    {
-      "path": "packages/geojson-utils.js"
-    },
-    {
-      "sourceMap": "packages/id-map.js.map",
-      "path": "packages/id-map.js"
+      "sourceMap": "packages/check.js.map",
+      "path": "packages/check.js"
     },
     {
       "sourceMap": "packages/random.js.map",
       "path": "packages/random.js"
     },
     {
-      "sourceMap": "packages/mongo-id.js.map",
-      "path": "packages/mongo-id.js"
-    },
-    {
-      "sourceMap": "packages/ordered-dict.js.map",
-      "path": "packages/ordered-dict.js"
-    },
-    {
       "path": "packages/tracker.js"
-    },
-    {
-      "sourceMap": "packages/minimongo.js.map",
-      "path": "packages/minimongo.js"
-    },
-    {
-      "sourceMap": "packages/check.js.map",
-      "path": "packages/check.js"
     },
     {
       "sourceMap": "packages/retry.js.map",
       "path": "packages/retry.js"
+    },
+    {
+      "sourceMap": "packages/id-map.js.map",
+      "path": "packages/id-map.js"
     },
     {
       "sourceMap": "packages/callback-hook.js.map",
@@ -159,6 +120,14 @@
       "path": "packages/socket-stream-client.js"
     },
     {
+      "sourceMap": "packages/diff-sequence.js.map",
+      "path": "packages/diff-sequence.js"
+    },
+    {
+      "sourceMap": "packages/mongo-id.js.map",
+      "path": "packages/mongo-id.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/ddp-client/node_modules",
       "sourceMap": "packages/ddp-client.js.map",
       "path": "packages/ddp-client.js"
@@ -174,12 +143,33 @@
       "path": "packages/audit-argument-checks.js"
     },
     {
+      "path": "packages/geojson-utils.js"
+    },
+    {
+      "sourceMap": "packages/ordered-dict.js.map",
+      "path": "packages/ordered-dict.js"
+    },
+    {
+      "sourceMap": "packages/minimongo.js.map",
+      "path": "packages/minimongo.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/ddp-server/node_modules",
       "sourceMap": "packages/ddp-server.js.map",
       "path": "packages/ddp-server.js"
     },
     {
       "path": "packages/ddp.js"
+    },
+    {
+      "path": "packages/hot-code-push.js"
+    },
+    {
+      "path": "packages/livedata.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/npm-mongo/node_modules",
+      "path": "packages/npm-mongo.js"
     },
     {
       "sourceMap": "packages/allow-deny.js.map",
@@ -200,13 +190,13 @@
       "path": "packages/jquery.js"
     },
     {
+      "path": "packages/reactive-var.js"
+    },
+    {
       "path": "packages/seba_minifiers-autoprefixer.js"
     },
     {
       "path": "packages/standard-minifier-js.js"
-    },
-    {
-      "path": "packages/reactive-var.js"
     },
     {
       "path": "packages/mrt_filesize.js"
@@ -348,17 +338,11 @@
       "path": "packages/accounts-meteor-developer.js"
     },
     {
-      "path": "packages/livedata.js"
-    },
-    {
-      "path": "packages/hot-code-push.js"
+      "sourceMap": "packages/autoupdate.js.map",
+      "path": "packages/autoupdate.js"
     },
     {
       "path": "packages/ui.js"
-    },
-    {
-      "sourceMap": "packages/autoupdate.js.map",
-      "path": "packages/autoupdate.js"
     },
     {
       "node_modules": "npm/node_modules",
