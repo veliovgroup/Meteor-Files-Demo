@@ -1,0 +1,1226 @@
+{
+  "format": "web-program-pre1",
+  "manifest": [
+    {
+      "path": "7728ccfdc499a376f54731e715bf7dd116defcd0.js",
+      "where": "client",
+      "type": "js",
+      "cacheable": true,
+      "url": "/7728ccfdc499a376f54731e715bf7dd116defcd0.js?meteor_js_resource=true",
+      "size": 823585,
+      "hash": "7728ccfdc499a376f54731e715bf7dd116defcd0"
+    },
+    {
+      "path": "7728ccfdc499a376f54731e715bf7dd116defcd0.stats.json",
+      "where": "client",
+      "type": "json",
+      "cacheable": true,
+      "url": "/7728ccfdc499a376f54731e715bf7dd116defcd0.stats.json?meteor_js_resource=true",
+      "size": 33177,
+      "hash": "bcd6fd08b14681bb1504677b2c844b4ff14c3d16"
+    },
+    {
+      "path": "dynamic/imports/client/file/file.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/file/file.jade?hash=bb2fa36cacaaddb882145877bdbc305a6b988af7",
+      "size": 76,
+      "hash": "bb2fa36cacaaddb882145877bdbc305a6b988af7"
+    },
+    {
+      "path": "dynamic/imports/client/file/template.file.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/file/template.file.js?hash=bb3291e553e16a7c98ebb7322ce97cdb0ac43d89",
+      "size": 13394,
+      "hash": "bb3291e553e16a7c98ebb7322ce97cdb0ac43d89"
+    },
+    {
+      "path": "dynamic/imports/client/index/index.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/index/index.jade?hash=7f2c259c07fe0e342280ace2855508532ffbbbda",
+      "size": 77,
+      "hash": "7f2c259c07fe0e342280ace2855508532ffbbbda"
+    },
+    {
+      "path": "dynamic/imports/client/index/template.index.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/index/template.index.js?hash=32d83cbe71cec4669e07fdb4112236bbea918126",
+      "size": 1530,
+      "hash": "32d83cbe71cec4669e07fdb4112236bbea918126"
+    },
+    {
+      "path": "dynamic/imports/client/listing/listing-row.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/listing/listing-row.jade?hash=2693d74c3b8cedf73460f53851a97a00691aeffc",
+      "size": 83,
+      "hash": "2693d74c3b8cedf73460f53851a97a00691aeffc"
+    },
+    {
+      "path": "dynamic/imports/client/listing/template.listing-row.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/listing/template.listing-row.js?hash=5e2521d4f38e58210690e36c7e046a62bc90d513",
+      "size": 6492,
+      "hash": "5e2521d4f38e58210690e36c7e046a62bc90d513"
+    },
+    {
+      "path": "dynamic/imports/client/upload/upload-row.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/upload/upload-row.jade?hash=841d1f6e532cfad69b7c0993a3e8791853700944",
+      "size": 82,
+      "hash": "841d1f6e532cfad69b7c0993a3e8791853700944"
+    },
+    {
+      "path": "dynamic/imports/client/upload/template.upload-row.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/upload/template.upload-row.js?hash=5ed17c593d22ac807c508e80a8b189bcfb00798f",
+      "size": 1888,
+      "hash": "5ed17c593d22ac807c508e80a8b189bcfb00798f"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/login.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/login.jade?hash=07a358729d931bb3e7e23f8fc29dab2b3fba62a1",
+      "size": 77,
+      "hash": "07a358729d931bb3e7e23f8fc29dab2b3fba62a1"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/template.login.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/template.login.js?hash=555563ee481430e48105646c4aa5f058cb36e84a",
+      "size": 4997,
+      "hash": "555563ee481430e48105646c4aa5f058cb36e84a"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/logout.jade",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/logout.jade?hash=caa4bdfb824e300ebfa1d65a20639b1bf93dbf4f",
+      "size": 78,
+      "hash": "caa4bdfb824e300ebfa1d65a20639b1bf93dbf4f"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/template.logout.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/template.logout.js?hash=3d0e0515e7d6b34817ad8a5e9fada9b089b1572a",
+      "size": 217,
+      "hash": "3d0e0515e7d6b34817ad8a5e9fada9b089b1572a"
+    },
+    {
+      "path": "dynamic/imports/client/file/file.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/file/file.js?hash=8d38ba671195909e285af104ce945de5900cfda8",
+      "size": 3390,
+      "hash": "8d38ba671195909e285af104ce945de5900cfda8"
+    },
+    {
+      "path": "dynamic/imports/client/index/index.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/index/index.js?hash=22f81125bfd581ce4cf0d8cb919a60b683eb4989",
+      "size": 1563,
+      "hash": "22f81125bfd581ce4cf0d8cb919a60b683eb4989"
+    },
+    {
+      "path": "dynamic/imports/client/listing/listing-row.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/listing/listing-row.js?hash=837527c4bac1622f51dcb0ccfa1a9c84e0c72773",
+      "size": 1968,
+      "hash": "837527c4bac1622f51dcb0ccfa1a9c84e0c72773"
+    },
+    {
+      "path": "dynamic/imports/client/upload/upload-row.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/upload/upload-row.js?hash=f55c13638cba2c4db588d6fe75a93406986a4080",
+      "size": 771,
+      "hash": "f55c13638cba2c4db588d6fe75a93406986a4080"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/login.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/login.js?hash=d09296d5b25edefd1da050f225be4312de75d1a5",
+      "size": 1055,
+      "hash": "d09296d5b25edefd1da050f225be4312de75d1a5"
+    },
+    {
+      "path": "dynamic/imports/client/user-account/logout.js",
+      "where": "client",
+      "type": "dynamic js",
+      "cacheable": true,
+      "url": "/dynamic/imports/client/user-account/logout.js?hash=90c1c0c9b41a540b22c083159ba792756a5488f3",
+      "size": 256,
+      "hash": "90c1c0c9b41a540b22c083159ba792756a5488f3"
+    },
+    {
+      "path": "b7be895580115f7e3d05afafc761bcb0d4f2f89e.css",
+      "where": "client",
+      "type": "css",
+      "cacheable": true,
+      "url": "/b7be895580115f7e3d05afafc761bcb0d4f2f89e.css?meteor_css_resource=true",
+      "size": 72210,
+      "hash": "b7be895580115f7e3d05afafc761bcb0d4f2f89e"
+    },
+    {
+      "path": "packages/ostrio_files/worker.min.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/ostrio_files/worker.min.js",
+      "size": 625,
+      "hash": "6d127a96f8f989baa5999b29fe802006d746b553"
+    },
+    {
+      "path": "packages/oauth/end_of_popup_response.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/oauth/end_of_popup_response.js",
+      "size": 1137,
+      "hash": "8a36abddc07778ebcf5db6253f08bd2b63d02c63"
+    },
+    {
+      "path": "packages/oauth/end_of_redirect_response.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/packages/oauth/end_of_redirect_response.js",
+      "size": 356,
+      "hash": "db42ae47cb556ec736c5b7b1cee4cfbed3f8abf6"
+    },
+    {
+      "path": "app/GCAA.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/GCAA.png",
+      "size": 12186,
+      "hash": "79118974512f2af64975c59ea279336388584b89"
+    },
+    {
+      "path": "app/android-chrome-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-144x144.png",
+      "size": 5901,
+      "hash": "f28eb29a712eff1cf4569536e3519b1432541a05"
+    },
+    {
+      "path": "app/android-chrome-192x192.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-192x192.png",
+      "size": 8610,
+      "hash": "c42adf40fa06b47eff1c9f0ee7ae6f44464f39d1"
+    },
+    {
+      "path": "app/android-chrome-256x256.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-256x256.png",
+      "size": 12883,
+      "hash": "cf23b8033d1ea847d83761c7c4cf629f066d20e0"
+    },
+    {
+      "path": "app/android-chrome-36x36.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-36x36.png",
+      "size": 1125,
+      "hash": "5c9567211d8fc08504c5aa8e473141f2076df0a3"
+    },
+    {
+      "path": "app/android-chrome-384x384.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-384x384.png",
+      "size": 25609,
+      "hash": "ec137e1180e7ef4a985c4418dbcedd08d02427ae"
+    },
+    {
+      "path": "app/android-chrome-48x48.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-48x48.png",
+      "size": 1628,
+      "hash": "ccb32c6d187f3d22f63d9c2aee6e6e7a24ddba64"
+    },
+    {
+      "path": "app/android-chrome-512x512.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-512x512.png",
+      "size": 45667,
+      "hash": "18c7022b4cd03364914bbe847d7dfdd302f1feb9"
+    },
+    {
+      "path": "app/android-chrome-72x72.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-72x72.png",
+      "size": 2596,
+      "hash": "926c918a63c6195eea18bd6480eb3297f0852bd7"
+    },
+    {
+      "path": "app/android-chrome-96x96.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/android-chrome-96x96.png",
+      "size": 3563,
+      "hash": "55130ca1108e01705227077234deb4884c3259f0"
+    },
+    {
+      "path": "app/apple-touch-icon-114x114-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-114x114-precomposed.png",
+      "size": 4071,
+      "hash": "9f0d34baaab1cd0fa736d50d8828532ad0e2a66e"
+    },
+    {
+      "path": "app/apple-touch-icon-114x114.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-114x114.png",
+      "size": 3736,
+      "hash": "aab7b8aac0f8b839b2fd2b2031213e28295fc2ff"
+    },
+    {
+      "path": "app/apple-touch-icon-120x120-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-120x120-precomposed.png",
+      "size": 4242,
+      "hash": "1ebd4047b542e9abd44f6e4e02a37b5f792dabc5"
+    },
+    {
+      "path": "app/apple-touch-icon-120x120.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-120x120.png",
+      "size": 3923,
+      "hash": "41b6d4c4fce648f03456a0bba0c10c2034f7ea7c"
+    },
+    {
+      "path": "app/apple-touch-icon-144x144-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-144x144-precomposed.png",
+      "size": 5313,
+      "hash": "cd932b4e510070ada4025b71f0b83aabd70c62da"
+    },
+    {
+      "path": "app/apple-touch-icon-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-144x144.png",
+      "size": 4931,
+      "hash": "bf4f5bdfc03225fd8a1c358c45c99b7bd718e90c"
+    },
+    {
+      "path": "app/apple-touch-icon-152x152-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-152x152-precomposed.png",
+      "size": 5669,
+      "hash": "a3b434dc7286dd20da9e62f7b8953231e8c97b7e"
+    },
+    {
+      "path": "app/apple-touch-icon-152x152.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-152x152.png",
+      "size": 5265,
+      "hash": "f265950ff318497ab59b9871d369b3e7cb4aa53e"
+    },
+    {
+      "path": "app/apple-touch-icon-180x180-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-180x180-precomposed.png",
+      "size": 6954,
+      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4"
+    },
+    {
+      "path": "app/apple-touch-icon-180x180.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-180x180.png",
+      "size": 6540,
+      "hash": "d6e49307a68d74461b91238643087b22dbe06a57"
+    },
+    {
+      "path": "app/apple-touch-icon-57x57-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-57x57-precomposed.png",
+      "size": 1839,
+      "hash": "aae08abafa36395d7681701f70d8d611f832502b"
+    },
+    {
+      "path": "app/apple-touch-icon-57x57.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-57x57.png",
+      "size": 1649,
+      "hash": "f34602e42935926e31bcad7d6f1fe2842387526b"
+    },
+    {
+      "path": "app/apple-touch-icon-60x60-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-60x60-precomposed.png",
+      "size": 1984,
+      "hash": "069c115ce8e8dbfb0112b08edd7c88c5c94a5042"
+    },
+    {
+      "path": "app/apple-touch-icon-60x60.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-60x60.png",
+      "size": 1786,
+      "hash": "09b81baddd85e842793621e1369b4d37a8edebea"
+    },
+    {
+      "path": "app/apple-touch-icon-72x72-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-72x72-precomposed.png",
+      "size": 2439,
+      "hash": "c6d31196ec75567929a10e78e78e22f68647f93c"
+    },
+    {
+      "path": "app/apple-touch-icon-72x72.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-72x72.png",
+      "size": 2207,
+      "hash": "faa5fd42b44030882bcd243be7bf4bef9ab60a9e"
+    },
+    {
+      "path": "app/apple-touch-icon-76x76-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-76x76-precomposed.png",
+      "size": 2504,
+      "hash": "e3f8e283751994c34ebce5a752d277e69e333ab8"
+    },
+    {
+      "path": "app/apple-touch-icon-76x76.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-76x76.png",
+      "size": 2277,
+      "hash": "9e5bda597495ec5cbad503d16a1c22febc59fa2b"
+    },
+    {
+      "path": "app/apple-touch-icon-precomposed.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon-precomposed.png",
+      "size": 6954,
+      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4"
+    },
+    {
+      "path": "app/apple-touch-icon.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/apple-touch-icon.png",
+      "size": 6540,
+      "hash": "d6e49307a68d74461b91238643087b22dbe06a57"
+    },
+    {
+      "path": "app/browserconfig.xml",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/browserconfig.xml",
+      "size": 417,
+      "hash": "d9cc0cfa2422c8cdd0dee71c58f1b2cfd0ef8612"
+    },
+    {
+      "path": "app/dataset.polyfill.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/dataset.polyfill.js",
+      "size": 761,
+      "hash": "f89aaa4cec26af0bc67b14f088e8319b58f37391"
+    },
+    {
+      "path": "app/dnd.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/dnd.png",
+      "size": 934,
+      "hash": "3cd5d478230bc7f8e647249d58f9a9097631c2dc"
+    },
+    {
+      "path": "app/favicon-16x16.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-16x16.png",
+      "size": 416,
+      "hash": "bbca58ab364adcc489fcbd3249436ec964452e43"
+    },
+    {
+      "path": "app/favicon-32x32.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-32x32.png",
+      "size": 1016,
+      "hash": "16cff445b53cb0942db9f5a2c0f2b2247bb03da6"
+    },
+    {
+      "path": "app/favicon-96x96.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon-96x96.png",
+      "size": 3346,
+      "hash": "32ebf3dc3a756d3f12bfad6d423ac1c300cbd940"
+    },
+    {
+      "path": "app/favicon.ico",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/favicon.ico",
+      "size": 7406,
+      "hash": "437a44292dd910f1a18957a2a551be6a897eb699"
+    },
+    {
+      "path": "app/history.polyfill.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/history.polyfill.js",
+      "size": 7685,
+      "hash": "762dbac195d686bab13e87da2b96c9a1794832ba"
+    },
+    {
+      "path": "app/icon_1200x630.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/icon_1200x630.png",
+      "size": 65771,
+      "hash": "6b004cfd5af7f7b4801fcda0b7b18f6970620f32"
+    },
+    {
+      "path": "app/icon_750x560.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/icon_750x560.png",
+      "size": 29564,
+      "hash": "6a85a8f7bca62732d2b4c83f09e7d395135372ec"
+    },
+    {
+      "path": "app/logo-bg.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/logo-bg.png",
+      "size": 4787,
+      "hash": "2eef07c978c91f4c5ab125dd4a211b37f5a12a52"
+    },
+    {
+      "path": "app/logo-bw.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/logo-bw.png",
+      "size": 9447,
+      "hash": "c3118bd520ab863f7e9ee9061f2bebf4b0cd62d2"
+    },
+    {
+      "path": "app/logo_1024x1024.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/logo_1024x1024.png",
+      "size": 220225,
+      "hash": "bb5e0e5750d7e6257004d801e3cd08489f80d432"
+    },
+    {
+      "path": "app/logo_1024x1024_alpha.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/logo_1024x1024_alpha.png",
+      "size": 209519,
+      "hash": "7d6429570477aa8b43949ef97bedff60bcbe4957"
+    },
+    {
+      "path": "app/manifest.webmanifest",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/manifest.webmanifest",
+      "size": 1246,
+      "hash": "629f7f6c52d29ab7330022bac800b046da885dba"
+    },
+    {
+      "path": "app/meteor-icon.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/meteor-icon.svg",
+      "size": 2024,
+      "hash": "3d4ab9ae6590079844e474b446eb54e622ea777f"
+    },
+    {
+      "path": "app/mstile-144x144.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-144x144.png",
+      "size": 6094,
+      "hash": "a7e4f29b866ab33ba3fa1d451015496f6c54de08"
+    },
+    {
+      "path": "app/mstile-150x150.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-150x150.png",
+      "size": 5507,
+      "hash": "61a6f9bc53db5fc5700b1ecdf65c8ee0cd7e01ef"
+    },
+    {
+      "path": "app/mstile-310x150.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-310x150.png",
+      "size": 5721,
+      "hash": "c4e9d673ebf098e72ecc0cf4c35f8885e34e3b98"
+    },
+    {
+      "path": "app/mstile-310x310.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-310x310.png",
+      "size": 12985,
+      "hash": "920f6ea4d72ae659e4371b0ca6e3bc214e8650a3"
+    },
+    {
+      "path": "app/mstile-70x70.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/mstile-70x70.png",
+      "size": 4055,
+      "hash": "a3e9b45ec79e7aebfe26c41e8eb86b73df1be62d"
+    },
+    {
+      "path": "app/ostrio-bg.png",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/ostrio-bg.png",
+      "size": 3731,
+      "hash": "f1760210a0ef5d2f6283ab05c483585da7ef4589"
+    },
+    {
+      "path": "app/robots.txt",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/robots.txt",
+      "size": 24,
+      "hash": "880fc23ab49be97dbc7bbb66861acefc7f6e22c3"
+    },
+    {
+      "path": "app/safari-pinned-tab.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/safari-pinned-tab.svg",
+      "size": 7601,
+      "hash": "b86e1ed24861073c37b353a5c3ae9d7b18b57699"
+    },
+    {
+      "path": "app/sw.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/sw.js",
+      "size": 1895,
+      "hash": "60900db05bf06bdf3319175bcf8a9c77901a0c2f"
+    },
+    {
+      "path": "app/sw.min.js",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/sw.min.js",
+      "size": 1193,
+      "hash": "18312f23970e799708d94060591662764312de13"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300.eot",
+      "size": 26052,
+      "hash": "be2b86d10631dc899e67a5f23640a81b8c7fb398"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300.svg",
+      "size": 79706,
+      "hash": "47192f85330624d34d1a4018c9e129d38b64a65e"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300.ttf",
+      "size": 67632,
+      "hash": "d938c3d312d51079ca02ea404e89f9c552b65ad7"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300.woff",
+      "size": 31828,
+      "hash": "ed507e6d2e095a59fad7367af4cfe88a7a832083"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300.woff2",
+      "size": 24752,
+      "hash": "ee28c3ac0b975db9d6c530762b32d7680a32a8bf"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300italic.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300italic.eot",
+      "size": 20935,
+      "hash": "90f0b2117d91698eb7d7fea1ce07c5de4386a78d"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300italic.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300italic.svg",
+      "size": 82027,
+      "hash": "534bf80569180fc80b752966cd000d1d6a964322"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300italic.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300italic.ttf",
+      "size": 42148,
+      "hash": "466ac95a451ca6e33e48d68b183729f07923a1ef"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300italic.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300italic.woff",
+      "size": 23784,
+      "hash": "a17837101627cf9c5e47a56208ec0c9946fa27cc"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-300italic.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-300italic.woff2",
+      "size": 18660,
+      "hash": "6ba2eca2ea812d7f9b869f3d2989bc2bf63448cd"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700.eot",
+      "size": 27836,
+      "hash": "6ea710fb65dabc12fc33ff3cef1c347b5c22f298"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700.svg",
+      "size": 80884,
+      "hash": "47de017ceff4b151a906cf77e3d71c45831b4e45"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700.ttf",
+      "size": 63876,
+      "hash": "2ffcc5ce9ab19a4344c55594b1f0b861f195a5ae"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700.woff",
+      "size": 29972,
+      "hash": "ad23951f7de0590a5f9a0ea57294b0d3b9d0c178"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700.woff2",
+      "size": 24488,
+      "hash": "64576afb2040644cb288754588597d41162a5220"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700italic.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700italic.eot",
+      "size": 29727,
+      "hash": "be037e263c360b79a105d4da80112cb241a55632"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700italic.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700italic.svg",
+      "size": 83985,
+      "hash": "324a89acbc345d6af73154a83f575a92f2f97122"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700italic.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700italic.ttf",
+      "size": 67488,
+      "hash": "184e65f5e8296e94fe7464de7d1b07e614497c6d"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700italic.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700italic.woff",
+      "size": 31944,
+      "hash": "00cb6ec6140d41c01613204cc99e7bf2806ede44"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-700italic.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-700italic.woff2",
+      "size": 25988,
+      "hash": "41e17cc80485bec9511b235e399f5bce321838a6"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-italic.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-italic.eot",
+      "size": 29538,
+      "hash": "2153ee96dae00462693a659d59a0fa9c649055b0"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-italic.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-italic.svg",
+      "size": 83394,
+      "hash": "34a266f9b826b5cd582d0ffd50ded4e8dabdf28f"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-italic.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-italic.ttf",
+      "size": 65732,
+      "hash": "723683d6e7cea1eae0d9a8581dae98e0c9c1ec5f"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-italic.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-italic.woff",
+      "size": 31760,
+      "hash": "16f3d0858f0b692e4aff8ccfef8a0f13acd30940"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-italic.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-italic.woff2",
+      "size": 25944,
+      "hash": "57d2a86843b78bb8cdf132a1fa0064c9089b01c3"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-regular.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-regular.eot",
+      "size": 28323,
+      "hash": "31f3aca6afc0bb726eed893ecb8411f7a64becbe"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-regular.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-regular.svg",
+      "size": 80331,
+      "hash": "2194c7bc3f4de38a8cbeab4f81a3bec8142fe1c8"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-regular.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-regular.ttf",
+      "size": 65080,
+      "hash": "4c72cd69f8fa051cdad008ec1c7c386e29268223"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-regular.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-regular.woff",
+      "size": 30468,
+      "hash": "9f9cbd0b5523bca327015aa841fd2974a7993f7c"
+    },
+    {
+      "path": "app/fonts/lato-v14-latin_latin-ext-regular.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/lato-v14-latin_latin-ext-regular.woff2",
+      "size": 24904,
+      "hash": "3f7aab38f4796eb022bc43ee3765d4730f12228b"
+    },
+    {
+      "path": "app/fonts/line-awesome.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/line-awesome.eot",
+      "size": 112916,
+      "hash": "3df69d99f3ff4c1179629d72d861259feb86b00f"
+    },
+    {
+      "path": "app/fonts/line-awesome.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/line-awesome.svg",
+      "size": 433695,
+      "hash": "e8961aed342b18fc24107c1acda91adf731083e8"
+    },
+    {
+      "path": "app/fonts/line-awesome.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/line-awesome.ttf",
+      "size": 112728,
+      "hash": "9e24986ab9fab12abf9ed65cadc4501f74f04a16"
+    },
+    {
+      "path": "app/fonts/line-awesome.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/line-awesome.woff",
+      "size": 57436,
+      "hash": "fa9cc3a0abb3056a3e9a44ccc406c18f1d92c0b9"
+    },
+    {
+      "path": "app/fonts/line-awesome.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/line-awesome.woff2",
+      "size": 45108,
+      "hash": "6f6d409276da4f2b892a8589bf960d0771ca5aae"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.eot",
+      "size": 112139,
+      "hash": "9433ed0091760aa53f97750e48eff1fd4b61ae5f"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.svg",
+      "size": 58483,
+      "hash": "52b4ae5ad775c2e0c1d3f4bed6014434df367e87"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.ttf",
+      "size": 290916,
+      "hash": "ae9d34d7421c45a87bd163a87778f6746119b085"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff",
+      "size": 112628,
+      "hash": "52b60f6f9a5185dd6b6a10bd2b7a463bea2e0018"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff2",
+      "size": 85436,
+      "hash": "ab6f72ddc3e92f6597501f9bd5dfc386fef59e71"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.eot",
+      "size": 47248,
+      "hash": "9e67066893f85fa01c8e0bda6c815839f446a724"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.svg",
+      "size": 61529,
+      "hash": "35fcfd18abf4730b8b618787c23baafeb61230fd"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.ttf",
+      "size": 103200,
+      "hash": "70ad12528e6e37a8ce17833e83ca54e111142aff"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff",
+      "size": 45988,
+      "hash": "e4cfe0b42ef88eb59bc72173fd9917798ec7c2c9"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff2",
+      "size": 35768,
+      "hash": "dcbf70b0fad21c0f784367293aa1a7495b47cba0"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.eot",
+      "size": 47365,
+      "hash": "df843cea5aec2ada5900428f38fa65a56246daec"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.svg",
+      "size": 61242,
+      "hash": "d5b916c5ca2b7aef8f55821e0ceb277b468a5f48"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.ttf",
+      "size": 103828,
+      "hash": "63dc969f1a05cf5ac212687eff4227ac8393f6ec"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff",
+      "size": 46364,
+      "hash": "31680e223f1578b76326b6f0fc50e6ad50b51bd3"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff2",
+      "size": 35924,
+      "hash": "7d350baf5d8b83283f73fbe267b5abfa4c95d69f"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.eot",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.eot",
+      "size": 113103,
+      "hash": "6dc2e4589e07337c2264bab7adfe3094579dc367"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.svg",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.svg",
+      "size": 60072,
+      "hash": "1fe221bda015b17bd8abe311a67c7fb214a0157f"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.ttf",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.ttf",
+      "size": 293516,
+      "hash": "0fa40da0fcf68ead20797f715e70fa61334f58d4"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff",
+      "size": 113924,
+      "hash": "a464d631a2335acad9b53c1e314712d6fb29b749"
+    },
+    {
+      "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff2",
+      "where": "client",
+      "type": "asset",
+      "cacheable": false,
+      "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff2",
+      "size": 86732,
+      "hash": "b65d81f77be9fe02e9606565d1dc86dbae769477"
+    },
+    {
+      "path": "head.html",
+      "where": "internal",
+      "type": "head",
+      "hash": "4478dc3583942b22dfb9e8cd48de70b417ecd928"
+    }
+  ]
+}

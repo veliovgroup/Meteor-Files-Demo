@@ -8,12 +8,12 @@ var meteorInstall = Package.modules.meteorInstall;
 
 var require = meteorInstall({"node_modules":{"meteor":{"ecmascript-runtime-server":{"runtime.js":function(require){
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                        //
-// packages/ecmascript-runtime-server/runtime.js                                          //
-//                                                                                        //
-////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                          //
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// packages/ecmascript-runtime-server/runtime.js                           //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+                                                                           //
 // The ecmascript-runtime-server package depends on its own copy of
 // core-js using Npm.depends, so we don't have to check that core-js is
 // available (as we do in ecmascript-runtime-client/runtime.js).
@@ -40,47 +40,29 @@ var require = meteorInstall({"node_modules":{"meteor":{"ecmascript-runtime-serve
 require("core-js/modules/es7.string.pad-start");
 require("core-js/modules/es7.string.pad-end");
 
-////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
-},"node_modules":{"core-js":{"modules":{"es7.string.pad-start.js":function(require){
+},"node_modules":{"core-js":{"modules":{"es7.string.pad-start.js":function(require,exports,module){
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                        //
-// node_modules/meteor/ecmascript-runtime-server/node_modules/core-js/modules/es7.string. //
-//                                                                                        //
-////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                          //
-'use strict';
-// https://github.com/tc39/proposal-string-pad-start-end
-var $export = require('./_export')
-  , $pad    = require('./_string-pad');
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// node_modules/meteor/ecmascript-runtime-server/node_modules/core-js/modu //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+                                                                           //
+module.useNode();
+/////////////////////////////////////////////////////////////////////////////
 
-$export($export.P, 'String', {
-  padStart: function padStart(maxLength /*, fillString = ' ' */){
-    return $pad(this, maxLength, arguments.length > 1 ? arguments[1] : undefined, true);
-  }
-});
-////////////////////////////////////////////////////////////////////////////////////////////
+},"es7.string.pad-end.js":function(require,exports,module){
 
-},"es7.string.pad-end.js":function(require){
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                        //
-// node_modules/meteor/ecmascript-runtime-server/node_modules/core-js/modules/es7.string. //
-//                                                                                        //
-////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                          //
-'use strict';
-// https://github.com/tc39/proposal-string-pad-start-end
-var $export = require('./_export')
-  , $pad    = require('./_string-pad');
-
-$export($export.P, 'String', {
-  padEnd: function padEnd(maxLength /*, fillString = ' ' */){
-    return $pad(this, maxLength, arguments.length > 1 ? arguments[1] : undefined, false);
-  }
-});
-////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// node_modules/meteor/ecmascript-runtime-server/node_modules/core-js/modu //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+                                                                           //
+module.useNode();
+/////////////////////////////////////////////////////////////////////////////
 
 }}}}}}}},{
   "extensions": [

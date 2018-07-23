@@ -31,11 +31,11 @@
       "integrity": "sha1-Zjs6ZItotV0EaQ1JFnqoN4WPIXQ=",
       "dev": true,
       "requires": {
-        "ansi-styles": "1.1.0",
-        "escape-string-regexp": "1.0.5",
-        "has-ansi": "0.1.0",
-        "strip-ansi": "0.3.0",
-        "supports-color": "0.2.0"
+        "ansi-styles": "^1.1.0",
+        "escape-string-regexp": "^1.0.0",
+        "has-ansi": "^0.1.0",
+        "strip-ansi": "^0.3.0",
+        "supports-color": "^0.2.0"
       }
     },
     "core-util-is": {
@@ -50,7 +50,7 @@
       "integrity": "sha1-ixLauHjA1p4+eJEFFmKjL8a93ME=",
       "dev": true,
       "requires": {
-        "readable-stream": "2.3.5"
+        "readable-stream": "^2.0.2"
       }
     },
     "escape-string-regexp": {
@@ -70,7 +70,7 @@
       "integrity": "sha1-hPJlqujA5qiKEtcCKJS3VoiUxi4=",
       "dev": true,
       "requires": {
-        "ansi-regex": "0.2.1"
+        "ansi-regex": "^0.2.0"
       }
     },
     "inherits": {
@@ -96,8 +96,8 @@
       "integrity": "sha1-zBPv2DPJzamfIk+GhGG44aP9k50=",
       "dev": true,
       "requires": {
-        "duplexer2": "0.1.4",
-        "object-assign": "4.1.1"
+        "duplexer2": "^0.1.2",
+        "object-assign": "^4.1.0"
       }
     },
     "object-assign": {
@@ -117,28 +117,28 @@
       "resolved": "https://registry.npmjs.org/promise/-/promise-8.0.1.tgz",
       "integrity": "sha1-5F1osAoXZHttpxG/he1u1HII9FA=",
       "requires": {
-        "asap": "2.0.6"
+        "asap": "~2.0.3"
       }
     },
     "readable-stream": {
-      "version": "2.3.5",
-      "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.5.tgz",
-      "integrity": "sha512-tK0yDhrkygt/knjowCUiWP9YdV7c5R+8cR0r/kt9ZhBU906Fs6RpQJCEilamRJj1Nx2rWI6LkW9gKqjTkshhEw==",
+      "version": "2.3.6",
+      "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.6.tgz",
+      "integrity": "sha512-tQtKA9WIAhBF3+VLAseyMqZeBjW0AHJoxOtYqSUZNJxauErmLbVm2FW1y+J/YA9dUrAC39ITejlZWhVIwawkKw==",
       "dev": true,
       "requires": {
-        "core-util-is": "1.0.2",
-        "inherits": "2.0.3",
-        "isarray": "1.0.0",
-        "process-nextick-args": "2.0.0",
-        "safe-buffer": "5.1.1",
-        "string_decoder": "1.0.3",
-        "util-deprecate": "1.0.2"
+        "core-util-is": "~1.0.0",
+        "inherits": "~2.0.3",
+        "isarray": "~1.0.0",
+        "process-nextick-args": "~2.0.0",
+        "safe-buffer": "~5.1.1",
+        "string_decoder": "~1.1.1",
+        "util-deprecate": "~1.0.1"
       }
     },
     "safe-buffer": {
-      "version": "5.1.1",
-      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.1.tgz",
-      "integrity": "sha512-kKvNJn6Mm93gAczWVJg7wH+wGYWNrDHdWvpUmHyEsgCtIwwo3bqPtV4tR5tuPaUhTOo/kvhVwd8XwwOllGYkbg==",
+      "version": "5.1.2",
+      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+      "integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
       "dev": true
     },
     "semver": {
@@ -151,7 +151,7 @@
       "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.1.32.tgz",
       "integrity": "sha1-yLbBZ3l7pHQKjqMyUhYv8IWRsmY=",
       "requires": {
-        "amdefine": "1.0.1"
+        "amdefine": ">=0.0.4"
       }
     },
     "source-map-support": {
@@ -167,16 +167,16 @@
       "integrity": "sha1-eh9VHhdqkOzTNF9yRqDP4XXvT9A=",
       "dev": true,
       "requires": {
-        "through2": "2.0.3"
+        "through2": "^2.0.2"
       }
     },
     "string_decoder": {
-      "version": "1.0.3",
-      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.0.3.tgz",
-      "integrity": "sha512-4AH6Z5fzNNBcH+6XDMfA/BTt87skxqJlO0lAh3Dker5zThcAxG6mKz+iGu308UKoPPQ8Dcqx/4JhujzltRa+hQ==",
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
+      "integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
       "dev": true,
       "requires": {
-        "safe-buffer": "5.1.1"
+        "safe-buffer": "~5.1.0"
       }
     },
     "strip-ansi": {
@@ -185,7 +185,7 @@
       "integrity": "sha1-JfSOoiynkYfzF0pNuHWTR7sSYiA=",
       "dev": true,
       "requires": {
-        "ansi-regex": "0.2.1"
+        "ansi-regex": "^0.2.1"
       }
     },
     "supports-color": {
@@ -200,8 +200,8 @@
       "integrity": "sha1-AARWmzfHx0ujnEPzzteNGtlBQL4=",
       "dev": true,
       "requires": {
-        "readable-stream": "2.3.5",
-        "xtend": "4.0.1"
+        "readable-stream": "^2.1.5",
+        "xtend": "~4.0.1"
       }
     },
     "underscore": {

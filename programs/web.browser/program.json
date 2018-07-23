@@ -2,22 +2,22 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "84bc61ef827cff7ed29bdc6d844be884d12c3250.js",
+      "path": "120d93cfd5bff8ef477e52cd9364226f3f7df5ee.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/84bc61ef827cff7ed29bdc6d844be884d12c3250.js?meteor_js_resource=true",
-      "size": 795582,
-      "hash": "84bc61ef827cff7ed29bdc6d844be884d12c3250"
+      "url": "/120d93cfd5bff8ef477e52cd9364226f3f7df5ee.js?meteor_js_resource=true",
+      "size": 694043,
+      "hash": "120d93cfd5bff8ef477e52cd9364226f3f7df5ee"
     },
     {
-      "path": "84bc61ef827cff7ed29bdc6d844be884d12c3250.stats.json",
+      "path": "120d93cfd5bff8ef477e52cd9364226f3f7df5ee.stats.json",
       "where": "client",
       "type": "json",
       "cacheable": true,
-      "url": "/84bc61ef827cff7ed29bdc6d844be884d12c3250.stats.json?meteor_js_resource=true",
-      "size": 31427,
-      "hash": "bbbb14ac1dec796be4e8c1689b8f6f5135ce59b6"
+      "url": "/120d93cfd5bff8ef477e52cd9364226f3f7df5ee.stats.json?meteor_js_resource=true",
+      "size": 20809,
+      "hash": "9a76a8b05ad57c7df18bb11dd328ecabb9f718ed"
     },
     {
       "path": "dynamic/imports/client/file/file.jade",
@@ -33,9 +33,9 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/template.file.js?hash=5cc37965e3494b66c5fd5aed81f5879227d5681e",
-      "size": 13358,
-      "hash": "5cc37965e3494b66c5fd5aed81f5879227d5681e"
+      "url": "/dynamic/imports/client/file/template.file.js?hash=bb3291e553e16a7c98ebb7322ce97cdb0ac43d89",
+      "size": 13394,
+      "hash": "bb3291e553e16a7c98ebb7322ce97cdb0ac43d89"
     },
     {
       "path": "dynamic/imports/client/index/index.jade",
@@ -132,63 +132,63 @@
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/file.js?hash=846048669f5ee98e16c43b22372b7305bea2e627",
-      "size": 3792,
-      "hash": "846048669f5ee98e16c43b22372b7305bea2e627"
+      "url": "/dynamic/imports/client/file/file.js?hash=2921d2fb42ee8caf2a630f84539ab0db7c9debe2",
+      "size": 3161,
+      "hash": "2921d2fb42ee8caf2a630f84539ab0db7c9debe2"
     },
     {
       "path": "dynamic/imports/client/index/index.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/index/index.js?hash=fc8aef7322a3d537d3992274ad850bc392cd3bb1",
-      "size": 1760,
-      "hash": "fc8aef7322a3d537d3992274ad850bc392cd3bb1"
+      "url": "/dynamic/imports/client/index/index.js?hash=74b456b8be565d6d466ecc1aca9b77d5eb85cea6",
+      "size": 1367,
+      "hash": "74b456b8be565d6d466ecc1aca9b77d5eb85cea6"
     },
     {
       "path": "dynamic/imports/client/listing/listing-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/listing/listing-row.js?hash=122c7c389ff7a679d15775fcbc661ff762556339",
-      "size": 2047,
-      "hash": "122c7c389ff7a679d15775fcbc661ff762556339"
+      "url": "/dynamic/imports/client/listing/listing-row.js?hash=68648d7a143b9cbb72b05345c59e811a7b0f1189",
+      "size": 1795,
+      "hash": "68648d7a143b9cbb72b05345c59e811a7b0f1189"
     },
     {
       "path": "dynamic/imports/client/upload/upload-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/upload/upload-row.js?hash=f55c13638cba2c4db588d6fe75a93406986a4080",
-      "size": 771,
-      "hash": "f55c13638cba2c4db588d6fe75a93406986a4080"
+      "url": "/dynamic/imports/client/upload/upload-row.js?hash=48497dd4f0c7e85be177d97654c85acdcfcd2770",
+      "size": 741,
+      "hash": "48497dd4f0c7e85be177d97654c85acdcfcd2770"
     },
     {
       "path": "dynamic/imports/client/user-account/login.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/login.js?hash=d09296d5b25edefd1da050f225be4312de75d1a5",
-      "size": 1055,
-      "hash": "d09296d5b25edefd1da050f225be4312de75d1a5"
+      "url": "/dynamic/imports/client/user-account/login.js?hash=82170c7e526098e9266cc26d248d5114ce5c653c",
+      "size": 917,
+      "hash": "82170c7e526098e9266cc26d248d5114ce5c653c"
     },
     {
       "path": "dynamic/imports/client/user-account/logout.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/logout.js?hash=90c1c0c9b41a540b22c083159ba792756a5488f3",
-      "size": 256,
-      "hash": "90c1c0c9b41a540b22c083159ba792756a5488f3"
+      "url": "/dynamic/imports/client/user-account/logout.js?hash=ceaeb032f51789ebb984815f103a94ea521c9a0b",
+      "size": 229,
+      "hash": "ceaeb032f51789ebb984815f103a94ea521c9a0b"
     },
     {
-      "path": "7352f65727a724c5de359504467ca21e1b60957c.css",
+      "path": "b7be895580115f7e3d05afafc761bcb0d4f2f89e.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/7352f65727a724c5de359504467ca21e1b60957c.css?meteor_css_resource=true",
-      "size": 73161,
-      "hash": "7352f65727a724c5de359504467ca21e1b60957c"
+      "url": "/b7be895580115f7e3d05afafc761bcb0d4f2f89e.css?meteor_css_resource=true",
+      "size": 72210,
+      "hash": "b7be895580115f7e3d05afafc761bcb0d4f2f89e"
     },
     {
       "path": "packages/ostrio_files/worker.min.js",
@@ -1220,7 +1220,7 @@
       "path": "head.html",
       "where": "internal",
       "type": "head",
-      "hash": "dc6e97bf5112e616682429198a16ebf496329c0a"
+      "hash": "4478dc3583942b22dfb9e8cd48de70b417ecd928"
     }
   ]
 }

@@ -6,7 +6,6 @@ meteorEnv = Package.meteor.meteorEnv;
 WebApp = Package.webapp.WebApp;
 WebAppInternals = Package.webapp.WebAppInternals;
 main = Package.webapp.main;
-_ = Package.underscore._;
 DDP = Package['ddp-client'].DDP;
 DDPServer = Package['ddp-server'].DDPServer;
 MongoInternals = Package.mongo.MongoInternals;

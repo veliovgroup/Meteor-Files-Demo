@@ -26,6 +26,7 @@ const {
   normalize: pathNormalize,
 } = require("path");
 const { fetchURL } = require("./common.js");
+const { isModern } = require("meteor/modern-browsers");
 const hasOwn = Object.prototype.hasOwnProperty;
 
 require("./security.js");
@@ -80,20 +81,41 @@ function randomId(n) {
 }
 
 function middleware(request, response) {
-  assert.strictEqual(request.method, "POST");
-  const chunks = [];
-  request.on("data", chunk => chunks.push(chunk));
-  request.on("end", () => {
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(readTree(
-      JSON.parse(Buffer.concat(chunks)),
-      getPlatform(request)
-    )));
-  });
+  // Allow dynamic import() requests from any origin.
+  response.setHeader("Access-Control-Allow-Origin", "*");
+
+  if (request.method === "OPTIONS") {
+    const acrh = request.headers["access-control-request-headers"];
+    response.setHeader(
+      "Access-Control-Allow-Headers",
+      typeof acrh === "string" ? acrh : "*"
+    );
+    response.setHeader("Access-Control-Allow-Methods", "POST");
+    response.end();
+  } else if (request.method === "POST") {
+    const chunks = [];
+    request.on("data", chunk => chunks.push(chunk));
+    request.on("end", () => {
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify(readTree(
+        JSON.parse(Buffer.concat(chunks)),
+        getPlatform(request)
+      ), null, 2));
+    });
+  } else {
+    response.writeHead(405, {
+      "Cache-Control": "no-cache"
+    });
+    response.end(`method ${request.method} not allowed`);
+  }
 }
 
 function getPlatform(request) {
-  let platform = "web.browser";
+  const { identifyBrowser } = Package.webapp.WebAppInternals;
+  const browser = identifyBrowser(request.headers["user-agent"]);
+  let platform = isModern(browser)
+    ? "web.browser"
+    : "web.browser.legacy";
 
   // If the __dynamicImport request includes a secret key, and it matches
   // dynamicImportInfo[platform].key, use platform instead of the default
@@ -527,11 +549,15 @@ var fetchURL = require("./common.js").fetchURL;
 
 function fetchMissing(missingTree) {
   return new Promise(function (resolve, reject) {
-    // Always match the protocol (http or https) and the domain:port of
-    // the current page.
-    var url = "//" + location.host + fetchURL;
-
-    HTTP.call("POST", url, {
+    // If the hostname of the URL returned by Meteor.absoluteUrl differs
+    // from location.host, then we'll be making a cross-origin request
+    // here, but that's fine because the dynamic-import server sets
+    // appropriate CORS headers to enable fetching dynamic modules from
+    // any origin. Browsers that check CORS do so by sending an additional
+    // preflight OPTIONS request, which may add latency to the first
+    // dynamic import() request, so it's a good idea for ROOT_URL to match
+    // location.host if possible, though not strictly necessary.
+    HTTP.call("POST", Meteor.absoluteUrl(fetchURL), {
       query: secretKey ? "key=" + secretKey : void 0,
       data: missingTree
     }, function (error, result) {

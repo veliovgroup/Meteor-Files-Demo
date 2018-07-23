@@ -45,7 +45,10 @@ Meteor = {
   isDevelopment: meteorEnv.NODE_ENV !== "production",
   isClient: false,
   isServer: true,
-  isCordova: false
+  isCordova: false,
+  // Server code runs in Node 8+, which is decidedly "modern" by any
+  // reasonable definition.
+  isModern: true
 };
 
 Meteor.settings = {};
@@ -54,7 +57,7 @@ if (process.env.METEOR_SETTINGS) {
   try {
     Meteor.settings = JSON.parse(process.env.METEOR_SETTINGS);
   } catch (e) {
-    throw new Error("METEOR_SETTINGS are not valid JSON: " + process.env.METEOR_SETTINGS);
+    throw new Error("METEOR_SETTINGS are not valid JSON.");
   }
 }
 
@@ -90,7 +93,9 @@ if (typeof __meteor_runtime_config__ === "object") {
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                    //
-function PackageRegistry() {}
+function PackageRegistry() {
+  this._promiseInfoMap = Object.create(null);
+}
 
 var PRp = PackageRegistry.prototype;
 
@@ -111,7 +116,43 @@ PRp._define = function definePackage(name, pkg) {
     }
   }
 
-  return this[name] = pkg;
+  this[name] = pkg;
+
+  var info = this._promiseInfoMap[name];
+  if (info) {
+    info.resolve(pkg);
+  }
+
+  return pkg;
+};
+
+PRp._has = function has(name) {
+  return Object.prototype.hasOwnProperty.call(this, name);
+};
+
+// Returns a Promise that will resolve to the exports of the named
+// package, or be rejected if the package is not installed.
+PRp._promise = function promise(name) {
+  var self = this;
+  var info = self._promiseInfoMap[name];
+
+  if (! info) {
+    info = self._promiseInfoMap[name] = {};
+    info.promise = new Promise(function (resolve, reject) {
+      info.resolve = resolve;
+      if (self._has(name)) {
+        resolve(self[name]);
+      } else {
+        Meteor.startup(function () {
+          if (! self._has(name)) {
+            reject(new Error("Package " + name + " not installed"));
+          }
+        });
+      }
+    });
+  }
+
+  return info.promise;
 };
 
 // Initialize the Package namespace used by all Meteor packages.
@@ -120,6 +161,83 @@ global.Package = new PackageRegistry();
 if (typeof exports === "object") {
   // This code is also used by meteor/tools/isobuild/bundler.js.
   exports.PackageRegistry = PackageRegistry;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}).call(this);
+
+
+
+
+
+
+(function(){
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                 //
+// packages/meteor/message-dispatch.js                                                                             //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                                   //
+// This code receives, dispatches, and responds to inter-process messages
+// sent by the parent (build) process. See tools/runners/run-app.js for
+// the other side of this communications system.
+
+// The process.send method is only defined when the current process was
+// spawned by another process with an IPC channel.
+if (typeof process.send === "function") {
+  const promises = Object.create(null);
+
+  // Listen for messages from the parent process and dispatch them to the
+  // appropriate package, as identified by packageName. To receive these
+  // messages, packages should export an onMessage function that takes the
+  // payload as a parameter.
+  process.on("message", ({
+    type = "FROM_PARENT",
+    responseId = null,
+    packageName,
+    payload,
+  }) => {
+    if (type === "FROM_PARENT" &&
+        typeof packageName === "string") {
+      // Keep the messages and their responses strictly ordered per
+      // package, one after the last. The first message waits for the
+      // package to call Package._define(packageName, exports).
+      promises[packageName] = (
+        promises[packageName] || Package._promise(packageName)
+      ).then(
+        // In order to receive messages, the package must export an
+        // onMessage function.
+        () => Package[packageName].onMessage(payload)
+      ).then(result => {
+        if (responseId) {
+          // Send the response value back to the parent using the provided
+          // responseId (if any).
+          process.send({
+            type: "FROM_CHILD",
+            responseId,
+            result,
+          });
+        }
+      }, error => {
+        const copy = {};
+        Reflect.ownKeys(error).forEach(key => copy[key] = error[key]);
+        process.send({
+          type: "FROM_CHILD",
+          responseId,
+          error: copy,
+        });
+      });
+    }
+  });
+
+  // Let the parent process know this child process is ready to receive
+  // messages.
+  process.send({
+    type: "CHILD_READY",
+    pid: process.pid,
+  });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +421,7 @@ function logErr(err) {
   if (err) {
     return Meteor._debug(
       "Exception in callback of async function",
-      err.stack ? err.stack : err
+      err
     );
   }
 }
@@ -788,7 +906,7 @@ SQp.runTask = function (task) {
   var fut = new Future;
   var handle = {
     task: Meteor.bindEnvironment(task, function (e) {
-      Meteor._debug("Exception from task:", e && e.stack || e);
+      Meteor._debug("Exception from task", e);
       throw e;
     }),
     future: fut,
@@ -872,7 +990,7 @@ SQp._run = function () {
       // We'll throw this exception through runTask.
       exception = err;
     } else {
-      Meteor._debug("Exception in queued task: " + (err.stack || err));
+      Meteor._debug("Exception in queued task", err);
     }
   }
   self._currentTaskFiber = undefined;
@@ -1219,7 +1337,7 @@ Meteor.bindEnvironment = function (func, onException, _this) {
     onException = function (error) {
       Meteor._debug(
         "Exception in " + description + ":",
-        error && error.stack || error
+        error
       );
     };
   } else if (typeof(onException) !== 'function') {
@@ -1332,11 +1450,17 @@ Meteor.absoluteUrl = function (path, options) {
   if (!/^http[s]?:\/\//i.test(url)) // url starts with 'http://' or 'https://'
     url = 'http://' + url; // we will later fix to https if options.secure is set
 
-  if (!/\/$/.test(url)) // url ends with '/'
-    url += '/';
+  if (! url.endsWith("/")) {
+    url += "/";
+  }
 
-  if (path)
+  if (path) {
+    // join url and path with a / separator
+    while (path.startsWith("/")) {
+      path = path.slice(1);
+    }
     url += path;
+  }
 
   // turn http to https if secure option is set, and we're not talking
   // to localhost.
@@ -1353,11 +1477,27 @@ Meteor.absoluteUrl = function (path, options) {
 };
 
 // allow later packages to override default options
-Meteor.absoluteUrl.defaultOptions = { };
-if (typeof __meteor_runtime_config__ === "object" &&
-    __meteor_runtime_config__.ROOT_URL)
-  Meteor.absoluteUrl.defaultOptions.rootUrl = __meteor_runtime_config__.ROOT_URL;
+var defaultOptions = Meteor.absoluteUrl.defaultOptions = {};
 
+// available only in a browser environment
+var location = typeof window === "object" && window.location;
+
+if (typeof __meteor_runtime_config__ === "object" &&
+    __meteor_runtime_config__.ROOT_URL) {
+  defaultOptions.rootUrl = __meteor_runtime_config__.ROOT_URL;
+} else if (location &&
+           location.protocol &&
+           location.host) {
+  defaultOptions.rootUrl = location.protocol + "//" + location.host;
+}
+
+// Make absolute URLs use HTTPS by default if the current window.location
+// uses HTTPS. Since this is just a default, it can be overridden by
+// passing { secure: false } if necessary.
+if (location &&
+    location.protocol === "https:") {
+  defaultOptions.secure = true;
+}
 
 Meteor._relativeToSiteRootUrl = function (link) {
   if (typeof __meteor_runtime_config__ === "object" &&

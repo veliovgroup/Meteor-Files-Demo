@@ -18,6 +18,16 @@
       "path": "packages/modules.js"
     },
     {
+      "path": "packages/modern-browsers.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/promise/node_modules",
+      "path": "packages/promise.js"
+    },
+    {
+      "path": "packages/ecmascript-runtime-client.js"
+    },
+    {
       "node_modules": "npm/node_modules/meteor/ecmascript-runtime-server/node_modules",
       "path": "packages/ecmascript-runtime-server.js"
     },
@@ -32,10 +42,6 @@
     {
       "node_modules": "npm/node_modules/meteor/babel-runtime/node_modules",
       "path": "packages/babel-runtime.js"
-    },
-    {
-      "node_modules": "npm/node_modules/meteor/promise/node_modules",
-      "path": "packages/promise.js"
     },
     {
       "path": "packages/url.js"
@@ -54,9 +60,6 @@
     {
       "sourceMap": "packages/ejson.js.map",
       "path": "packages/ejson.js"
-    },
-    {
-      "path": "packages/ecmascript-runtime-client.js"
     },
     {
       "node_modules": "npm/node_modules/meteor/logging/node_modules",
@@ -93,6 +96,7 @@
       "path": "packages/random.js"
     },
     {
+      "sourceMap": "packages/tracker.js.map",
       "path": "packages/tracker.js"
     },
     {
@@ -264,6 +268,31 @@
       "path": "packages/ostrio_templatehelpers.js"
     },
     {
+      "sourceMap": "packages/staringatlights_inject-data.js.map",
+      "path": "packages/staringatlights_inject-data.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/meteorhacks_picker/node_modules",
+      "path": "packages/meteorhacks_picker.js"
+    },
+    {
+      "path": "packages/meteorhacks_meteorx.js"
+    },
+    {
+      "sourceMap": "packages/accounts-base.js.map",
+      "path": "packages/accounts-base.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/server-render/node_modules",
+      "sourceMap": "packages/server-render.js.map",
+      "path": "packages/server-render.js"
+    },
+    {
+      "node_modules": "npm/node_modules/meteor/staringatlights_fast-render/node_modules",
+      "sourceMap": "packages/staringatlights_fast-render.js.map",
+      "path": "packages/staringatlights_fast-render.js"
+    },
+    {
       "sourceMap": "packages/reactive-dict.js.map",
       "path": "packages/reactive-dict.js"
     },
@@ -282,10 +311,6 @@
       "node_modules": "npm/node_modules/meteor/ostrio_spiderable-middleware/node_modules",
       "sourceMap": "packages/ostrio_spiderable-middleware.js.map",
       "path": "packages/ostrio_spiderable-middleware.js"
-    },
-    {
-      "sourceMap": "packages/accounts-base.js.map",
-      "path": "packages/accounts-base.js"
     },
     {
       "path": "packages/service-configuration.js"
