@@ -1,3 +1,5 @@
 [
+  "npm/node_modules/meteor/babel-compiler",
+  "npm/node_modules/meteor/ostrio_spiderable-middleware",
   "npm"
 ]

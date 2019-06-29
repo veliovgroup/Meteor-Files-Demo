@@ -50,10 +50,10 @@ class SourceMap {
     return this._rawMappings.slice();
   }
 
-  mark(generatedLine, generatedColumn, line, column, identifierName, filename) {
+  mark(generatedLine, generatedColumn, line, column, identifierName, filename, force) {
     if (this._lastGenLine !== generatedLine && line === null) return;
 
-    if (this._lastGenLine === generatedLine && this._lastSourceLine === line && this._lastSourceColumn === column) {
+    if (!force && this._lastGenLine === generatedLine && this._lastSourceLine === line && this._lastSourceColumn === column) {
       return;
     }
 

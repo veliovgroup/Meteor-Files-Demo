@@ -17,8 +17,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const parse = function parse(code, opts, callback) {
   if (typeof opts === "function") {
-    opts = undefined;
     callback = opts;
+    opts = undefined;
   }
 
   if (callback === undefined) return parseSync(code, opts);

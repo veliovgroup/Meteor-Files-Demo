@@ -262,7 +262,7 @@ HTTP.patch = function (/* varargs */) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"node_modules":{"request":{"package.json":function(require,exports){
+},"node_modules":{"request":{"package.json":function(require,exports,module){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                  //
@@ -270,9 +270,11 @@ HTTP.patch = function (/* varargs */) {
 //                                                                                                                  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                                     //
-exports.name = "request";
-exports.version = "2.83.0";
-exports.main = "index.js";
+module.exports = {
+  "name": "request",
+  "version": "2.88.0",
+  "main": "index.js"
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -293,6 +295,7 @@ module.useNode();
     ".json"
   ]
 });
+
 var exports = require("/node_modules/meteor/http/httpcall_server.js");
 
 /* Exports */

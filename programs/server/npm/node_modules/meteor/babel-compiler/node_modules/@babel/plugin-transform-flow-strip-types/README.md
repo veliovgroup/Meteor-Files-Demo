@@ -2,18 +2,18 @@
 
 > Strip flow type annotations from your output code.
 
-See our website [@babel/plugin-transform-flow-strip-types](https://new.babeljs.io/docs/en/next/babel-plugin-transform-flow-strip-types.html) for more information.
+See our website [@babel/plugin-transform-flow-strip-types](https://babeljs.io/docs/en/next/babel-plugin-transform-flow-strip-types.html) for more information.
 
 ## Install
 
 Using npm:
 
 ```sh
-npm install --save @babel/plugin-transform-flow-strip-types
+npm install --save-dev @babel/plugin-transform-flow-strip-types
 ```
 
 or using yarn:
 
 ```sh
-yarn add --save @babel/plugin-transform-flow-strip-types
+yarn add @babel/plugin-transform-flow-strip-types --dev
 ```

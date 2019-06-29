@@ -13,44 +13,42 @@ var Promise = Package.promise.Promise;
 
 var require = meteorInstall({"node_modules":{"meteor":{"accounts-facebook":{"notice.js":function(){
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// packages/accounts-facebook/notice.js                                                                             //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
-if (Package['accounts-ui'] && !Package['service-configuration'] && !Package.hasOwnProperty('facebook-config-ui')) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                       //
+// packages/accounts-facebook/notice.js                                                                  //
+//                                                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                         //
+if (Package['accounts-ui'] && !Package['service-configuration'] && !Object.prototype.hasOwnProperty.call(Package, 'facebook-config-ui')) {
   console.warn("Note: You're using accounts-ui and accounts-facebook,\n" + "but didn't install the configuration UI for the Facebook\n" + "OAuth. You can install it with:\n" + "\n" + "    meteor add facebook-config-ui" + "\n");
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 },"facebook.js":function(){
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                                                  //
-// packages/accounts-facebook/facebook.js                                                                           //
-//                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                                                                                    //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                       //
+// packages/accounts-facebook/facebook.js                                                                //
+//                                                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                                                                         //
 Accounts.oauth.registerService('facebook');
 
 if (Meteor.isClient) {
-  const loginWithFacebook = function (options, callback) {
+  const loginWithFacebook = (options, callback) => {
     // support a callback without options
     if (!callback && typeof options === "function") {
       callback = options;
       options = null;
     }
 
-    var credentialRequestCompleteCallback = Accounts.oauth.credentialRequestCompleteHandler(callback);
+    const credentialRequestCompleteCallback = Accounts.oauth.credentialRequestCompleteHandler(callback);
     Facebook.requestCredential(options, credentialRequestCompleteCallback);
   };
 
   Accounts.registerClientLoginFunction('facebook', loginWithFacebook);
 
-  Meteor.loginWithFacebook = function () {
-    return Accounts.applyLoginFunction('facebook', arguments);
-  };
+  Meteor.loginWithFacebook = (...args) => Accounts.applyLoginFunction('facebook', args);
 } else {
   Accounts.addAutopublishFields({
     // publish all fields including access token, which can legitimately
@@ -62,7 +60,7 @@ if (Meteor.isClient) {
     'services.facebook.id', 'services.facebook.username', 'services.facebook.gender']
   });
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }}}}},{
   "extensions": [
@@ -70,6 +68,7 @@ if (Meteor.isClient) {
     ".json"
   ]
 });
+
 require("/node_modules/meteor/accounts-facebook/notice.js");
 require("/node_modules/meteor/accounts-facebook/facebook.js");
 
@@ -79,4 +78,4 @@ Package._define("accounts-facebook");
 })();
 
 //# sourceURL=meteor://💻app/packages/accounts-facebook.js
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1ldGVvcjovL/CfkrthcHAvcGFja2FnZXMvYWNjb3VudHMtZmFjZWJvb2svbm90aWNlLmpzIiwibWV0ZW9yOi8v8J+Su2FwcC9wYWNrYWdlcy9hY2NvdW50cy1mYWNlYm9vay9mYWNlYm9vay5qcyJdLCJuYW1lcyI6WyJQYWNrYWdlIiwiaGFzT3duUHJvcGVydHkiLCJjb25zb2xlIiwid2FybiIsIkFjY291bnRzIiwib2F1dGgiLCJyZWdpc3RlclNlcnZpY2UiLCJNZXRlb3IiLCJpc0NsaWVudCIsImxvZ2luV2l0aEZhY2Vib29rIiwib3B0aW9ucyIsImNhbGxiYWNrIiwiY3JlZGVudGlhbFJlcXVlc3RDb21wbGV0ZUNhbGxiYWNrIiwiY3JlZGVudGlhbFJlcXVlc3RDb21wbGV0ZUhhbmRsZXIiLCJGYWNlYm9vayIsInJlcXVlc3RDcmVkZW50aWFsIiwicmVnaXN0ZXJDbGllbnRMb2dpbkZ1bmN0aW9uIiwiYXBwbHlMb2dpbkZ1bmN0aW9uIiwiYXJndW1lbnRzIiwiYWRkQXV0b3B1Ymxpc2hGaWVsZHMiLCJmb3JMb2dnZWRJblVzZXIiLCJmb3JPdGhlclVzZXJzIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxJQUFJQSxRQUFRLGFBQVIsS0FDRyxDQUFDQSxRQUFRLHVCQUFSLENBREosSUFFRyxDQUFDQSxRQUFRQyxjQUFSLENBQXVCLG9CQUF2QixDQUZSLEVBRXNEO0FBQ3BEQyxVQUFRQyxJQUFSLENBQ0UsNERBQ0EsNERBREEsR0FFQSxtQ0FGQSxHQUdBLElBSEEsR0FJQSxtQ0FKQSxHQUtBLElBTkY7QUFRRCxDOzs7Ozs7Ozs7OztBQ1hEQyxTQUFTQyxLQUFULENBQWVDLGVBQWYsQ0FBK0IsVUFBL0I7O0FBRUEsSUFBSUMsT0FBT0MsUUFBWCxFQUFxQjtBQUNuQixRQUFNQyxvQkFBb0IsVUFBU0MsT0FBVCxFQUFrQkMsUUFBbEIsRUFBNEI7QUFDcEQ7QUFDQSxRQUFJLENBQUVBLFFBQUYsSUFBYyxPQUFPRCxPQUFQLEtBQW1CLFVBQXJDLEVBQWlEO0FBQy9DQyxpQkFBV0QsT0FBWDtBQUNBQSxnQkFBVSxJQUFWO0FBQ0Q7O0FBRUQsUUFBSUUsb0NBQW9DUixTQUFTQyxLQUFULENBQWVRLGdDQUFmLENBQWdERixRQUFoRCxDQUF4QztBQUNBRyxhQUFTQyxpQkFBVCxDQUEyQkwsT0FBM0IsRUFBb0NFLGlDQUFwQztBQUNELEdBVEQ7O0FBVUFSLFdBQVNZLDJCQUFULENBQXFDLFVBQXJDLEVBQWlEUCxpQkFBakQ7O0FBQ0FGLFNBQU9FLGlCQUFQLEdBQTJCLFlBQVk7QUFDckMsV0FBT0wsU0FBU2Esa0JBQVQsQ0FBNEIsVUFBNUIsRUFBd0NDLFNBQXhDLENBQVA7QUFDRCxHQUZEO0FBR0QsQ0FmRCxNQWVPO0FBQ0xkLFdBQVNlLG9CQUFULENBQThCO0FBQzVCO0FBQ0E7QUFDQTtBQUNBO0FBQ0FDLHFCQUFpQixDQUFDLG1CQUFELENBTFc7QUFNNUJDLG1CQUFlLENBQ2I7QUFDQSwwQkFGYSxFQUVXLDRCQUZYLEVBRXlDLDBCQUZ6QztBQU5hLEdBQTlCO0FBV0QsQyIsImZpbGUiOiIvcGFja2FnZXMvYWNjb3VudHMtZmFjZWJvb2suanMiLCJzb3VyY2VzQ29udGVudCI6WyJpZiAoUGFja2FnZVsnYWNjb3VudHMtdWknXVxuICAgICYmICFQYWNrYWdlWydzZXJ2aWNlLWNvbmZpZ3VyYXRpb24nXVxuICAgICYmICFQYWNrYWdlLmhhc093blByb3BlcnR5KCdmYWNlYm9vay1jb25maWctdWknKSkge1xuICBjb25zb2xlLndhcm4oXG4gICAgXCJOb3RlOiBZb3UncmUgdXNpbmcgYWNjb3VudHMtdWkgYW5kIGFjY291bnRzLWZhY2Vib29rLFxcblwiICtcbiAgICBcImJ1dCBkaWRuJ3QgaW5zdGFsbCB0aGUgY29uZmlndXJhdGlvbiBVSSBmb3IgdGhlIEZhY2Vib29rXFxuXCIgK1xuICAgIFwiT0F1dGguIFlvdSBjYW4gaW5zdGFsbCBpdCB3aXRoOlxcblwiICtcbiAgICBcIlxcblwiICtcbiAgICBcIiAgICBtZXRlb3IgYWRkIGZhY2Vib29rLWNvbmZpZy11aVwiICtcbiAgICBcIlxcblwiXG4gICk7XG59XG4iLCJBY2NvdW50cy5vYXV0aC5yZWdpc3RlclNlcnZpY2UoJ2ZhY2Vib29rJyk7XG5cbmlmIChNZXRlb3IuaXNDbGllbnQpIHtcbiAgY29uc3QgbG9naW5XaXRoRmFjZWJvb2sgPSBmdW5jdGlvbihvcHRpb25zLCBjYWxsYmFjaykge1xuICAgIC8vIHN1cHBvcnQgYSBjYWxsYmFjayB3aXRob3V0IG9wdGlvbnNcbiAgICBpZiAoISBjYWxsYmFjayAmJiB0eXBlb2Ygb3B0aW9ucyA9PT0gXCJmdW5jdGlvblwiKSB7XG4gICAgICBjYWxsYmFjayA9IG9wdGlvbnM7XG4gICAgICBvcHRpb25zID0gbnVsbDtcbiAgICB9XG5cbiAgICB2YXIgY3JlZGVudGlhbFJlcXVlc3RDb21wbGV0ZUNhbGxiYWNrID0gQWNjb3VudHMub2F1dGguY3JlZGVudGlhbFJlcXVlc3RDb21wbGV0ZUhhbmRsZXIoY2FsbGJhY2spO1xuICAgIEZhY2Vib29rLnJlcXVlc3RDcmVkZW50aWFsKG9wdGlvbnMsIGNyZWRlbnRpYWxSZXF1ZXN0Q29tcGxldGVDYWxsYmFjayk7XG4gIH07XG4gIEFjY291bnRzLnJlZ2lzdGVyQ2xpZW50TG9naW5GdW5jdGlvbignZmFjZWJvb2snLCBsb2dpbldpdGhGYWNlYm9vayk7XG4gIE1ldGVvci5sb2dpbldpdGhGYWNlYm9vayA9IGZ1bmN0aW9uICgpIHtcbiAgICByZXR1cm4gQWNjb3VudHMuYXBwbHlMb2dpbkZ1bmN0aW9uKCdmYWNlYm9vaycsIGFyZ3VtZW50cyk7XG4gIH07XG59IGVsc2Uge1xuICBBY2NvdW50cy5hZGRBdXRvcHVibGlzaEZpZWxkcyh7XG4gICAgLy8gcHVibGlzaCBhbGwgZmllbGRzIGluY2x1ZGluZyBhY2Nlc3MgdG9rZW4sIHdoaWNoIGNhbiBsZWdpdGltYXRlbHlcbiAgICAvLyBiZSB1c2VkIGZyb20gdGhlIGNsaWVudCAoaWYgdHJhbnNtaXR0ZWQgb3ZlciBzc2wgb3Igb25cbiAgICAvLyBsb2NhbGhvc3QpLiBodHRwczovL2RldmVsb3BlcnMuZmFjZWJvb2suY29tL2RvY3MvY29uY2VwdHMvbG9naW4vYWNjZXNzLXRva2Vucy1hbmQtdHlwZXMvLFxuICAgIC8vIFwiU2hhcmluZyBvZiBBY2Nlc3MgVG9rZW5zXCJcbiAgICBmb3JMb2dnZWRJblVzZXI6IFsnc2VydmljZXMuZmFjZWJvb2snXSxcbiAgICBmb3JPdGhlclVzZXJzOiBbXG4gICAgICAvLyBodHRwczovL3d3dy5mYWNlYm9vay5jb20vaGVscC8xNjc3MDk1MTk5NTY1NDJcbiAgICAgICdzZXJ2aWNlcy5mYWNlYm9vay5pZCcsICdzZXJ2aWNlcy5mYWNlYm9vay51c2VybmFtZScsICdzZXJ2aWNlcy5mYWNlYm9vay5nZW5kZXInXG4gICAgXVxuICB9KTtcbn1cbiJdfQ==
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1ldGVvcjovL/CfkrthcHAvcGFja2FnZXMvYWNjb3VudHMtZmFjZWJvb2svbm90aWNlLmpzIiwibWV0ZW9yOi8v8J+Su2FwcC9wYWNrYWdlcy9hY2NvdW50cy1mYWNlYm9vay9mYWNlYm9vay5qcyJdLCJuYW1lcyI6WyJQYWNrYWdlIiwiT2JqZWN0IiwicHJvdG90eXBlIiwiaGFzT3duUHJvcGVydHkiLCJjYWxsIiwiY29uc29sZSIsIndhcm4iLCJBY2NvdW50cyIsIm9hdXRoIiwicmVnaXN0ZXJTZXJ2aWNlIiwiTWV0ZW9yIiwiaXNDbGllbnQiLCJsb2dpbldpdGhGYWNlYm9vayIsIm9wdGlvbnMiLCJjYWxsYmFjayIsImNyZWRlbnRpYWxSZXF1ZXN0Q29tcGxldGVDYWxsYmFjayIsImNyZWRlbnRpYWxSZXF1ZXN0Q29tcGxldGVIYW5kbGVyIiwiRmFjZWJvb2siLCJyZXF1ZXN0Q3JlZGVudGlhbCIsInJlZ2lzdGVyQ2xpZW50TG9naW5GdW5jdGlvbiIsImFyZ3MiLCJhcHBseUxvZ2luRnVuY3Rpb24iLCJhZGRBdXRvcHVibGlzaEZpZWxkcyIsImZvckxvZ2dlZEluVXNlciIsImZvck90aGVyVXNlcnMiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUFBLElBQUlBLE9BQU8sQ0FBQyxhQUFELENBQVAsSUFDRyxDQUFDQSxPQUFPLENBQUMsdUJBQUQsQ0FEWCxJQUVHLENBQUNDLE1BQU0sQ0FBQ0MsU0FBUCxDQUFpQkMsY0FBakIsQ0FBZ0NDLElBQWhDLENBQXFDSixPQUFyQyxFQUE4QyxvQkFBOUMsQ0FGUixFQUU2RTtBQUMzRUssU0FBTyxDQUFDQyxJQUFSLENBQ0UsNERBQ0EsNERBREEsR0FFQSxtQ0FGQSxHQUdBLElBSEEsR0FJQSxtQ0FKQSxHQUtBLElBTkY7QUFRRCxDOzs7Ozs7Ozs7OztBQ1hEQyxRQUFRLENBQUNDLEtBQVQsQ0FBZUMsZUFBZixDQUErQixVQUEvQjs7QUFFQSxJQUFJQyxNQUFNLENBQUNDLFFBQVgsRUFBcUI7QUFDbkIsUUFBTUMsaUJBQWlCLEdBQUcsQ0FBQ0MsT0FBRCxFQUFVQyxRQUFWLEtBQXVCO0FBQy9DO0FBQ0EsUUFBSSxDQUFFQSxRQUFGLElBQWMsT0FBT0QsT0FBUCxLQUFtQixVQUFyQyxFQUFpRDtBQUMvQ0MsY0FBUSxHQUFHRCxPQUFYO0FBQ0FBLGFBQU8sR0FBRyxJQUFWO0FBQ0Q7O0FBRUQsVUFBTUUsaUNBQWlDLEdBQUdSLFFBQVEsQ0FBQ0MsS0FBVCxDQUFlUSxnQ0FBZixDQUFnREYsUUFBaEQsQ0FBMUM7QUFDQUcsWUFBUSxDQUFDQyxpQkFBVCxDQUEyQkwsT0FBM0IsRUFBb0NFLGlDQUFwQztBQUNELEdBVEQ7O0FBVUFSLFVBQVEsQ0FBQ1ksMkJBQVQsQ0FBcUMsVUFBckMsRUFBaURQLGlCQUFqRDs7QUFDQUYsUUFBTSxDQUFDRSxpQkFBUCxHQUNFLENBQUMsR0FBR1EsSUFBSixLQUFhYixRQUFRLENBQUNjLGtCQUFULENBQTRCLFVBQTVCLEVBQXdDRCxJQUF4QyxDQURmO0FBRUQsQ0FkRCxNQWNPO0FBQ0xiLFVBQVEsQ0FBQ2Usb0JBQVQsQ0FBOEI7QUFDNUI7QUFDQTtBQUNBO0FBQ0E7QUFDQUMsbUJBQWUsRUFBRSxDQUFDLG1CQUFELENBTFc7QUFNNUJDLGlCQUFhLEVBQUUsQ0FDYjtBQUNBLDBCQUZhLEVBRVcsNEJBRlgsRUFFeUMsMEJBRnpDO0FBTmEsR0FBOUI7QUFXRCxDIiwiZmlsZSI6Ii9wYWNrYWdlcy9hY2NvdW50cy1mYWNlYm9vay5qcyIsInNvdXJjZXNDb250ZW50IjpbImlmIChQYWNrYWdlWydhY2NvdW50cy11aSddXG4gICAgJiYgIVBhY2thZ2VbJ3NlcnZpY2UtY29uZmlndXJhdGlvbiddXG4gICAgJiYgIU9iamVjdC5wcm90b3R5cGUuaGFzT3duUHJvcGVydHkuY2FsbChQYWNrYWdlLCAnZmFjZWJvb2stY29uZmlnLXVpJykpIHtcbiAgY29uc29sZS53YXJuKFxuICAgIFwiTm90ZTogWW91J3JlIHVzaW5nIGFjY291bnRzLXVpIGFuZCBhY2NvdW50cy1mYWNlYm9vayxcXG5cIiArXG4gICAgXCJidXQgZGlkbid0IGluc3RhbGwgdGhlIGNvbmZpZ3VyYXRpb24gVUkgZm9yIHRoZSBGYWNlYm9va1xcblwiICtcbiAgICBcIk9BdXRoLiBZb3UgY2FuIGluc3RhbGwgaXQgd2l0aDpcXG5cIiArXG4gICAgXCJcXG5cIiArXG4gICAgXCIgICAgbWV0ZW9yIGFkZCBmYWNlYm9vay1jb25maWctdWlcIiArXG4gICAgXCJcXG5cIlxuICApO1xufVxuIiwiQWNjb3VudHMub2F1dGgucmVnaXN0ZXJTZXJ2aWNlKCdmYWNlYm9vaycpO1xuXG5pZiAoTWV0ZW9yLmlzQ2xpZW50KSB7XG4gIGNvbnN0IGxvZ2luV2l0aEZhY2Vib29rID0gKG9wdGlvbnMsIGNhbGxiYWNrKSA9PiB7XG4gICAgLy8gc3VwcG9ydCBhIGNhbGxiYWNrIHdpdGhvdXQgb3B0aW9uc1xuICAgIGlmICghIGNhbGxiYWNrICYmIHR5cGVvZiBvcHRpb25zID09PSBcImZ1bmN0aW9uXCIpIHtcbiAgICAgIGNhbGxiYWNrID0gb3B0aW9ucztcbiAgICAgIG9wdGlvbnMgPSBudWxsO1xuICAgIH1cblxuICAgIGNvbnN0IGNyZWRlbnRpYWxSZXF1ZXN0Q29tcGxldGVDYWxsYmFjayA9IEFjY291bnRzLm9hdXRoLmNyZWRlbnRpYWxSZXF1ZXN0Q29tcGxldGVIYW5kbGVyKGNhbGxiYWNrKTtcbiAgICBGYWNlYm9vay5yZXF1ZXN0Q3JlZGVudGlhbChvcHRpb25zLCBjcmVkZW50aWFsUmVxdWVzdENvbXBsZXRlQ2FsbGJhY2spO1xuICB9O1xuICBBY2NvdW50cy5yZWdpc3RlckNsaWVudExvZ2luRnVuY3Rpb24oJ2ZhY2Vib29rJywgbG9naW5XaXRoRmFjZWJvb2spO1xuICBNZXRlb3IubG9naW5XaXRoRmFjZWJvb2sgPSBcbiAgICAoLi4uYXJncykgPT4gQWNjb3VudHMuYXBwbHlMb2dpbkZ1bmN0aW9uKCdmYWNlYm9vaycsIGFyZ3MpO1xufSBlbHNlIHtcbiAgQWNjb3VudHMuYWRkQXV0b3B1Ymxpc2hGaWVsZHMoe1xuICAgIC8vIHB1Ymxpc2ggYWxsIGZpZWxkcyBpbmNsdWRpbmcgYWNjZXNzIHRva2VuLCB3aGljaCBjYW4gbGVnaXRpbWF0ZWx5XG4gICAgLy8gYmUgdXNlZCBmcm9tIHRoZSBjbGllbnQgKGlmIHRyYW5zbWl0dGVkIG92ZXIgc3NsIG9yIG9uXG4gICAgLy8gbG9jYWxob3N0KS4gaHR0cHM6Ly9kZXZlbG9wZXJzLmZhY2Vib29rLmNvbS9kb2NzL2NvbmNlcHRzL2xvZ2luL2FjY2Vzcy10b2tlbnMtYW5kLXR5cGVzLyxcbiAgICAvLyBcIlNoYXJpbmcgb2YgQWNjZXNzIFRva2Vuc1wiXG4gICAgZm9yTG9nZ2VkSW5Vc2VyOiBbJ3NlcnZpY2VzLmZhY2Vib29rJ10sXG4gICAgZm9yT3RoZXJVc2VyczogW1xuICAgICAgLy8gaHR0cHM6Ly93d3cuZmFjZWJvb2suY29tL2hlbHAvMTY3NzA5NTE5OTU2NTQyXG4gICAgICAnc2VydmljZXMuZmFjZWJvb2suaWQnLCAnc2VydmljZXMuZmFjZWJvb2sudXNlcm5hbWUnLCAnc2VydmljZXMuZmFjZWJvb2suZ2VuZGVyJ1xuICAgIF1cbiAgfSk7XG59XG4iXX0=

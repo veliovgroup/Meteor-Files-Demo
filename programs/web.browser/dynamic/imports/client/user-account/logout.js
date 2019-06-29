@@ -1,2 +1,2 @@
-function(t,e,o){let a,l;o.watch(t("meteor/meteor"),{Meteor(t){a=t}},0),o.watch(t("meteor/templating"),{Template(t){l=t}},1),o.watch(t("./logout.jade")),l.logout.events({"click [data-logout]"(t){t.preventDefault(),a.logout()}})}
+function(e,t,o){let l,n;o.link("meteor/meteor",{Meteor(e){l=e}},0),o.link("meteor/templating",{Template(e){n=e}},1),o.link("./logout.jade"),n.logout.events({"click [data-logout]"(e){e.preventDefault(),l.logout()}})}
 

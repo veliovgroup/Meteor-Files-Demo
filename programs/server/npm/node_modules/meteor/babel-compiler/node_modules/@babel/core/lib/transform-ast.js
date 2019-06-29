@@ -15,8 +15,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const transformFromAst = function transformFromAst(ast, code, opts, callback) {
   if (typeof opts === "function") {
-    opts = undefined;
     callback = opts;
+    opts = undefined;
   }
 
   if (callback === undefined) return transformFromAstSync(ast, code, opts);

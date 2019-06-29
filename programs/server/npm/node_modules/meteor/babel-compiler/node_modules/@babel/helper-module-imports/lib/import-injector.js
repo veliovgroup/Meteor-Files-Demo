@@ -46,7 +46,7 @@ class ImportInjector {
     const programPath = path.find(p => p.isProgram());
     this._programPath = programPath;
     this._programScope = programPath.scope;
-    this._file = programPath.hub.file;
+    this._hub = programPath.hub;
     this._defaultOpts = this._applyDefaults(importedSource, opts, true);
   }
 
@@ -115,7 +115,7 @@ class ImportInjector {
     const isMod = (0, _isModule.default)(this._programPath);
     const isModuleForNode = isMod && importingInterop === "node";
     const isModuleForBabel = isMod && importingInterop === "babel";
-    const builder = new _importBuilder.default(importedSource, this._programScope, this._file);
+    const builder = new _importBuilder.default(importedSource, this._programScope, this._hub);
 
     if (importedType === "es6") {
       if (!isModuleForNode && !isModuleForBabel) {

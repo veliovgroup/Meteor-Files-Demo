@@ -30,13 +30,13 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class ImportBuilder {
-  constructor(importedSource, scope, file) {
+  constructor(importedSource, scope, hub) {
     this._statements = [];
     this._resultName = null;
     this._scope = null;
-    this._file = null;
+    this._hub = null;
     this._scope = scope;
-    this._file = file;
+    this._hub = hub;
     this._importedSource = importedSource;
   }
 
@@ -107,11 +107,11 @@ class ImportBuilder {
   }
 
   defaultInterop() {
-    return this._interop(this._file.addHelper("interopRequireDefault"));
+    return this._interop(this._hub.addHelper("interopRequireDefault"));
   }
 
   wildcardInterop() {
-    return this._interop(this._file.addHelper("interopRequireWildcard"));
+    return this._interop(this._hub.addHelper("interopRequireWildcard"));
   }
 
   _interop(callee) {

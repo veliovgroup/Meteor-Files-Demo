@@ -6,8 +6,7 @@ var global = Package.meteor.global;
 var meteorEnv = Package.meteor.meteorEnv;
 var meteorInstall = Package.modules.meteorInstall;
 var Promise = Package.promise.Promise;
-var HTTP = Package.http.HTTP;
-var HTTPInternals = Package.http.HTTPInternals;
+var fetch = Package.fetch.fetch;
 
 var require = meteorInstall({"node_modules":{"meteor":{"dynamic-import":{"server.js":function(require,exports,module){
 
@@ -26,6 +25,7 @@ const {
   normalize: pathNormalize,
 } = require("path");
 const { fetchURL } = require("./common.js");
+const { Meteor } = require("meteor/meteor");
 const { isModern } = require("meteor/modern-browsers");
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -92,20 +92,39 @@ function middleware(request, response) {
     );
     response.setHeader("Access-Control-Allow-Methods", "POST");
     response.end();
+
   } else if (request.method === "POST") {
     const chunks = [];
     request.on("data", chunk => chunks.push(chunk));
     request.on("end", () => {
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify(readTree(
-        JSON.parse(Buffer.concat(chunks)),
-        getPlatform(request)
-      ), null, 2));
+      try {
+        const tree = JSON.stringify(readTree(
+          JSON.parse(Buffer.concat(chunks)),
+          getPlatform(request)
+        ), null, 2);
+
+        response.writeHead(200, {
+          "Content-Type": "application/json"
+        });
+
+        response.end(tree);
+
+      } catch (e) {
+        response.writeHead(400, {
+          "Content-Type": "application/json"
+        });
+
+        response.end(JSON.stringify(
+          Meteor.isDevelopment && e.message || "bad request"
+        ));
+      }
     });
+
   } else {
     response.writeHead(405, {
       "Cache-Control": "no-cache"
     });
+
     response.end(`method ${request.method} not allowed`);
   }
 }
@@ -206,14 +225,17 @@ function getCache(platform) {
     : cachesByPlatform[platform] = Object.create(null);
 }
 
-process.on("message", msg => {
-  // The cache for the "web.browser" platform needs to be discarded
-  // whenever a client-only refresh occurs, so that new client code does
-  // not receive stale module data from __dynamicImport. This code handles
-  // the same message listened for by the autoupdate package.
-  if (msg && msg.refresh === "client") {
-    delete cachesByPlatform["web.browser"];
-  }
+const { onMessage } = require("meteor/inter-process-messaging");
+
+onMessage("client-refresh", () => {
+  // The caches for the web.browser[.legacy] platforms need to be
+  // discarded whenever a client-only refresh occurs, so the new client
+  // bundle does not fetch stale module data from dynamic import(). This
+  // message is sent by tools/runners/run-app.js and also consumed by the
+  // autoupdate package.
+  Object.keys(cachesByPlatform).forEach(platform => {
+    delete cachesByPlatform[platform];
+  });
 });
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +248,6 @@ process.on("message", msg => {
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
                                                                                //
-var hasOwn = Object.prototype.hasOwnProperty;
 var dbPromise;
 
 var canUseCache =
@@ -428,7 +449,6 @@ function flushSetMany() {
                                                                                //
 var Module = module.constructor;
 var cache = require("./cache.js");
-var HTTP = require("meteor/http").HTTP;
 var meteorInstall = require("meteor/modules").meteorInstall;
 
 // Call module.dynamicImport(id) to fetch a module and any/all of its
@@ -548,21 +568,26 @@ exports.setSecretKey = function (key) {
 var fetchURL = require("./common.js").fetchURL;
 
 function fetchMissing(missingTree) {
-  return new Promise(function (resolve, reject) {
-    // If the hostname of the URL returned by Meteor.absoluteUrl differs
-    // from location.host, then we'll be making a cross-origin request
-    // here, but that's fine because the dynamic-import server sets
-    // appropriate CORS headers to enable fetching dynamic modules from
-    // any origin. Browsers that check CORS do so by sending an additional
-    // preflight OPTIONS request, which may add latency to the first
-    // dynamic import() request, so it's a good idea for ROOT_URL to match
-    // location.host if possible, though not strictly necessary.
-    HTTP.call("POST", Meteor.absoluteUrl(fetchURL), {
-      query: secretKey ? "key=" + secretKey : void 0,
-      data: missingTree
-    }, function (error, result) {
-      error ? reject(error) : resolve(result.data);
-    });
+  // If the hostname of the URL returned by Meteor.absoluteUrl differs
+  // from location.host, then we'll be making a cross-origin request here,
+  // but that's fine because the dynamic-import server sets appropriate
+  // CORS headers to enable fetching dynamic modules from any
+  // origin. Browsers that check CORS do so by sending an additional
+  // preflight OPTIONS request, which may add latency to the first dynamic
+  // import() request, so it's a good idea for ROOT_URL to match
+  // location.host if possible, though not strictly necessary.
+  var url = Meteor.absoluteUrl(fetchURL);
+
+  if (secretKey) {
+    url += "key=" + secretKey;
+  }
+
+  return fetch(url, {
+    method: "POST",
+    body: JSON.stringify(missingTree)
+  }).then(function (res) {
+    if (! res.ok) throw res;
+    return res.json();
   });
 }
 
@@ -580,7 +605,7 @@ function addToTree(tree, id, value) {
 function getNamespace(module, id) {
   var namespace;
 
-  module.watch(module.require(id), {
+  module.link(id, {
     "*": function (ns) {
       namespace = ns;
     }
@@ -689,7 +714,9 @@ function precacheOnLoad(event) {
       return module.prefetch(id);
     })).then(function () {
       if (modules.length > 0) {
-        prefetchInChunks(modules, amount);
+        setTimeout(function () {
+          prefetchInChunks(modules, amount);
+        }, 0);
       }
     });
   }
@@ -746,6 +773,7 @@ Meteor.startup(function () {
     ".json"
   ]
 });
+
 var exports = require("/node_modules/meteor/dynamic-import/server.js");
 
 /* Exports */

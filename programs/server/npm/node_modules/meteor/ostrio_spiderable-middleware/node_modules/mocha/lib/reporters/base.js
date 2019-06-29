@@ -8,28 +8,18 @@
 
 var tty = require('tty');
 var diff = require('diff');
-var ms = require('../ms');
+var milliseconds = require('ms');
 var utils = require('../utils');
 var supportsColor = process.browser ? null : require('supports-color');
+var constants = require('../runner').constants;
+var EVENT_TEST_PASS = constants.EVENT_TEST_PASS;
+var EVENT_TEST_FAIL = constants.EVENT_TEST_FAIL;
 
 /**
  * Expose `Base`.
  */
 
 exports = module.exports = Base;
-
-/**
- * Save timer references to avoid Sinon interfering.
- * See: https://github.com/mochajs/mocha/issues/237
- */
-
-/* eslint-disable no-unused-vars, no-native-reassign */
-var Date = global.Date;
-var setTimeout = global.setTimeout;
-var setInterval = global.setInterval;
-var clearTimeout = global.clearTimeout;
-var clearInterval = global.clearInterval;
-/* eslint-enable no-unused-vars, no-native-reassign */
 
 /**
  * Check if both stdio streams are associated with a tty.
@@ -102,10 +92,10 @@ if (process.platform === 'win32') {
  * as well as user-defined color
  * schemes.
  *
+ * @private
  * @param {string} type
  * @param {string} str
  * @return {string}
- * @api private
  */
 var color = (exports.color = function(type, str) {
   if (!exports.useColors) {
@@ -178,7 +168,8 @@ function stringifyDiffObjs(err) {
 /**
  * Returns a diff between 2 strings with coloured ANSI output.
  *
- * The diff will be either inline or unified dependant on the value
+ * @description
+ * The diff will be either inline or unified dependent on the value
  * of `Base.inlineDiff`.
  *
  * @param {string} actual
@@ -192,15 +183,14 @@ var generateDiff = (exports.generateDiff = function(actual, expected) {
 });
 
 /**
- * Output the given `failures` as a list.
+ * Outputs the given `failures` as a list.
  *
  * @public
  * @memberof Mocha.reporters.Base
  * @variation 1
- * @param {Array} failures
- * @api public
+ * @param {Object[]} failures - Each is Test instance with corresponding
+ *     Error property
  */
-
 exports.list = function(failures) {
   console.log();
   failures.forEach(function(test, i) {
@@ -268,54 +258,28 @@ exports.list = function(failures) {
 };
 
 /**
- * Initialize a new `Base` reporter.
+ * Constructs a new `Base` reporter instance.
  *
- * All other reporters generally
- * inherit from this reporter, providing
- * stats such as test duration, number
- * of tests passed / failed etc.
+ * @description
+ * All other reporters generally inherit from this reporter.
  *
- * @memberof Mocha.reporters
  * @public
  * @class
- * @param {Runner} runner
- * @api public
+ * @memberof Mocha.reporters
+ * @param {Runner} runner - Instance triggers reporter actions.
+ * @param {Object} [options] - runner options
  */
-
-function Base(runner) {
-  var stats = (this.stats = {
-    suites: 0,
-    tests: 0,
-    passes: 0,
-    pending: 0,
-    failures: 0
-  });
+function Base(runner, options) {
   var failures = (this.failures = []);
 
   if (!runner) {
-    return;
+    throw new TypeError('Missing runner argument');
   }
+  this.options = options || {};
   this.runner = runner;
+  this.stats = runner.stats; // assigned so Reporters keep a closer reference
 
-  runner.stats = stats;
-
-  runner.on('start', function() {
-    stats.start = new Date();
-  });
-
-  runner.on('suite', function(suite) {
-    stats.suites = stats.suites || 0;
-    suite.root || stats.suites++;
-  });
-
-  runner.on('test end', function() {
-    stats.tests = stats.tests || 0;
-    stats.tests++;
-  });
-
-  runner.on('pass', function(test) {
-    stats.passes = stats.passes || 0;
-
+  runner.on(EVENT_TEST_PASS, function(test) {
     if (test.duration > test.slow()) {
       test.speed = 'slow';
     } else if (test.duration > test.slow() / 2) {
@@ -323,37 +287,22 @@ function Base(runner) {
     } else {
       test.speed = 'fast';
     }
-
-    stats.passes++;
   });
 
-  runner.on('fail', function(test, err) {
-    stats.failures = stats.failures || 0;
-    stats.failures++;
+  runner.on(EVENT_TEST_FAIL, function(test, err) {
     if (showDiff(err)) {
       stringifyDiffObjs(err);
     }
     test.err = err;
     failures.push(test);
   });
-
-  runner.once('end', function() {
-    stats.end = new Date();
-    stats.duration = stats.end - stats.start;
-  });
-
-  runner.on('pending', function() {
-    stats.pending++;
-  });
 }
 
 /**
- * Output common epilogue used by many of
- * the bundled reporters.
+ * Outputs common epilogue used by many of the bundled reporters.
  *
- * @memberof Mocha.reporters.Base
  * @public
- * @api public
+ * @memberof Mocha.reporters.Base
  */
 Base.prototype.epilogue = function() {
   var stats = this.stats;
@@ -367,7 +316,7 @@ Base.prototype.epilogue = function() {
     color('green', ' %d passing') +
     color('light', ' (%s)');
 
-  console.log(fmt, stats.passes || 0, ms(stats.duration));
+  console.log(fmt, stats.passes || 0, milliseconds(stats.duration));
 
   // pending
   if (stats.pending) {
@@ -390,9 +339,9 @@ Base.prototype.epilogue = function() {
 };
 
 /**
- * Pad the given `str` to `len`.
+ * Pads the given `str` to `len`.
  *
- * @api private
+ * @private
  * @param {string} str
  * @param {string} len
  * @return {string}
@@ -403,9 +352,9 @@ function pad(str, len) {
 }
 
 /**
- * Returns an inline diff between 2 strings with coloured ANSI output.
+ * Returns inline diff between 2 strings with coloured ANSI output.
  *
- * @api private
+ * @private
  * @param {String} actual
  * @param {String} expected
  * @return {string} Diff
@@ -440,9 +389,9 @@ function inlineDiff(actual, expected) {
 }
 
 /**
- * Returns a unified diff between two strings with coloured ANSI output.
+ * Returns unified diff between two strings with coloured ANSI output.
  *
- * @api private
+ * @private
  * @param {String} actual
  * @param {String} expected
  * @return {string} The diff.
@@ -483,9 +432,9 @@ function unifiedDiff(actual, expected) {
 }
 
 /**
- * Return a character diff for `err`.
+ * Returns character diff for `err`.
  *
- * @api private
+ * @private
  * @param {String} actual
  * @param {String} expected
  * @return {string} the diff
@@ -506,9 +455,9 @@ function errorDiff(actual, expected) {
 }
 
 /**
- * Color lines for `str`, using the color `name`.
+ * Colors lines for `str`, using the color `name`.
  *
- * @api private
+ * @private
  * @param {string} name
  * @param {string} str
  * @return {string}
@@ -528,9 +477,9 @@ function colorLines(name, str) {
 var objToString = Object.prototype.toString;
 
 /**
- * Check that a / b have the same type.
+ * Checks that a / b have the same type.
  *
- * @api private
+ * @private
  * @param {Object} a
  * @param {Object} b
  * @return {boolean}
@@ -538,3 +487,5 @@ var objToString = Object.prototype.toString;
 function sameType(a, b) {
   return objToString.call(a) === objToString.call(b);
 }
+
+Base.abstract = true;

@@ -1,32 +1,40 @@
 'use strict';
 
 /**
- * @module
+ * Various utility functions used throughout Mocha's codebase.
+ * @module utils
  */
 
 /**
  * Module dependencies.
  */
 
-var debug = require('debug')('mocha:watch');
 var fs = require('fs');
-var glob = require('glob');
 var path = require('path');
-var join = path.join;
+var util = require('util');
+var glob = require('glob');
 var he = require('he');
+var errors = require('./errors');
+var createNoFilesMatchPatternError = errors.createNoFilesMatchPatternError;
+var createMissingArgumentError = errors.createMissingArgumentError;
+
+var assign = (exports.assign = require('object.assign').getPolyfill());
 
 /**
- * Ignored directories.
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * @param {function} ctor - Constructor function which needs to inherit the
+ *     prototype.
+ * @param {function} superCtor - Constructor function to inherit prototype from.
+ * @throws {TypeError} if either constructor is null, or if super constructor
+ *     lacks a prototype.
  */
-
-var ignore = ['node_modules', '.git'];
-
-exports.inherits = require('util').inherits;
+exports.inherits = util.inherits;
 
 /**
  * Escape special characters in the given string of html.
  *
- * @api private
+ * @private
  * @param  {string} html
  * @return {string}
  */
@@ -37,7 +45,7 @@ exports.escape = function(html) {
 /**
  * Test if the given obj is type of string.
  *
- * @api private
+ * @private
  * @param {Object} obj
  * @return {boolean}
  */
@@ -49,12 +57,13 @@ exports.isString = function(obj) {
  * Watch the given `files` for changes
  * and invoke `fn(file)` on modification.
  *
- * @api private
+ * @private
  * @param {Array} files
  * @param {Function} fn
  */
 exports.watch = function(files, fn) {
   var options = {interval: 100};
+  var debug = require('debug')('mocha:watch');
   files.forEach(function(file) {
     debug('file %s', file);
     fs.watchFile(file, options, function(curr, prev) {
@@ -66,40 +75,52 @@ exports.watch = function(files, fn) {
 };
 
 /**
- * Ignored files.
+ * Predicate to screen `pathname` for further consideration.
  *
- * @api private
- * @param {string} path
- * @return {boolean}
+ * @description
+ * Returns <code>false</code> for pathname referencing:
+ * <ul>
+ *   <li>'npm' package installation directory
+ *   <li>'git' version control directory
+ * </ul>
+ *
+ * @private
+ * @param {string} pathname - File or directory name to screen
+ * @return {boolean} whether pathname should be further considered
+ * @example
+ * ['node_modules', 'test.js'].filter(considerFurther); // => ['test.js']
  */
-function ignored(path) {
-  return !~ignore.indexOf(path);
+function considerFurther(pathname) {
+  var ignore = ['node_modules', '.git'];
+
+  return !~ignore.indexOf(pathname);
 }
 
 /**
  * Lookup files in the given `dir`.
  *
- * @api private
+ * @description
+ * Filenames are returned in _traversal_ order by the OS/filesystem.
+ * **Make no assumption that the names will be sorted in any fashion.**
+ *
+ * @private
  * @param {string} dir
- * @param {string[]} [ext=['.js']]
+ * @param {string[]} [exts=['js']]
  * @param {Array} [ret=[]]
  * @return {Array}
  */
-exports.files = function(dir, ext, ret) {
+exports.files = function(dir, exts, ret) {
   ret = ret || [];
-  ext = ext || ['js'];
+  exts = exts || ['js'];
 
-  var re = new RegExp('\\.(' + ext.join('|') + ')$');
-
-  fs
-    .readdirSync(dir)
-    .filter(ignored)
-    .forEach(function(path) {
-      path = join(dir, path);
-      if (fs.lstatSync(path).isDirectory()) {
-        exports.files(path, ext, ret);
-      } else if (path.match(re)) {
-        ret.push(path);
+  fs.readdirSync(dir)
+    .filter(considerFurther)
+    .forEach(function(dirent) {
+      var pathname = path.join(dir, dirent);
+      if (fs.lstatSync(pathname).isDirectory()) {
+        exports.files(pathname, exts, ret);
+      } else if (hasMatchingExtname(pathname, exts)) {
+        ret.push(pathname);
       }
     });
 
@@ -109,7 +130,7 @@ exports.files = function(dir, ext, ret) {
 /**
  * Compute a slug from the given `str`.
  *
- * @api private
+ * @private
  * @param {string} str
  * @return {string}
  */
@@ -151,7 +172,7 @@ exports.clean = function(str) {
 /**
  * Parse the given `qs`.
  *
- * @api private
+ * @private
  * @param {string} qs
  * @return {Object}
  */
@@ -174,7 +195,7 @@ exports.parseQuery = function(qs) {
 /**
  * Highlight the given string of `js`.
  *
- * @api private
+ * @private
  * @param {string} js
  * @return {string}
  */
@@ -199,7 +220,7 @@ function highlight(js) {
 /**
  * Highlight the contents of tag `name`.
  *
- * @api private
+ * @private
  * @param {string} name
  */
 exports.highlightTags = function(name) {
@@ -218,7 +239,7 @@ exports.highlightTags = function(name) {
  * Objects w/ no properties return `'{}'`
  * All else: return result of `value.toString()`
  *
- * @api private
+ * @private
  * @param {*} value The value to inspect.
  * @param {string} typeHint The type of the value
  * @returns {string}
@@ -240,7 +261,7 @@ function emptyRepresentation(value, typeHint) {
  * Takes some variable and asks `Object.prototype.toString()` what it thinks it
  * is.
  *
- * @api private
+ * @private
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString
  * @param {*} value The value to test.
  * @returns {string} Computed type
@@ -281,7 +302,7 @@ var type = (exports.type = function type(value) {
  * - If `value` has properties, call {@link exports.canonicalize} on it, then return result of
  *   JSON.stringify().
  *
- * @api private
+ * @private
  * @see exports.type
  * @param {*} value
  * @return {string}
@@ -327,7 +348,7 @@ exports.stringify = function(value) {
 /**
  * like JSON.stringify but more sense.
  *
- * @api private
+ * @private
  * @param {Object}  object
  * @param {number=} spaces
  * @param {number=} depth
@@ -422,7 +443,7 @@ function jsonStringify(object, spaces, depth) {
  * - is a non-empty `Array`, `Object`, or `Function`, return the result of calling this function again.
  * - is an empty `Array`, `Object`, or `Function`, return the result of calling `emptyRepresentation()`
  *
- * @api private
+ * @private
  * @see {@link exports.stringify}
  * @param {*} value Thing to inspect.  May or may not have properties.
  * @param {Array} [stack=[]] Stack of seen values
@@ -497,33 +518,81 @@ exports.canonicalize = function canonicalize(value, stack, typeHint) {
 };
 
 /**
+ * Determines if pathname has a matching file extension.
+ *
+ * @private
+ * @param {string} pathname - Pathname to check for match.
+ * @param {string[]} exts - List of file extensions (sans period).
+ * @return {boolean} whether file extension matches.
+ * @example
+ * hasMatchingExtname('foo.html', ['js', 'css']); // => false
+ */
+function hasMatchingExtname(pathname, exts) {
+  var suffix = path.extname(pathname).slice(1);
+  return exts.some(function(element) {
+    return suffix === element;
+  });
+}
+
+/**
+ * Determines if pathname would be a "hidden" file (or directory) on UN*X.
+ *
+ * @description
+ * On UN*X, pathnames beginning with a full stop (aka dot) are hidden during
+ * typical usage. Dotfiles, plain-text configuration files, are prime examples.
+ *
+ * @see {@link http://xahlee.info/UnixResource_dir/writ/unix_origin_of_dot_filename.html|Origin of Dot File Names}
+ *
+ * @private
+ * @param {string} pathname - Pathname to check for match.
+ * @return {boolean} whether pathname would be considered a hidden file.
+ * @example
+ * isHiddenOnUnix('.profile'); // => true
+ */
+function isHiddenOnUnix(pathname) {
+  return path.basename(pathname)[0] === '.';
+}
+
+/**
  * Lookup file names at the given `path`.
  *
- * @memberof Mocha.utils
+ * @description
+ * Filenames are returned in _traversal_ order by the OS/filesystem.
+ * **Make no assumption that the names will be sorted in any fashion.**
+ *
  * @public
- * @api public
- * @param {string} filepath Base path to start searching from.
- * @param {string[]} extensions File extensions to look for.
- * @param {boolean} recursive Whether or not to recurse into subdirectories.
+ * @memberof Mocha.utils
+ * @todo Fix extension handling
+ * @param {string} filepath - Base path to start searching from.
+ * @param {string[]} extensions - File extensions to look for.
+ * @param {boolean} recursive - Whether to recurse into subdirectories.
  * @return {string[]} An array of paths.
+ * @throws {Error} if no files match pattern.
+ * @throws {TypeError} if `filepath` is directory and `extensions` not provided.
  */
 exports.lookupFiles = function lookupFiles(filepath, extensions, recursive) {
   var files = [];
+  var stat;
 
   if (!fs.existsSync(filepath)) {
     if (fs.existsSync(filepath + '.js')) {
       filepath += '.js';
     } else {
+      // Handle glob
       files = glob.sync(filepath);
       if (!files.length) {
-        throw new Error("cannot resolve path (or pattern) '" + filepath + "'");
+        throw createNoFilesMatchPatternError(
+          'Cannot find any files matching pattern ' + exports.dQuote(filepath),
+          filepath
+        );
       }
       return files;
     }
   }
 
+  // Handle file
   try {
-    var stat = fs.statSync(filepath);
+    stat = fs.statSync(filepath);
     if (stat.isFile()) {
       return filepath;
     }
@@ -532,13 +601,16 @@ exports.lookupFiles = function lookupFiles(filepath, extensions, recursive) {
     return;
   }
 
-  fs.readdirSync(filepath).forEach(function(file) {
-    file = path.join(filepath, file);
+  // Handle directory
+  fs.readdirSync(filepath).forEach(function(dirent) {
+    var pathname = path.join(filepath, dirent);
+    var stat;
+
     try {
-      var stat = fs.statSync(file);
+      stat = fs.statSync(pathname);
       if (stat.isDirectory()) {
         if (recursive) {
-          files = files.concat(lookupFiles(file, extensions, recursive));
+          files = files.concat(lookupFiles(pathname, extensions, recursive));
         }
         return;
       }
@@ -547,41 +619,72 @@ exports.lookupFiles = function lookupFiles(filepath, extensions, recursive) {
       return;
     }
     if (!extensions) {
-      throw new Error(
-        'extensions parameter required when filepath is a directory'
+      throw createMissingArgumentError(
+        util.format(
+          'Argument %s required when argument %s is a directory',
+          exports.sQuote('extensions'),
+          exports.sQuote('filepath')
+        ),
+        'extensions',
+        'array'
       );
     }
-    var re = new RegExp('\\.(?:' + extensions.join('|') + ')$');
-    if (!stat.isFile() || !re.test(file) || path.basename(file)[0] === '.') {
+
+    if (
+      !stat.isFile() ||
+      !hasMatchingExtname(pathname, extensions) ||
+      isHiddenOnUnix(pathname)
+    ) {
       return;
     }
-    files.push(file);
+    files.push(pathname);
   });
 
   return files;
 };
 
 /**
- * Generate an undefined error with a message warning the user.
- *
- * @return {Error}
+ * process.emitWarning or a polyfill
+ * @see https://nodejs.org/api/process.html#process_process_emitwarning_warning_options
+ * @ignore
  */
-
-exports.undefinedError = function() {
-  return new Error(
-    'Caught undefined error, did you throw without specifying what?'
-  );
-};
+function emitWarning(msg, type) {
+  if (process.emitWarning) {
+    process.emitWarning(msg, type);
+  } else {
+    process.nextTick(function() {
+      console.warn(type + ': ' + msg);
+    });
+  }
+}
 
 /**
- * Generate an undefined error if `err` is not defined.
+ * Show a deprecation warning. Each distinct message is only displayed once.
+ * Ignores empty messages.
  *
- * @param {Error} err
- * @return {Error}
+ * @param {string} [msg] - Warning to print
+ * @private
  */
+exports.deprecate = function deprecate(msg) {
+  msg = String(msg);
+  if (msg && !deprecate.cache[msg]) {
+    deprecate.cache[msg] = true;
+    emitWarning(msg, 'DeprecationWarning');
+  }
+};
+exports.deprecate.cache = {};
 
-exports.getError = function(err) {
-  return err || exports.undefinedError();
+/**
+ * Show a generic warning.
+ * Ignores empty messages.
+ *
+ * @param {string} [msg] - Warning to print
+ * @private
+ */
+exports.warn = function warn(msg) {
+  if (msg) {
+    emitWarning(msg);
+  }
 };
 
 /**
@@ -611,8 +714,6 @@ exports.stackTraceFilter = function() {
   function isMochaInternal(line) {
     return (
       ~line.indexOf('node_modules' + slash + 'mocha' + slash) ||
-      ~line.indexOf('node_modules' + slash + 'mocha.js') ||
-      ~line.indexOf('bower_components' + slash + 'mocha.js') ||
       ~line.indexOf(slash + 'mocha.js')
     );
   }
@@ -641,7 +742,7 @@ exports.stackTraceFilter = function() {
       }
 
       // Clean up cwd(absolute)
-      if (/\(?.+:\d+:\d+\)?$/.test(line)) {
+      if (/:\d+:\d+\)?$/.test(line)) {
         line = line.replace('(' + cwd, '(');
       }
 
@@ -655,16 +756,142 @@ exports.stackTraceFilter = function() {
 
 /**
  * Crude, but effective.
- * @api
+ * @public
  * @param {*} value
  * @returns {boolean} Whether or not `value` is a Promise
  */
 exports.isPromise = function isPromise(value) {
-  return typeof value === 'object' && typeof value.then === 'function';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.then === 'function'
+  );
+};
+
+/**
+ * Clamps a numeric value to an inclusive range.
+ *
+ * @param {number} value - Value to be clamped.
+ * @param {numer[]} range - Two element array specifying [min, max] range.
+ * @returns {number} clamped value
+ */
+exports.clamp = function clamp(value, range) {
+  return Math.min(Math.max(value, range[0]), range[1]);
+};
+
+/**
+ * Single quote text by combining with undirectional ASCII quotation marks.
+ *
+ * @description
+ * Provides a simple means of markup for quoting text to be used in output.
+ * Use this to quote names of variables, methods, and packages.
+ *
+ * <samp>package 'foo' cannot be found</samp>
+ *
+ * @private
+ * @param {string} str - Value to be quoted.
+ * @returns {string} quoted value
+ * @example
+ * sQuote('n') // => 'n'
+ */
+exports.sQuote = function(str) {
+  return "'" + str + "'";
+};
+
+/**
+ * Double quote text by combining with undirectional ASCII quotation marks.
+ *
+ * @description
+ * Provides a simple means of markup for quoting text to be used in output.
+ * Use this to quote names of datatypes, classes, pathnames, and strings.
+ *
+ * <samp>argument 'value' must be "string" or "number"</samp>
+ *
+ * @private
+ * @param {string} str - Value to be quoted.
+ * @returns {string} quoted value
+ * @example
+ * dQuote('number') // => "number"
+ */
+exports.dQuote = function(str) {
+  return '"' + str + '"';
+};
+
+/**
+ * Provides simplistic message translation for dealing with plurality.
+ *
+ * @description
+ * Use this to create messages which need to be singular or plural.
+ * Some languages have several plural forms, so _complete_ message clauses
+ * are preferable to generating the message on the fly.
+ *
+ * @private
+ * @param {number} n - Non-negative integer
+ * @param {string} msg1 - Message to be used in English for `n = 1`
+ * @param {string} msg2 - Message to be used in English for `n = 0, 2, 3, ...`
+ * @returns {string} message corresponding to value of `n`
+ * @example
+ * var sprintf = require('util').format;
+ * var pkgs = ['one', 'two'];
+ * var msg = sprintf(
+ *   ngettext(
+ *     pkgs.length,
+ *     'cannot load package: %s',
+ *     'cannot load packages: %s'
+ *   ),
+ *   pkgs.map(sQuote).join(', ')
+ * );
+ * console.log(msg); // => cannot load packages: 'one', 'two'
+ */
+exports.ngettext = function(n, msg1, msg2) {
+  if (typeof n === 'number' && n >= 0) {
+    return n === 1 ? msg1 : msg2;
+  }
 };
 
 /**
  * It's a noop.
- * @api
+ * @public
  */
 exports.noop = function() {};
+
+/**
+ * Creates a map-like object.
+ *
+ * @description
+ * A "map" is an object with no prototype, for our purposes. In some cases
+ * this would be more appropriate than a `Map`, especially if your environment
+ * doesn't support it. Recommended for use in Mocha's public APIs.
+ *
+ * @public
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map|MDN:Map}
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create#Custom_and_Null_objects|MDN:Object.create - Custom objects}
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign|MDN:Object.assign}
+ * @param {...*} [obj] - Arguments to `Object.assign()`.
+ * @returns {Object} An object with no prototype, having `...obj` properties
+ */
+exports.createMap = function(obj) {
+  return assign.apply(
+    null,
+    [Object.create(null)].concat(Array.prototype.slice.call(arguments))
+  );
+};
+
+/**
+ * Creates a read-only map-like object.
+ *
+ * @description
+ * This differs from {@link module:utils.createMap createMap} only in that
+ * the argument must be non-empty, because the result is frozen.
+ *
+ * @see {@link module:utils.createMap createMap}
+ * @param {...*} [obj] - Arguments to `Object.assign()`.
+ * @returns {Object} A frozen object with no prototype, having `...obj` properties
+ * @throws {TypeError} if argument is not a non-empty object.
+ */
+exports.defineConstants = function(obj) {
+  if (type(obj) !== 'object' || !Object.keys(obj).length) {
+    throw new TypeError('Invalid argument; expected a non-empty object');
+  }
+  return Object.freeze(exports.createMap(obj));
+};

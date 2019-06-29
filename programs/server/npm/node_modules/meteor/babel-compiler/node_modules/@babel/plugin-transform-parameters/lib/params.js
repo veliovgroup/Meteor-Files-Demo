@@ -88,8 +88,9 @@ function convertFunctionParams(path, loose) {
 
   for (let i = 0; i < params.length; i++) {
     const param = params[i];
+    const paramIsAssignmentPattern = param.isAssignmentPattern();
 
-    if (param.isAssignmentPattern() && loose) {
+    if (paramIsAssignmentPattern && (loose || node.kind === "set")) {
       const left = param.get("left");
       const right = param.get("right");
       const undefinedNode = scope.buildUndefinedNode();
@@ -111,7 +112,7 @@ function convertFunctionParams(path, loose) {
         }));
         param.replaceWith(paramName);
       }
-    } else if (param.isAssignmentPattern()) {
+    } else if (paramIsAssignmentPattern) {
       if (firstOptionalIndex === null) firstOptionalIndex = i;
       const left = param.get("left");
       const right = param.get("right");

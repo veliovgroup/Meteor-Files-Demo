@@ -2,18 +2,18 @@
 
 > Helper function to build react jsx
 
-See our website [@babel/helper-builder-react-jsx](https://new.babeljs.io/docs/en/next/babel-helper-builder-react-jsx.html) for more information.
+See our website [@babel/helper-builder-react-jsx](https://babeljs.io/docs/en/next/babel-helper-builder-react-jsx.html) for more information.
 
 ## Install
 
 Using npm:
 
 ```sh
-npm install --save @babel/helper-builder-react-jsx
+npm install --save-dev @babel/helper-builder-react-jsx
 ```
 
 or using yarn:
 
 ```sh
-yarn add --save @babel/helper-builder-react-jsx
+yarn add @babel/helper-builder-react-jsx --dev
 ```

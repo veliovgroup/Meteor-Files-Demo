@@ -216,7 +216,7 @@ Blaze._wrapCatchingExceptions = function (f, where) {
  * @summary Constructor for a View, which represents a reactive region of DOM.
  * @locus Client
  * @param {String} [name] Optional.  A name for this type of View.  See [`view.name`](#view_name).
- * @param {Function} renderFunction A function that returns [*renderable content*](#renderable_content).  In this function, `this` is bound to the View.
+ * @param {Function} renderFunction A function that returns [*renderable content*](#Renderable-Content).  In this function, `this` is bound to the View.
  */
 Blaze.View = function (name, render) {
   if (! (this instanceof Blaze.View))
@@ -777,7 +777,7 @@ var contentAsFunc = function (content) {
 };
 
 /**
- * @summary Renders a template or View to DOM nodes and inserts it into the DOM, returning a rendered [View](#blaze_view) which can be passed to [`Blaze.remove`](#blaze_remove).
+ * @summary Renders a template or View to DOM nodes and inserts it into the DOM, returning a rendered [View](#Blaze-View) which can be passed to [`Blaze.remove`](#Blaze-remove).
  * @locus Client
  * @param {Template|Blaze.View} templateOrView The template (e.g. `Template.myTemplate`) or View object to render.  If a template, a View object is [constructed](#template_constructview).  If a View, it must be an unrendered View, which becomes a rendered View and is returned.
  * @param {DOMNode} parentNode The node that will be the parent of the rendered template.  It must be an Element node.
@@ -1099,7 +1099,7 @@ Blaze._calculateCondition = function (cond) {
  * @summary Constructs a View that renders content with a data context.
  * @locus Client
  * @param {Object|Function} data An object to use as the data context, or a function returning such an object.  If a function is provided, it will be reactively re-run.
- * @param {Function} contentFunc A Function that returns [*renderable content*](#renderable_content).
+ * @param {Function} contentFunc A Function that returns [*renderable content*](#Renderable-Content).
  */
 Blaze.With = function (data, contentFunc) {
   var view = Blaze.View('with', contentFunc);
@@ -1145,7 +1145,7 @@ Blaze._attachBindingsToView = function (bindings, view) {
  * @summary Constructs a View setting the local lexical scope in the block.
  * @param {Function} bindings Dictionary mapping names of bindings to
  * values or computations to reactively re-run.
- * @param {Function} contentFunc A Function that returns [*renderable content*](#renderable_content).
+ * @param {Function} contentFunc A Function that returns [*renderable content*](#Renderable-Content).
  */
 Blaze.Let = function (bindings, contentFunc) {
   var view = Blaze.View('let', contentFunc);
@@ -1158,8 +1158,8 @@ Blaze.Let = function (bindings, contentFunc) {
  * @summary Constructs a View that renders content conditionally.
  * @locus Client
  * @param {Function} conditionFunc A function to reactively re-run.  Whether the result is truthy or falsy determines whether `contentFunc` or `elseFunc` is shown.  An empty array is considered falsy.
- * @param {Function} contentFunc A Function that returns [*renderable content*](#renderable_content).
- * @param {Function} [elseFunc] Optional.  A Function that returns [*renderable content*](#renderable_content).  If no `elseFunc` is supplied, no content is shown in the "else" case.
+ * @param {Function} contentFunc A Function that returns [*renderable content*](#Renderable-Content).
+ * @param {Function} [elseFunc] Optional.  A Function that returns [*renderable content*](#Renderable-Content).  If no `elseFunc` is supplied, no content is shown in the "else" case.
  */
 Blaze.If = function (conditionFunc, contentFunc, elseFunc, _not) {
   var conditionVar = new ReactiveVar;
@@ -1180,11 +1180,11 @@ Blaze.If = function (conditionFunc, contentFunc, elseFunc, _not) {
 };
 
 /**
- * @summary An inverted [`Blaze.If`](#blaze_if).
+ * @summary An inverted [`Blaze.If`](#Blaze-If).
  * @locus Client
  * @param {Function} conditionFunc A function to reactively re-run.  If the result is falsy, `contentFunc` is shown, otherwise `elseFunc` is shown.  An empty array is considered falsy.
- * @param {Function} contentFunc A Function that returns [*renderable content*](#renderable_content).
- * @param {Function} [elseFunc] Optional.  A Function that returns [*renderable content*](#renderable_content).  If no `elseFunc` is supplied, no content is shown in the "else" case.
+ * @param {Function} contentFunc A Function that returns [*renderable content*](#Renderable-Content).
+ * @param {Function} [elseFunc] Optional.  A Function that returns [*renderable content*](#Renderable-Content).  If no `elseFunc` is supplied, no content is shown in the "else" case.
  */
 Blaze.Unless = function (conditionFunc, contentFunc, elseFunc) {
   return Blaze.If(conditionFunc, contentFunc, elseFunc, true /*_not*/);
@@ -1205,9 +1205,9 @@ Blaze.Unless = function (conditionFunc, contentFunc, elseFunc) {
  *   object. Inside the Each body, the current item will be set as the data
  *   context.
  * @param {Function} contentFunc A Function that returns  [*renderable
- * content*](#renderable_content).
+ * content*](#Renderable-Content).
  * @param {Function} [elseFunc] A Function that returns [*renderable
- * content*](#renderable_content) to display in the case when there are no items
+ * content*](#Renderable-Content) to display in the case when there are no items
  * in the sequence.
  */
 Blaze.Each = function (argFunc, contentFunc, elseFunc) {
@@ -1730,7 +1730,7 @@ Blaze.View.prototype.lookupTemplate = function (name) {
  * @summary Constructor for a Template, which is used to construct Views with particular name and content.
  * @locus Client
  * @param {String} [viewName] Optional.  A name for Views constructed by this Template.  See [`view.name`](#view_name).
- * @param {Function} renderFunction A function that returns [*renderable content*](#renderable_content).  This function is used as the `renderFunction` for Views constructed by this Template.
+ * @param {Function} renderFunction A function that returns [*renderable content*](#Renderable-Content).  This function is used as the `renderFunction` for Views constructed by this Template.
  */
 Blaze.Template = function (viewName, renderFunction) {
   if (! (this instanceof Blaze.Template))
@@ -1769,7 +1769,7 @@ HelperMap.prototype.set = function (name, helper) {
   this[' '+name] = helper;
 };
 HelperMap.prototype.has = function (name) {
-  return (' '+name) in this;
+  return (typeof this[' '+name] !== 'undefined');
 };
 
 /**
@@ -1963,7 +1963,7 @@ Blaze.TemplateInstance = function (view) {
    * @name view
    * @memberOf Blaze.TemplateInstance
    * @instance
-   * @summary The [View](#blaze_view) object for this invocation of the template.
+   * @summary The [View](../api/blaze.html#Blaze-View) object for this invocation of the template.
    * @locus Client
    * @type {Blaze.View}
    */
@@ -2036,7 +2036,7 @@ Blaze.TemplateInstance.prototype.find = function (selector) {
 };
 
 /**
- * @summary A version of [Tracker.autorun](#tracker_autorun) that is stopped when the template is destroyed.
+ * @summary A version of [Tracker.autorun](https://docs.meteor.com/api/tracker.html#Tracker-autorun) that is stopped when the template is destroyed.
  * @locus Client
  * @param {Function} runFunc The function to run. It receives one argument: a Tracker.Computation object.
  */
@@ -2045,7 +2045,7 @@ Blaze.TemplateInstance.prototype.autorun = function (f) {
 };
 
 /**
- * @summary A version of [Meteor.subscribe](#meteor_subscribe) that is stopped
+ * @summary A version of [Meteor.subscribe](https://docs.meteor.com/api/pubsub.html#Meteor-subscribe) that is stopped
  * when the template is destroyed.
  * @return {SubscriptionHandle} The subscription handle to the newly made
  * subscription. Call `handle.stop()` to manually stop the subscription, or
@@ -2058,8 +2058,8 @@ Blaze.TemplateInstance.prototype.autorun = function (f) {
  * on server.
  * @param {Function|Object} [options] If a function is passed instead of an
  * object, it is interpreted as an `onReady` callback.
- * @param {Function} [options.onReady] Passed to [`Meteor.subscribe`](#meteor_subscribe).
- * @param {Function} [options.onStop] Passed to [`Meteor.subscribe`](#meteor_subscribe).
+ * @param {Function} [options.onReady] Passed to [`Meteor.subscribe`](https://docs.meteor.com/api/pubsub.html#Meteor-subscribe).
+ * @param {Function} [options.onStop] Passed to [`Meteor.subscribe`](https://docs.meteor.com/api/pubsub.html#Meteor-subscribe).
  * @param {DDP.Connection} [options.connection] The connection on which to make the
  * subscription.
  */
@@ -2168,24 +2168,67 @@ Template.prototype.helpers = function (dict) {
     this.__helpers.set(k, dict[k]);
 };
 
-// Kind of like Blaze.currentView but for the template instance.
-// This is a function, not a value -- so that not all helpers
-// are implicitly dependent on the current template instance's `data` property,
-// which would make them dependenct on the data context of the template
-// inclusion.
-Template._currentTemplateInstanceFunc = null;
-
-Template._withTemplateInstanceFunc = function (templateInstanceFunc, func) {
-  if (typeof func !== 'function')
-    throw new Error("Expected function, got: " + func);
-  var oldTmplInstanceFunc = Template._currentTemplateInstanceFunc;
-  try {
-    Template._currentTemplateInstanceFunc = templateInstanceFunc;
-    return func();
-  } finally {
-    Template._currentTemplateInstanceFunc = oldTmplInstanceFunc;
+var canUseGetters = function() {
+  if (Object.defineProperty) {
+    var obj = {};
+    try {
+      Object.defineProperty(obj, "self", {
+        get: function () { return obj; }
+      });
+    } catch (e) {
+      return false;
+    }
+    return obj.self === obj;
   }
-};
+  return false;
+}();
+
+if (canUseGetters) {
+  // Like Blaze.currentView but for the template instance. A function
+  // rather than a value so that not all helpers are implicitly dependent
+  // on the current template instance's `data` property, which would make
+  // them dependent on the data context of the template inclusion.
+  var currentTemplateInstanceFunc = null;
+
+  // If getters are supported, define this property with a getter function
+  // to make it effectively read-only, and to work around this bizarre JSC
+  // bug: https://github.com/meteor/meteor/issues/9926
+  Object.defineProperty(Template, "_currentTemplateInstanceFunc", {
+    get: function () {
+      return currentTemplateInstanceFunc;
+    }
+  });
+
+  Template._withTemplateInstanceFunc = function (templateInstanceFunc, func) {
+    if (typeof func !== 'function') {
+      throw new Error("Expected function, got: " + func);
+    }
+    var oldTmplInstanceFunc = currentTemplateInstanceFunc;
+    try {
+      currentTemplateInstanceFunc = templateInstanceFunc;
+      return func();
+    } finally {
+      currentTemplateInstanceFunc = oldTmplInstanceFunc;
+    }
+  };
+
+} else {
+  // If getters are not supported, just use a normal property.
+  Template._currentTemplateInstanceFunc = null;
+
+  Template._withTemplateInstanceFunc = function (templateInstanceFunc, func) {
+    if (typeof func !== 'function') {
+      throw new Error("Expected function, got: " + func);
+    }
+    var oldTmplInstanceFunc = Template._currentTemplateInstanceFunc;
+    try {
+      Template._currentTemplateInstanceFunc = templateInstanceFunc;
+      return func();
+    } finally {
+      Template._currentTemplateInstanceFunc = oldTmplInstanceFunc;
+    }
+  };
+}
 
 /**
  * @summary Specify event handlers for this template.
@@ -2225,7 +2268,7 @@ Template.prototype.events = function (eventMap) {
  * @function
  * @name instance
  * @memberOf Template
- * @summary The [template instance](#template_inst) corresponding to the current template helper, event handler, callback, or autorun.  If there isn't one, `null`.
+ * @summary The [template instance](#Template-instances) corresponding to the current template helper, event handler, callback, or autorun.  If there isn't one, `null`.
  * @locus Client
  * @returns {Blaze.TemplateInstance}
  * @importFromPackage templating
@@ -2265,7 +2308,7 @@ Template.currentData = Blaze.getData;
 Template.parentData = Blaze._parentData;
 
 /**
- * @summary Defines a [helper function](#template_helpers) which can be used from all templates.
+ * @summary Defines a [helper function](#Template-helpers) which can be used from all templates.
  * @locus Client
  * @function
  * @param {String} name The name of the helper function you are defining.
@@ -2275,7 +2318,7 @@ Template.parentData = Blaze._parentData;
 Template.registerHelper = Blaze.registerHelper;
 
 /**
- * @summary Removes a global [helper function](#template_helpers).
+ * @summary Removes a global [helper function](#Template-helpers).
  * @locus Client
  * @function
  * @param {String} name The name of the helper function you are defining.

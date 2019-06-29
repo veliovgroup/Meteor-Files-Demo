@@ -70,8 +70,8 @@ install("ecmascript-runtime-server", "meteor/ecmascript-runtime-server/runtime.j
 install("babel-compiler");
 install("ecmascript");
 install("babel-runtime", "meteor/babel-runtime/babel-runtime.js");
-install("url", "meteor/url/url_server.js");
-install("http", "meteor/http/httpcall_server.js");
+install("fetch", "meteor/fetch/server.js");
+install("inter-process-messaging", "meteor/inter-process-messaging/inter-process-messaging.js");
 install("dynamic-import", "meteor/dynamic-import/server.js");
 install("base64", "meteor/base64/base64.js");
 install("ejson", "meteor/ejson/ejson.js");
@@ -96,16 +96,17 @@ install("ddp-client", "meteor/ddp-client/server/server.js");
 install("rate-limit", "meteor/rate-limit/rate-limit.js");
 install("ddp-rate-limiter");
 install("audit-argument-checks");
-install("geojson-utils", "meteor/geojson-utils/main.js");
-install("ordered-dict", "meteor/ordered-dict/ordered_dict.js");
-install("minimongo", "meteor/minimongo/minimongo_server.js");
 install("ddp-server");
 install("ddp");
 install("hot-code-push");
 install("livedata");
 install("npm-mongo");
+install("geojson-utils", "meteor/geojson-utils/main.js");
+install("ordered-dict", "meteor/ordered-dict/ordered_dict.js");
+install("minimongo", "meteor/minimongo/minimongo_server.js");
 install("allow-deny");
-install("binary-heap");
+install("mongo-decimal", "meteor/mongo-decimal/decimal.js");
+install("binary-heap", "meteor/binary-heap/binary-heap.js");
 install("mongo");
 install("blaze-html-templates");
 install("jquery");
@@ -114,6 +115,8 @@ install("seba:minifiers-autoprefixer");
 install("standard-minifier-js");
 install("mrt:filesize");
 install("markdown");
+install("url", "meteor/url/url_server.js");
+install("http", "meteor/http/httpcall_server.js");
 install("simple:highlight.js");
 install("observe-sequence");
 install("deps");
@@ -134,7 +137,7 @@ install("ostrio:cstorage");
 install("ostrio:templatehelpers");
 install("staringatlights:inject-data", "meteor/staringatlights:inject-data/lib/namespace.js");
 install("meteorhacks:picker");
-install("meteorhacks:meteorx");
+install("lamhieu:meteorx");
 install("accounts-base", "meteor/accounts-base/server_main.js");
 install("server-render", "meteor/server-render/server.js");
 install("staringatlights:fast-render", "meteor/staringatlights:fast-render/lib/server/namespace.js");
@@ -142,7 +145,7 @@ install("reactive-dict", "meteor/reactive-dict/migration.js");
 install("ostrio:flow-router-extra", "meteor/ostrio:flow-router-extra/server/_init.js");
 install("ostrio:flow-router-title");
 install("ostrio:flow-router-meta");
-install("ostrio:spiderable-middleware", "meteor/ostrio:spiderable-middleware/lib/meteor.js");
+install("ostrio:spiderable-middleware", "meteor/ostrio:spiderable-middleware/lib/index.js");
 install("service-configuration");
 install("localstorage");
 install("oauth");
@@ -157,7 +160,7 @@ install("facebook-oauth");
 install("accounts-facebook");
 install("meteor-developer-oauth");
 install("accounts-meteor-developer");
-install("autoupdate");
+install("autoupdate", "meteor/autoupdate/autoupdate_server.js");
 install("ui");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +237,13 @@ require("reify/lib/runtime").enable(
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}},"fs-extra":{"package.json":function(require,exports){
+}}}}}}}}},{
+  "extensions": [
+    ".js",
+    ".json"
+  ]
+});
+meteorInstall({"node_modules":{"fs-extra":{"package.json":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
@@ -242,9 +251,11 @@ module.useNode();
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
-exports.name = "fs-extra";
-exports.version = "7.0.0";
-exports.main = "./lib/index.js";
+module.exports = {
+  "name": "fs-extra",
+  "version": "8.1.0",
+  "main": "./lib/index.js"
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -270,7 +281,7 @@ module.useNode();
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}},"request":{"package.json":function(require,exports){
+}}},"request":{"package.json":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
@@ -278,9 +289,11 @@ module.useNode();
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
-exports.name = "request";
-exports.version = "2.87.0";
-exports.main = "index.js";
+module.exports = {
+  "name": "request",
+  "version": "2.88.0",
+  "main": "index.js"
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -295,7 +308,7 @@ exports.main = "index.js";
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}},"dropbox":{"package.json":function(require,exports){
+}},"dropbox":{"package.json":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
@@ -303,9 +316,11 @@ module.useNode();
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
-exports.name = "dropbox";
-exports.version = "0.10.3";
-exports.main = "lib/dropbox.js";
+module.exports = {
+  "name": "dropbox",
+  "version": "0.10.3",
+  "main": "lib/dropbox.js"
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -320,7 +335,7 @@ exports.main = "lib/dropbox.js";
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}},"gm":{"package.json":function(require,exports){
+}}},"gm":{"package.json":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
@@ -328,9 +343,11 @@ module.useNode();
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
-exports.name = "gm";
-exports.version = "1.23.1";
-exports.main = "./index";
+module.exports = {
+  "name": "gm",
+  "version": "1.23.1",
+  "main": "./index"
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -356,11 +373,11 @@ module.useNode();
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-},"helpers":{"builtin":{"interopRequireDefault.js":function(require,exports,module){
+},"helpers":{"interopRequireDefault.js":function(require,exports,module){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
-// node_modules/@babel/runtime/helpers/builtin/interopRequireDefault.js                               //
+// node_modules/@babel/runtime/helpers/interopRequireDefault.js                                       //
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
@@ -371,19 +388,20 @@ module.useNode();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                    //
-// node_modules/@babel/runtime/helpers/builtin/objectSpread.js                                        //
+// node_modules/@babel/runtime/helpers/objectSpread.js                                                //
 //                                                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                                       //
 module.useNode();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-}}}}}}},{
+}}}}}},{
   "extensions": [
     ".js",
     ".json"
   ]
 });
+
 var exports = require("/node_modules/meteor/modules/server.js");
 
 /* Exports */

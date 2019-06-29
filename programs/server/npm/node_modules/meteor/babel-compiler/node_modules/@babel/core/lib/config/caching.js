@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.makeStrongCache = makeStrongCache;
 exports.makeWeakCache = makeWeakCache;
+exports.assertSimpleType = assertSimpleType;
 
 function makeStrongCache(handler) {
   return makeCachedFunction(new Map(), handler);
@@ -175,16 +176,24 @@ function makeSimpleConfigurator(cache) {
       return;
     }
 
-    return cache.using(val);
+    return cache.using(() => assertSimpleType(val()));
   }
 
   cacheFn.forever = () => cache.forever();
 
   cacheFn.never = () => cache.never();
 
-  cacheFn.using = cb => cache.using(() => cb());
+  cacheFn.using = cb => cache.using(() => assertSimpleType(cb()));
 
-  cacheFn.invalidate = cb => cache.invalidate(() => cb());
+  cacheFn.invalidate = cb => cache.invalidate(() => assertSimpleType(cb()));
 
   return cacheFn;
+}
+
+function assertSimpleType(value) {
+  if (value != null && typeof value !== "string" && typeof value !== "boolean" && typeof value !== "number") {
+    throw new Error("Cache keys must be either string, boolean, number, null, or undefined.");
+  }
+
+  return value;
 }

@@ -35,6 +35,7 @@ class Buffer {
       column: null,
       filename: null
     };
+    this._disallowedPop = null;
     this._map = map;
   }
 
@@ -77,10 +78,11 @@ class Buffer {
       line,
       column,
       filename,
-      identifierName
+      identifierName,
+      force
     } = this._sourcePosition;
 
-    this._append(str, line, column, identifierName, filename);
+    this._append(str, line, column, identifierName, filename, force);
   }
 
   queue(str) {
@@ -94,10 +96,11 @@ class Buffer {
       line,
       column,
       filename,
-      identifierName
+      identifierName,
+      force
     } = this._sourcePosition;
 
-    this._queue.unshift([str, line, column, identifierName, filename]);
+    this._queue.unshift([str, line, column, identifierName, filename, force]);
   }
 
   _flush() {
@@ -106,9 +109,9 @@ class Buffer {
     while (item = this._queue.pop()) this._append(...item);
   }
 
-  _append(str, line, column, identifierName, filename) {
+  _append(str, line, column, identifierName, filename, force) {
     if (this._map && str[0] !== "\n") {
-      this._map.mark(this._position.line, this._position.column, line, column, identifierName, filename);
+      this._map.mark(this._position.line, this._position.column, line, column, identifierName, filename, force);
     }
 
     this._buf.push(str);
@@ -164,13 +167,18 @@ class Buffer {
     return this._queue.length > 0 || !!this._last;
   }
 
-  source(prop, loc) {
+  exactSource(loc, cb) {
+    this.source("start", loc, true);
+    cb();
+    this.source("end", loc);
+
+    this._disallowPop("start", loc);
+  }
+
+  source(prop, loc, force) {
     if (prop && !loc) return;
-    const pos = loc ? loc[prop] : null;
-    this._sourcePosition.identifierName = loc && loc.identifierName || null;
-    this._sourcePosition.line = pos ? pos.line : null;
-    this._sourcePosition.column = pos ? pos.column : null;
-    this._sourcePosition.filename = loc && loc.filename || null;
+
+    this._normalizePosition(prop, loc, this._sourcePosition, force);
   }
 
   withSource(prop, loc, cb) {
@@ -181,10 +189,48 @@ class Buffer {
     const originalIdentifierName = this._sourcePosition.identifierName;
     this.source(prop, loc);
     cb();
-    this._sourcePosition.line = originalLine;
-    this._sourcePosition.column = originalColumn;
-    this._sourcePosition.filename = originalFilename;
-    this._sourcePosition.identifierName = originalIdentifierName;
+
+    if ((!this._sourcePosition.force || this._sourcePosition.line !== originalLine || this._sourcePosition.column !== originalColumn || this._sourcePosition.filename !== originalFilename) && (!this._disallowedPop || this._disallowedPop.line !== originalLine || this._disallowedPop.column !== originalColumn || this._disallowedPop.filename !== originalFilename)) {
+      this._sourcePosition.line = originalLine;
+      this._sourcePosition.column = originalColumn;
+      this._sourcePosition.filename = originalFilename;
+      this._sourcePosition.identifierName = originalIdentifierName;
+      this._sourcePosition.force = false;
+      this._disallowedPop = null;
+    }
+  }
+
+  _disallowPop(prop, loc) {
+    if (prop && !loc) return;
+    this._disallowedPop = this._normalizePosition(prop, loc);
+  }
+
+  _normalizePosition(prop, loc, targetObj, force) {
+    const pos = loc ? loc[prop] : null;
+
+    if (targetObj === undefined) {
+      targetObj = {
+        identifierName: null,
+        line: null,
+        column: null,
+        filename: null,
+        force: false
+      };
+    }
+
+    const origLine = targetObj.line;
+    const origColumn = targetObj.column;
+    const origFilename = targetObj.filename;
+    targetObj.identifierName = prop === "start" && loc && loc.identifierName || null;
+    targetObj.line = pos ? pos.line : null;
+    targetObj.column = pos ? pos.column : null;
+    targetObj.filename = loc && loc.filename || null;
+
+    if (force || targetObj.line !== origLine || targetObj.column !== origColumn || targetObj.filename !== origFilename) {
+      targetObj.force = force;
+    }
+
+    return targetObj;
   }
 
   getCurrentColumn() {

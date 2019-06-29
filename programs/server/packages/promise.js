@@ -109,7 +109,7 @@ if (! hasOwn.call(proto, "finally")) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-},"node_modules":{"meteor-promise":{"package.json":function(require,exports){
+},"node_modules":{"meteor-promise":{"package.json":function(require,exports,module){
 
 ///////////////////////////////////////////////////////////////////////////////////
 //                                                                               //
@@ -117,9 +117,11 @@ if (! hasOwn.call(proto, "finally")) {
 //                                                                               //
 ///////////////////////////////////////////////////////////////////////////////////
                                                                                  //
-exports.name = "meteor-promise";
-exports.version = "0.8.6";
-exports.main = "promise_server.js";
+module.exports = {
+  "name": "meteor-promise",
+  "version": "0.8.7",
+  "main": "promise_server.js"
+};
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +142,7 @@ module.useNode();
     ".json"
   ]
 });
+
 require("/node_modules/meteor/promise/modern.js");
 var exports = require("/node_modules/meteor/promise/server.js");
 

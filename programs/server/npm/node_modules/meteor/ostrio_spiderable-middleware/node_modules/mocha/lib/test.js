@@ -1,6 +1,8 @@
 'use strict';
 var Runnable = require('./runnable');
 var utils = require('./utils');
+var errors = require('./errors');
+var createInvalidArgumentTypeError = errors.createInvalidArgumentTypeError;
 var isString = utils.isString;
 
 module.exports = Test;
@@ -8,17 +10,20 @@ module.exports = Test;
 /**
  * Initialize a new `Test` with the given `title` and callback `fn`.
  *
+ * @public
  * @class
  * @extends Runnable
- * @param {String} title
- * @param {Function} fn
+ * @param {String} title - Test title (required)
+ * @param {Function} [fn] - Test callback.  If omitted, the Test is considered "pending"
  */
 function Test(title, fn) {
   if (!isString(title)) {
-    throw new Error(
-      'Test `title` should be a "string" but "' +
+    throw createInvalidArgumentTypeError(
+      'Test argument "title" should be a string. Received type "' +
         typeof title +
-        '" was given instead.'
+        '"',
+      'title',
+      'string'
     );
   }
   Runnable.call(this, title, fn);

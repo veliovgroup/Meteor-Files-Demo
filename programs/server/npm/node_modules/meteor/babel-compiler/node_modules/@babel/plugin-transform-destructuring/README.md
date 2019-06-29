@@ -2,18 +2,18 @@
 
 > Compile ES2015 destructuring to ES5
 
-See our website [@babel/plugin-transform-destructuring](https://new.babeljs.io/docs/en/next/babel-plugin-transform-destructuring.html) for more information.
+See our website [@babel/plugin-transform-destructuring](https://babeljs.io/docs/en/next/babel-plugin-transform-destructuring.html) for more information.
 
 ## Install
 
 Using npm:
 
 ```sh
-npm install --save @babel/plugin-transform-destructuring
+npm install --save-dev @babel/plugin-transform-destructuring
 ```
 
 or using yarn:
 
 ```sh
-yarn add --save @babel/plugin-transform-destructuring
+yarn add @babel/plugin-transform-destructuring --dev
 ```

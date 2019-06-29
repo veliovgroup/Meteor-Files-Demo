@@ -1,2 +1,2 @@
-function(t,e,o){var n,a;o.watch(t("meteor/meteor"),{Meteor:function(t){n=t}},0),o.watch(t("meteor/templating"),{Template:function(t){a=t}},1),o.watch(t("./logout.jade")),a.logout.events({"click [data-logout]":function(t){t.preventDefault(),n.logout()}})}
+function(t,e,o){var n,i;o.link("meteor/meteor",{Meteor:function(t){n=t}},0),o.link("meteor/templating",{Template:function(t){i=t}},1),o.link("./logout.jade"),i.logout.events({"click [data-logout]":function(t){t.preventDefault(),n.logout()}})}
 

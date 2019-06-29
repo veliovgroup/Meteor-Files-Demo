@@ -64,15 +64,23 @@ function loadFullConfig(inputOpts) {
     }
 
     const ignored = function recurseDescriptors(config, pass) {
-      const plugins = config.plugins.map(descriptor => {
-        return loadPluginDescriptor(descriptor, context);
-      });
-      const presets = config.presets.map(descriptor => {
-        return {
-          preset: loadPresetDescriptor(descriptor, context),
-          pass: descriptor.ownPass ? [] : pass
-        };
-      });
+      const plugins = config.plugins.reduce((acc, descriptor) => {
+        if (descriptor.options !== false) {
+          acc.push(loadPluginDescriptor(descriptor, context));
+        }
+
+        return acc;
+      }, []);
+      const presets = config.presets.reduce((acc, descriptor) => {
+        if (descriptor.options !== false) {
+          acc.push({
+            preset: loadPresetDescriptor(descriptor, context),
+            pass: descriptor.ownPass ? [] : pass
+          });
+        }
+
+        return acc;
+      }, []);
 
       if (presets.length > 0) {
         passes.splice(1, 0, ...presets.map(o => o.pass).filter(p => p !== pass));

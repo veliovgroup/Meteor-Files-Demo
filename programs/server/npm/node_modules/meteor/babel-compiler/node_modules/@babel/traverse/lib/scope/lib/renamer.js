@@ -110,7 +110,7 @@ class Renamer {
     const parentDeclar = path.find(path => path.isDeclaration() || path.isFunctionExpression() || path.isClassExpression());
 
     if (parentDeclar) {
-      const bindingIds = parentDeclar.getBindingIdentifiers();
+      const bindingIds = parentDeclar.getOuterBindingIdentifiers();
 
       if (bindingIds[oldName] === binding.identifier) {
         this.maybeConvertFromExportDeclaration(parentDeclar);

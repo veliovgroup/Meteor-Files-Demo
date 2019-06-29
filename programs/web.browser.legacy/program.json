@@ -2,193 +2,214 @@
   "format": "web-program-pre1",
   "manifest": [
     {
-      "path": "7728ccfdc499a376f54731e715bf7dd116defcd0.js",
+      "path": "41f3a6de94327ec3efa30c5a03b8896500a0964e.js",
       "where": "client",
       "type": "js",
       "cacheable": true,
-      "url": "/7728ccfdc499a376f54731e715bf7dd116defcd0.js?meteor_js_resource=true",
-      "size": 823585,
-      "hash": "7728ccfdc499a376f54731e715bf7dd116defcd0"
+      "url": "/41f3a6de94327ec3efa30c5a03b8896500a0964e.js?meteor_js_resource=true",
+      "size": 812574,
+      "hash": "41f3a6de94327ec3efa30c5a03b8896500a0964e",
+      "sri": "Mllb2LO9pC2B+bAo4Ld/ObxlqDCXGGmAp99fGsKVALuSDT5Mxn2BOpcpyFS7SI2QVIoFRtmiTARHlqF1bYa9pw=="
     },
     {
-      "path": "7728ccfdc499a376f54731e715bf7dd116defcd0.stats.json",
+      "path": "41f3a6de94327ec3efa30c5a03b8896500a0964e.stats.json",
       "where": "client",
       "type": "json",
       "cacheable": true,
-      "url": "/7728ccfdc499a376f54731e715bf7dd116defcd0.stats.json?meteor_js_resource=true",
-      "size": 33177,
-      "hash": "bcd6fd08b14681bb1504677b2c844b4ff14c3d16"
+      "url": "/41f3a6de94327ec3efa30c5a03b8896500a0964e.stats.json?meteor_js_resource=true",
+      "size": 31855,
+      "hash": "eaddee764f66cdef7dd038bc3ded68ca76ec717e",
+      "sri": "QXqn3vMxGdJONKIwhGAhxpGtd5DIqZ3CGTlgKdMQ/sIsLq+gXO9ZHwrjf/ByyYR+FQ1xBCPzBL8TukSGijBXeA=="
     },
     {
       "path": "dynamic/imports/client/file/file.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/file.jade?hash=bb2fa36cacaaddb882145877bdbc305a6b988af7",
-      "size": 76,
-      "hash": "bb2fa36cacaaddb882145877bdbc305a6b988af7"
+      "url": "/dynamic/imports/client/file/file.jade?hash=6fc471650e16e95a8f62933aacd5c73507218a4a",
+      "size": 58,
+      "hash": "6fc471650e16e95a8f62933aacd5c73507218a4a",
+      "sri": "f2+ZP7vn2ZGYbHoHR2PgB2UWUhF6iXfYEqKrjU1aUO4CJJxfvfd9fHYcjlicRcVGlO0N13sayTaQM7l8JyyvYg=="
     },
     {
       "path": "dynamic/imports/client/file/template.file.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/template.file.js?hash=bb3291e553e16a7c98ebb7322ce97cdb0ac43d89",
+      "url": "/dynamic/imports/client/file/template.file.js?hash=6ba58bb4d26b38287fcf494cbfdc6eb0ea7cdee2",
       "size": 13394,
-      "hash": "bb3291e553e16a7c98ebb7322ce97cdb0ac43d89"
+      "hash": "6ba58bb4d26b38287fcf494cbfdc6eb0ea7cdee2",
+      "sri": "bYJyKFwL7/5X0XxbGBNXj7ZtDOV3JP5GnJknIVFQARxhjBv0pYC3auXubunWVCMDfUOgG95qiskvm/2N4XWMUA=="
     },
     {
       "path": "dynamic/imports/client/index/index.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/index/index.jade?hash=7f2c259c07fe0e342280ace2855508532ffbbbda",
-      "size": 77,
-      "hash": "7f2c259c07fe0e342280ace2855508532ffbbbda"
+      "url": "/dynamic/imports/client/index/index.jade?hash=9e3a03971de692622f1ce95aa1d09b5ba173b7f2",
+      "size": 59,
+      "hash": "9e3a03971de692622f1ce95aa1d09b5ba173b7f2",
+      "sri": "tJwR3f6+TNmVLpb4F4n8UIID9sdOfXugngmjga8RA+1MLP6c7VHw+Q+aWx2ENsTfIw9XmNKuQIC/N00y3E9bMw=="
     },
     {
       "path": "dynamic/imports/client/index/template.index.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/index/template.index.js?hash=32d83cbe71cec4669e07fdb4112236bbea918126",
+      "url": "/dynamic/imports/client/index/template.index.js?hash=24f3a8e238c54423b7da0f2ca53ebf18bde7d1e3",
       "size": 1530,
-      "hash": "32d83cbe71cec4669e07fdb4112236bbea918126"
+      "hash": "24f3a8e238c54423b7da0f2ca53ebf18bde7d1e3",
+      "sri": "jCdnQ7moaOxQzC3Tb08qyUVRgz/Oc3qn/A1FPVy6DELUebBk0nz/rDe8Hw0mwPy+uR/gsjG5cxIcXYlHZIPndA=="
     },
     {
       "path": "dynamic/imports/client/listing/listing-row.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/listing/listing-row.jade?hash=2693d74c3b8cedf73460f53851a97a00691aeffc",
-      "size": 83,
-      "hash": "2693d74c3b8cedf73460f53851a97a00691aeffc"
+      "url": "/dynamic/imports/client/listing/listing-row.jade?hash=661a0acf264cb9172ef2e0855e82a2616946eaa3",
+      "size": 65,
+      "hash": "661a0acf264cb9172ef2e0855e82a2616946eaa3",
+      "sri": "HDQ5ELeFXpYDQ5OiewpHe/kEILfmjz7q2JBs4jLhhxgEb/mflDYvb2zwtlP9jdK1TggeVvaQwngokh2jA8EWzg=="
     },
     {
       "path": "dynamic/imports/client/listing/template.listing-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/listing/template.listing-row.js?hash=5e2521d4f38e58210690e36c7e046a62bc90d513",
+      "url": "/dynamic/imports/client/listing/template.listing-row.js?hash=9d4e7169ec07ba457792214c7bd46d6600103f9a",
       "size": 6492,
-      "hash": "5e2521d4f38e58210690e36c7e046a62bc90d513"
+      "hash": "9d4e7169ec07ba457792214c7bd46d6600103f9a",
+      "sri": "3WXfv+//Ts2EwD80Jri8tMihhMd0YX3YsjHMpLtDrSfmTaK7jnH0i82z5LV832cA4goFTrBLK6BD3UUCo9oTWA=="
     },
     {
       "path": "dynamic/imports/client/upload/upload-row.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/upload/upload-row.jade?hash=841d1f6e532cfad69b7c0993a3e8791853700944",
-      "size": 82,
-      "hash": "841d1f6e532cfad69b7c0993a3e8791853700944"
+      "url": "/dynamic/imports/client/upload/upload-row.jade?hash=399984970bf26dd806624676695a159fa7d0c734",
+      "size": 64,
+      "hash": "399984970bf26dd806624676695a159fa7d0c734",
+      "sri": "kx1SFblEXS68nDP60PLg44jLvj/G4LCoBJQLqTQwM6rhBYeyThVMJmg5eswwB+XkUB3ZCPWvNk+RKC62zUpKZA=="
     },
     {
       "path": "dynamic/imports/client/upload/template.upload-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/upload/template.upload-row.js?hash=5ed17c593d22ac807c508e80a8b189bcfb00798f",
+      "url": "/dynamic/imports/client/upload/template.upload-row.js?hash=a690ec7a56fa0aefb8ec0dba683d637e907a9d97",
       "size": 1888,
-      "hash": "5ed17c593d22ac807c508e80a8b189bcfb00798f"
+      "hash": "a690ec7a56fa0aefb8ec0dba683d637e907a9d97",
+      "sri": "+0kdriRh/sTXr5QQswqpAmTzLhEZboJT0D5DYyYJbcDzMgIyQpgLrhcpLHizrawfgkbkQ3KIUU5UiqSNMdgTUg=="
     },
     {
       "path": "dynamic/imports/client/user-account/login.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/login.jade?hash=07a358729d931bb3e7e23f8fc29dab2b3fba62a1",
-      "size": 77,
-      "hash": "07a358729d931bb3e7e23f8fc29dab2b3fba62a1"
+      "url": "/dynamic/imports/client/user-account/login.jade?hash=02c73a141ab802be87ef10e5b647e8f2a1880b48",
+      "size": 59,
+      "hash": "02c73a141ab802be87ef10e5b647e8f2a1880b48",
+      "sri": "SEgyBVjQPYVe8oAwVhF9yD4PoRgIo+lcdC35z5XRaqrcrrWJ1brnSPPS4t7gBArKW6BzsFtvq6Rj19b5onPB3g=="
     },
     {
       "path": "dynamic/imports/client/user-account/template.login.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/template.login.js?hash=555563ee481430e48105646c4aa5f058cb36e84a",
+      "url": "/dynamic/imports/client/user-account/template.login.js?hash=5d87101ef5fdaa120a041a1c09ab2a0c96bdca19",
       "size": 4997,
-      "hash": "555563ee481430e48105646c4aa5f058cb36e84a"
+      "hash": "5d87101ef5fdaa120a041a1c09ab2a0c96bdca19",
+      "sri": "j4fZVAi2FivXp54RC4r4J9iWAQrmLM0B9yP5/yuPOsJy5LkawE3WuckMed+7waaiQh5z3VxGA5gh2A0ANCUr4A=="
     },
     {
       "path": "dynamic/imports/client/user-account/logout.jade",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/logout.jade?hash=caa4bdfb824e300ebfa1d65a20639b1bf93dbf4f",
-      "size": 78,
-      "hash": "caa4bdfb824e300ebfa1d65a20639b1bf93dbf4f"
+      "url": "/dynamic/imports/client/user-account/logout.jade?hash=910e85b0049aa15e2775a3c4fe7e3c9b3ff89220",
+      "size": 60,
+      "hash": "910e85b0049aa15e2775a3c4fe7e3c9b3ff89220",
+      "sri": "5JlfqLlc85VABBCXXFurISs+n8ghJwf6mgJVjwU3akoad/0cWagvyEtB5uHJroWr2h6FrxrHaQVZ9S52yF294w=="
     },
     {
       "path": "dynamic/imports/client/user-account/template.logout.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/template.logout.js?hash=3d0e0515e7d6b34817ad8a5e9fada9b089b1572a",
+      "url": "/dynamic/imports/client/user-account/template.logout.js?hash=3b809d0f886c3380a30a89f37ef3597cab85d1c2",
       "size": 217,
-      "hash": "3d0e0515e7d6b34817ad8a5e9fada9b089b1572a"
+      "hash": "3b809d0f886c3380a30a89f37ef3597cab85d1c2",
+      "sri": "CZJ+yVftPkda2/UaFR4H0hlLpsrcc043bCkKc//661hRkWu7UdibF5P6V9bNKYEL42AJrGblKlHbE1lsWlNcvw=="
     },
     {
       "path": "dynamic/imports/client/file/file.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/file/file.js?hash=8d38ba671195909e285af104ce945de5900cfda8",
-      "size": 3390,
-      "hash": "8d38ba671195909e285af104ce945de5900cfda8"
+      "url": "/dynamic/imports/client/file/file.js?hash=bf55e9c994462794d98b9a02529f6380769fcb71",
+      "size": 3366,
+      "hash": "bf55e9c994462794d98b9a02529f6380769fcb71",
+      "sri": "vmniYEHntxY3q8UUQauS7vDUwUK1DFZcq+Bja/CvNlfQjArCL3xDlDU8cR+7oEEXy5tI6AOar0RuSCFvDL1VvA=="
     },
     {
       "path": "dynamic/imports/client/index/index.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/index/index.js?hash=22f81125bfd581ce4cf0d8cb919a60b683eb4989",
-      "size": 1563,
-      "hash": "22f81125bfd581ce4cf0d8cb919a60b683eb4989"
+      "url": "/dynamic/imports/client/index/index.js?hash=f3b4097549127c1d23160d1907d97ae398761b56",
+      "size": 1531,
+      "hash": "f3b4097549127c1d23160d1907d97ae398761b56",
+      "sri": "A8yPJzdL5TVkJ7EZTHMKTOTL2xt4se0CGtXlf6ulOxwKh3/swhCzg112loWlCzbQmxFjiaHz2edGS5BoDLzKtg=="
     },
     {
       "path": "dynamic/imports/client/listing/listing-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/listing/listing-row.js?hash=837527c4bac1622f51dcb0ccfa1a9c84e0c72773",
-      "size": 1968,
-      "hash": "837527c4bac1622f51dcb0ccfa1a9c84e0c72773"
+      "url": "/dynamic/imports/client/listing/listing-row.js?hash=ccb90a5aec4a3fa2eb37b1379cd3f71d9cbddd73",
+      "size": 1940,
+      "hash": "ccb90a5aec4a3fa2eb37b1379cd3f71d9cbddd73",
+      "sri": "q/oPDzPJlXICBzl5oE9JqAuI6Njxsnd6Rm0CWIN0/L5Fsgc/CWMxACi6xuSpDWcjBfhtONOQua6CNi8I4KYBew=="
     },
     {
       "path": "dynamic/imports/client/upload/upload-row.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/upload/upload-row.js?hash=f55c13638cba2c4db588d6fe75a93406986a4080",
-      "size": 771,
-      "hash": "f55c13638cba2c4db588d6fe75a93406986a4080"
+      "url": "/dynamic/imports/client/upload/upload-row.js?hash=9eadc40a1527193a5b2022cec4b8246be13fa589",
+      "size": 755,
+      "hash": "9eadc40a1527193a5b2022cec4b8246be13fa589",
+      "sri": "RSDxnoNDfz72M6d6+Fd1GwdvqgjmzNJAG4Mj6gc4bktCsRlcc/gjccRgncG7zHQps5+kFvdyPzz4ooKC2ksZjA=="
     },
     {
       "path": "dynamic/imports/client/user-account/login.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/login.js?hash=d09296d5b25edefd1da050f225be4312de75d1a5",
-      "size": 1055,
-      "hash": "d09296d5b25edefd1da050f225be4312de75d1a5"
+      "url": "/dynamic/imports/client/user-account/login.js?hash=0aeeaed63faed46a234a484bbb66178423823887",
+      "size": 1035,
+      "hash": "0aeeaed63faed46a234a484bbb66178423823887",
+      "sri": "FgnljylI0or0fZqFtWFqCuwE4fRUSjvEuDi/0mH+J/UdobRPua3iQ4FLaynBtW8Thvvgd1xE39ShCyycgGNCvw=="
     },
     {
       "path": "dynamic/imports/client/user-account/logout.js",
       "where": "client",
       "type": "dynamic js",
       "cacheable": true,
-      "url": "/dynamic/imports/client/user-account/logout.js?hash=90c1c0c9b41a540b22c083159ba792756a5488f3",
-      "size": 256,
-      "hash": "90c1c0c9b41a540b22c083159ba792756a5488f3"
+      "url": "/dynamic/imports/client/user-account/logout.js?hash=24e1a15d3e5a79f3ba85e12f059c0bc37aa5097a",
+      "size": 244,
+      "hash": "24e1a15d3e5a79f3ba85e12f059c0bc37aa5097a",
+      "sri": "zd3fiFAJAvVuCULeq7s5xu0oCrfY+/RgBxXXYqvT4Pt+XdHvkRxakw5NJN8iCPdjET0QQCB22nZjKFQrUxhuZw=="
     },
     {
-      "path": "b7be895580115f7e3d05afafc761bcb0d4f2f89e.css",
+      "path": "79bfa15cfce8ca6142c0d291e8ac972c9a6a7ee7.css",
       "where": "client",
       "type": "css",
       "cacheable": true,
-      "url": "/b7be895580115f7e3d05afafc761bcb0d4f2f89e.css?meteor_css_resource=true",
-      "size": 72210,
-      "hash": "b7be895580115f7e3d05afafc761bcb0d4f2f89e"
+      "url": "/79bfa15cfce8ca6142c0d291e8ac972c9a6a7ee7.css?meteor_css_resource=true",
+      "size": 65033,
+      "hash": "79bfa15cfce8ca6142c0d291e8ac972c9a6a7ee7",
+      "sri": "Sb4lR99iI9lu5lFkSqpDnMDs5iQNXUHXgc6fi1edR/uWCpJIholiG1dVZjnJUsWd6L9Sak7SXVXhZYKt/XEV6A=="
     },
     {
       "path": "packages/ostrio_files/worker.min.js",
@@ -197,7 +218,8 @@
       "cacheable": false,
       "url": "/packages/ostrio_files/worker.min.js",
       "size": 625,
-      "hash": "6d127a96f8f989baa5999b29fe802006d746b553"
+      "hash": "1bbed45a74d0fa4392c6af5f13db396c2a18df84",
+      "sri": "O3hA6j1YKRSa2Hpu+o1M2pAHe/g5J8gGjshPPW2SfHnx/9kJD4Za7FtEYnDQVfDJC/oLkvMcC4MsNKX6Nry49A=="
     },
     {
       "path": "packages/oauth/end_of_popup_response.js",
@@ -205,8 +227,9 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/oauth/end_of_popup_response.js",
-      "size": 1137,
-      "hash": "8a36abddc07778ebcf5db6253f08bd2b63d02c63"
+      "size": 1236,
+      "hash": "cebe0774feb530a0f294bbb9e5e76babd47901f1",
+      "sri": "odXbW5eF6T4K2PPbIoSzUTa3oXVS5U2dcIErsulYVDpwRK7EPJ6WPpYPD+4FB4TW4TxwOMohga0GV8gKpAQYmw=="
     },
     {
       "path": "packages/oauth/end_of_redirect_response.js",
@@ -214,8 +237,9 @@
       "type": "asset",
       "cacheable": false,
       "url": "/packages/oauth/end_of_redirect_response.js",
-      "size": 356,
-      "hash": "db42ae47cb556ec736c5b7b1cee4cfbed3f8abf6"
+      "size": 455,
+      "hash": "558278c11f19a17afb952e154bab0254db689f74",
+      "sri": "gGAd4TcVJN9lf92ZkYe2Ae4XIuz77VJ/IyFllNoVUT1U3yaQ2pO89por0EutOmVY2Mg3XDux1GRBAnfc30A2MA=="
     },
     {
       "path": "app/GCAA.png",
@@ -224,7 +248,8 @@
       "cacheable": false,
       "url": "/GCAA.png",
       "size": 12186,
-      "hash": "79118974512f2af64975c59ea279336388584b89"
+      "hash": "79118974512f2af64975c59ea279336388584b89",
+      "sri": null
     },
     {
       "path": "app/android-chrome-144x144.png",
@@ -233,7 +258,8 @@
       "cacheable": false,
       "url": "/android-chrome-144x144.png",
       "size": 5901,
-      "hash": "f28eb29a712eff1cf4569536e3519b1432541a05"
+      "hash": "f28eb29a712eff1cf4569536e3519b1432541a05",
+      "sri": null
     },
     {
       "path": "app/android-chrome-192x192.png",
@@ -242,7 +268,8 @@
       "cacheable": false,
       "url": "/android-chrome-192x192.png",
       "size": 8610,
-      "hash": "c42adf40fa06b47eff1c9f0ee7ae6f44464f39d1"
+      "hash": "c42adf40fa06b47eff1c9f0ee7ae6f44464f39d1",
+      "sri": null
     },
     {
       "path": "app/android-chrome-256x256.png",
@@ -251,7 +278,8 @@
       "cacheable": false,
       "url": "/android-chrome-256x256.png",
       "size": 12883,
-      "hash": "cf23b8033d1ea847d83761c7c4cf629f066d20e0"
+      "hash": "cf23b8033d1ea847d83761c7c4cf629f066d20e0",
+      "sri": null
     },
     {
       "path": "app/android-chrome-36x36.png",
@@ -260,7 +288,8 @@
       "cacheable": false,
       "url": "/android-chrome-36x36.png",
       "size": 1125,
-      "hash": "5c9567211d8fc08504c5aa8e473141f2076df0a3"
+      "hash": "5c9567211d8fc08504c5aa8e473141f2076df0a3",
+      "sri": null
     },
     {
       "path": "app/android-chrome-384x384.png",
@@ -269,7 +298,8 @@
       "cacheable": false,
       "url": "/android-chrome-384x384.png",
       "size": 25609,
-      "hash": "ec137e1180e7ef4a985c4418dbcedd08d02427ae"
+      "hash": "ec137e1180e7ef4a985c4418dbcedd08d02427ae",
+      "sri": null
     },
     {
       "path": "app/android-chrome-48x48.png",
@@ -278,7 +308,8 @@
       "cacheable": false,
       "url": "/android-chrome-48x48.png",
       "size": 1628,
-      "hash": "ccb32c6d187f3d22f63d9c2aee6e6e7a24ddba64"
+      "hash": "ccb32c6d187f3d22f63d9c2aee6e6e7a24ddba64",
+      "sri": null
     },
     {
       "path": "app/android-chrome-512x512.png",
@@ -287,7 +318,8 @@
       "cacheable": false,
       "url": "/android-chrome-512x512.png",
       "size": 45667,
-      "hash": "18c7022b4cd03364914bbe847d7dfdd302f1feb9"
+      "hash": "18c7022b4cd03364914bbe847d7dfdd302f1feb9",
+      "sri": null
     },
     {
       "path": "app/android-chrome-72x72.png",
@@ -296,7 +328,8 @@
       "cacheable": false,
       "url": "/android-chrome-72x72.png",
       "size": 2596,
-      "hash": "926c918a63c6195eea18bd6480eb3297f0852bd7"
+      "hash": "926c918a63c6195eea18bd6480eb3297f0852bd7",
+      "sri": null
     },
     {
       "path": "app/android-chrome-96x96.png",
@@ -305,7 +338,8 @@
       "cacheable": false,
       "url": "/android-chrome-96x96.png",
       "size": 3563,
-      "hash": "55130ca1108e01705227077234deb4884c3259f0"
+      "hash": "55130ca1108e01705227077234deb4884c3259f0",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-114x114-precomposed.png",
@@ -314,7 +348,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-114x114-precomposed.png",
       "size": 4071,
-      "hash": "9f0d34baaab1cd0fa736d50d8828532ad0e2a66e"
+      "hash": "9f0d34baaab1cd0fa736d50d8828532ad0e2a66e",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-114x114.png",
@@ -323,7 +358,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-114x114.png",
       "size": 3736,
-      "hash": "aab7b8aac0f8b839b2fd2b2031213e28295fc2ff"
+      "hash": "aab7b8aac0f8b839b2fd2b2031213e28295fc2ff",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-120x120-precomposed.png",
@@ -332,7 +368,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-120x120-precomposed.png",
       "size": 4242,
-      "hash": "1ebd4047b542e9abd44f6e4e02a37b5f792dabc5"
+      "hash": "1ebd4047b542e9abd44f6e4e02a37b5f792dabc5",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-120x120.png",
@@ -341,7 +378,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-120x120.png",
       "size": 3923,
-      "hash": "41b6d4c4fce648f03456a0bba0c10c2034f7ea7c"
+      "hash": "41b6d4c4fce648f03456a0bba0c10c2034f7ea7c",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-144x144-precomposed.png",
@@ -350,7 +388,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-144x144-precomposed.png",
       "size": 5313,
-      "hash": "cd932b4e510070ada4025b71f0b83aabd70c62da"
+      "hash": "cd932b4e510070ada4025b71f0b83aabd70c62da",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-144x144.png",
@@ -359,7 +398,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-144x144.png",
       "size": 4931,
-      "hash": "bf4f5bdfc03225fd8a1c358c45c99b7bd718e90c"
+      "hash": "bf4f5bdfc03225fd8a1c358c45c99b7bd718e90c",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-152x152-precomposed.png",
@@ -368,7 +408,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-152x152-precomposed.png",
       "size": 5669,
-      "hash": "a3b434dc7286dd20da9e62f7b8953231e8c97b7e"
+      "hash": "a3b434dc7286dd20da9e62f7b8953231e8c97b7e",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-152x152.png",
@@ -377,7 +418,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-152x152.png",
       "size": 5265,
-      "hash": "f265950ff318497ab59b9871d369b3e7cb4aa53e"
+      "hash": "f265950ff318497ab59b9871d369b3e7cb4aa53e",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-180x180-precomposed.png",
@@ -386,7 +428,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-180x180-precomposed.png",
       "size": 6954,
-      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4"
+      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-180x180.png",
@@ -395,7 +438,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-180x180.png",
       "size": 6540,
-      "hash": "d6e49307a68d74461b91238643087b22dbe06a57"
+      "hash": "d6e49307a68d74461b91238643087b22dbe06a57",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-57x57-precomposed.png",
@@ -404,7 +448,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-57x57-precomposed.png",
       "size": 1839,
-      "hash": "aae08abafa36395d7681701f70d8d611f832502b"
+      "hash": "aae08abafa36395d7681701f70d8d611f832502b",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-57x57.png",
@@ -413,7 +458,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-57x57.png",
       "size": 1649,
-      "hash": "f34602e42935926e31bcad7d6f1fe2842387526b"
+      "hash": "f34602e42935926e31bcad7d6f1fe2842387526b",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-60x60-precomposed.png",
@@ -422,7 +468,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-60x60-precomposed.png",
       "size": 1984,
-      "hash": "069c115ce8e8dbfb0112b08edd7c88c5c94a5042"
+      "hash": "069c115ce8e8dbfb0112b08edd7c88c5c94a5042",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-60x60.png",
@@ -431,7 +478,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-60x60.png",
       "size": 1786,
-      "hash": "09b81baddd85e842793621e1369b4d37a8edebea"
+      "hash": "09b81baddd85e842793621e1369b4d37a8edebea",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-72x72-precomposed.png",
@@ -440,7 +488,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-72x72-precomposed.png",
       "size": 2439,
-      "hash": "c6d31196ec75567929a10e78e78e22f68647f93c"
+      "hash": "c6d31196ec75567929a10e78e78e22f68647f93c",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-72x72.png",
@@ -449,7 +498,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-72x72.png",
       "size": 2207,
-      "hash": "faa5fd42b44030882bcd243be7bf4bef9ab60a9e"
+      "hash": "faa5fd42b44030882bcd243be7bf4bef9ab60a9e",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-76x76-precomposed.png",
@@ -458,7 +508,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-76x76-precomposed.png",
       "size": 2504,
-      "hash": "e3f8e283751994c34ebce5a752d277e69e333ab8"
+      "hash": "e3f8e283751994c34ebce5a752d277e69e333ab8",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-76x76.png",
@@ -467,7 +518,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-76x76.png",
       "size": 2277,
-      "hash": "9e5bda597495ec5cbad503d16a1c22febc59fa2b"
+      "hash": "9e5bda597495ec5cbad503d16a1c22febc59fa2b",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon-precomposed.png",
@@ -476,7 +528,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon-precomposed.png",
       "size": 6954,
-      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4"
+      "hash": "eb45f609da0d0d1884b97e4ab0a152229a017bd4",
+      "sri": null
     },
     {
       "path": "app/apple-touch-icon.png",
@@ -485,7 +538,8 @@
       "cacheable": false,
       "url": "/apple-touch-icon.png",
       "size": 6540,
-      "hash": "d6e49307a68d74461b91238643087b22dbe06a57"
+      "hash": "d6e49307a68d74461b91238643087b22dbe06a57",
+      "sri": null
     },
     {
       "path": "app/browserconfig.xml",
@@ -494,7 +548,8 @@
       "cacheable": false,
       "url": "/browserconfig.xml",
       "size": 417,
-      "hash": "d9cc0cfa2422c8cdd0dee71c58f1b2cfd0ef8612"
+      "hash": "d9cc0cfa2422c8cdd0dee71c58f1b2cfd0ef8612",
+      "sri": null
     },
     {
       "path": "app/dataset.polyfill.js",
@@ -503,7 +558,8 @@
       "cacheable": false,
       "url": "/dataset.polyfill.js",
       "size": 761,
-      "hash": "f89aaa4cec26af0bc67b14f088e8319b58f37391"
+      "hash": "f89aaa4cec26af0bc67b14f088e8319b58f37391",
+      "sri": null
     },
     {
       "path": "app/dnd.png",
@@ -512,7 +568,8 @@
       "cacheable": false,
       "url": "/dnd.png",
       "size": 934,
-      "hash": "3cd5d478230bc7f8e647249d58f9a9097631c2dc"
+      "hash": "3cd5d478230bc7f8e647249d58f9a9097631c2dc",
+      "sri": null
     },
     {
       "path": "app/favicon-16x16.png",
@@ -521,7 +578,8 @@
       "cacheable": false,
       "url": "/favicon-16x16.png",
       "size": 416,
-      "hash": "bbca58ab364adcc489fcbd3249436ec964452e43"
+      "hash": "bbca58ab364adcc489fcbd3249436ec964452e43",
+      "sri": null
     },
     {
       "path": "app/favicon-32x32.png",
@@ -530,7 +588,8 @@
       "cacheable": false,
       "url": "/favicon-32x32.png",
       "size": 1016,
-      "hash": "16cff445b53cb0942db9f5a2c0f2b2247bb03da6"
+      "hash": "16cff445b53cb0942db9f5a2c0f2b2247bb03da6",
+      "sri": null
     },
     {
       "path": "app/favicon-96x96.png",
@@ -539,7 +598,8 @@
       "cacheable": false,
       "url": "/favicon-96x96.png",
       "size": 3346,
-      "hash": "32ebf3dc3a756d3f12bfad6d423ac1c300cbd940"
+      "hash": "32ebf3dc3a756d3f12bfad6d423ac1c300cbd940",
+      "sri": null
     },
     {
       "path": "app/favicon.ico",
@@ -548,7 +608,8 @@
       "cacheable": false,
       "url": "/favicon.ico",
       "size": 7406,
-      "hash": "437a44292dd910f1a18957a2a551be6a897eb699"
+      "hash": "437a44292dd910f1a18957a2a551be6a897eb699",
+      "sri": null
     },
     {
       "path": "app/history.polyfill.js",
@@ -557,7 +618,8 @@
       "cacheable": false,
       "url": "/history.polyfill.js",
       "size": 7685,
-      "hash": "762dbac195d686bab13e87da2b96c9a1794832ba"
+      "hash": "762dbac195d686bab13e87da2b96c9a1794832ba",
+      "sri": null
     },
     {
       "path": "app/icon_1200x630.png",
@@ -566,7 +628,8 @@
       "cacheable": false,
       "url": "/icon_1200x630.png",
       "size": 65771,
-      "hash": "6b004cfd5af7f7b4801fcda0b7b18f6970620f32"
+      "hash": "6b004cfd5af7f7b4801fcda0b7b18f6970620f32",
+      "sri": null
     },
     {
       "path": "app/icon_750x560.png",
@@ -575,7 +638,8 @@
       "cacheable": false,
       "url": "/icon_750x560.png",
       "size": 29564,
-      "hash": "6a85a8f7bca62732d2b4c83f09e7d395135372ec"
+      "hash": "6a85a8f7bca62732d2b4c83f09e7d395135372ec",
+      "sri": null
     },
     {
       "path": "app/logo-bg.png",
@@ -584,7 +648,8 @@
       "cacheable": false,
       "url": "/logo-bg.png",
       "size": 4787,
-      "hash": "2eef07c978c91f4c5ab125dd4a211b37f5a12a52"
+      "hash": "2eef07c978c91f4c5ab125dd4a211b37f5a12a52",
+      "sri": null
     },
     {
       "path": "app/logo-bw.png",
@@ -593,7 +658,8 @@
       "cacheable": false,
       "url": "/logo-bw.png",
       "size": 9447,
-      "hash": "c3118bd520ab863f7e9ee9061f2bebf4b0cd62d2"
+      "hash": "c3118bd520ab863f7e9ee9061f2bebf4b0cd62d2",
+      "sri": null
     },
     {
       "path": "app/logo_1024x1024.png",
@@ -602,7 +668,8 @@
       "cacheable": false,
       "url": "/logo_1024x1024.png",
       "size": 220225,
-      "hash": "bb5e0e5750d7e6257004d801e3cd08489f80d432"
+      "hash": "bb5e0e5750d7e6257004d801e3cd08489f80d432",
+      "sri": null
     },
     {
       "path": "app/logo_1024x1024_alpha.png",
@@ -611,7 +678,8 @@
       "cacheable": false,
       "url": "/logo_1024x1024_alpha.png",
       "size": 209519,
-      "hash": "7d6429570477aa8b43949ef97bedff60bcbe4957"
+      "hash": "7d6429570477aa8b43949ef97bedff60bcbe4957",
+      "sri": null
     },
     {
       "path": "app/manifest.webmanifest",
@@ -620,7 +688,8 @@
       "cacheable": false,
       "url": "/manifest.webmanifest",
       "size": 1246,
-      "hash": "629f7f6c52d29ab7330022bac800b046da885dba"
+      "hash": "629f7f6c52d29ab7330022bac800b046da885dba",
+      "sri": null
     },
     {
       "path": "app/meteor-icon.svg",
@@ -629,7 +698,8 @@
       "cacheable": false,
       "url": "/meteor-icon.svg",
       "size": 2024,
-      "hash": "3d4ab9ae6590079844e474b446eb54e622ea777f"
+      "hash": "3d4ab9ae6590079844e474b446eb54e622ea777f",
+      "sri": null
     },
     {
       "path": "app/mstile-144x144.png",
@@ -638,7 +708,8 @@
       "cacheable": false,
       "url": "/mstile-144x144.png",
       "size": 6094,
-      "hash": "a7e4f29b866ab33ba3fa1d451015496f6c54de08"
+      "hash": "a7e4f29b866ab33ba3fa1d451015496f6c54de08",
+      "sri": null
     },
     {
       "path": "app/mstile-150x150.png",
@@ -647,7 +718,8 @@
       "cacheable": false,
       "url": "/mstile-150x150.png",
       "size": 5507,
-      "hash": "61a6f9bc53db5fc5700b1ecdf65c8ee0cd7e01ef"
+      "hash": "61a6f9bc53db5fc5700b1ecdf65c8ee0cd7e01ef",
+      "sri": null
     },
     {
       "path": "app/mstile-310x150.png",
@@ -656,7 +728,8 @@
       "cacheable": false,
       "url": "/mstile-310x150.png",
       "size": 5721,
-      "hash": "c4e9d673ebf098e72ecc0cf4c35f8885e34e3b98"
+      "hash": "c4e9d673ebf098e72ecc0cf4c35f8885e34e3b98",
+      "sri": null
     },
     {
       "path": "app/mstile-310x310.png",
@@ -665,7 +738,8 @@
       "cacheable": false,
       "url": "/mstile-310x310.png",
       "size": 12985,
-      "hash": "920f6ea4d72ae659e4371b0ca6e3bc214e8650a3"
+      "hash": "920f6ea4d72ae659e4371b0ca6e3bc214e8650a3",
+      "sri": null
     },
     {
       "path": "app/mstile-70x70.png",
@@ -674,7 +748,8 @@
       "cacheable": false,
       "url": "/mstile-70x70.png",
       "size": 4055,
-      "hash": "a3e9b45ec79e7aebfe26c41e8eb86b73df1be62d"
+      "hash": "a3e9b45ec79e7aebfe26c41e8eb86b73df1be62d",
+      "sri": null
     },
     {
       "path": "app/ostrio-bg.png",
@@ -683,7 +758,8 @@
       "cacheable": false,
       "url": "/ostrio-bg.png",
       "size": 3731,
-      "hash": "f1760210a0ef5d2f6283ab05c483585da7ef4589"
+      "hash": "f1760210a0ef5d2f6283ab05c483585da7ef4589",
+      "sri": null
     },
     {
       "path": "app/robots.txt",
@@ -692,7 +768,8 @@
       "cacheable": false,
       "url": "/robots.txt",
       "size": 24,
-      "hash": "880fc23ab49be97dbc7bbb66861acefc7f6e22c3"
+      "hash": "880fc23ab49be97dbc7bbb66861acefc7f6e22c3",
+      "sri": null
     },
     {
       "path": "app/safari-pinned-tab.svg",
@@ -701,7 +778,8 @@
       "cacheable": false,
       "url": "/safari-pinned-tab.svg",
       "size": 7601,
-      "hash": "b86e1ed24861073c37b353a5c3ae9d7b18b57699"
+      "hash": "b86e1ed24861073c37b353a5c3ae9d7b18b57699",
+      "sri": null
     },
     {
       "path": "app/sw.js",
@@ -710,7 +788,8 @@
       "cacheable": false,
       "url": "/sw.js",
       "size": 1895,
-      "hash": "60900db05bf06bdf3319175bcf8a9c77901a0c2f"
+      "hash": "60900db05bf06bdf3319175bcf8a9c77901a0c2f",
+      "sri": null
     },
     {
       "path": "app/sw.min.js",
@@ -719,7 +798,8 @@
       "cacheable": false,
       "url": "/sw.min.js",
       "size": 1193,
-      "hash": "18312f23970e799708d94060591662764312de13"
+      "hash": "18312f23970e799708d94060591662764312de13",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300.eot",
@@ -728,7 +808,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300.eot",
       "size": 26052,
-      "hash": "be2b86d10631dc899e67a5f23640a81b8c7fb398"
+      "hash": "be2b86d10631dc899e67a5f23640a81b8c7fb398",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300.svg",
@@ -737,7 +818,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300.svg",
       "size": 79706,
-      "hash": "47192f85330624d34d1a4018c9e129d38b64a65e"
+      "hash": "47192f85330624d34d1a4018c9e129d38b64a65e",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300.ttf",
@@ -746,7 +828,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300.ttf",
       "size": 67632,
-      "hash": "d938c3d312d51079ca02ea404e89f9c552b65ad7"
+      "hash": "d938c3d312d51079ca02ea404e89f9c552b65ad7",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300.woff",
@@ -755,7 +838,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300.woff",
       "size": 31828,
-      "hash": "ed507e6d2e095a59fad7367af4cfe88a7a832083"
+      "hash": "ed507e6d2e095a59fad7367af4cfe88a7a832083",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300.woff2",
@@ -764,7 +848,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300.woff2",
       "size": 24752,
-      "hash": "ee28c3ac0b975db9d6c530762b32d7680a32a8bf"
+      "hash": "ee28c3ac0b975db9d6c530762b32d7680a32a8bf",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300italic.eot",
@@ -773,7 +858,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300italic.eot",
       "size": 20935,
-      "hash": "90f0b2117d91698eb7d7fea1ce07c5de4386a78d"
+      "hash": "90f0b2117d91698eb7d7fea1ce07c5de4386a78d",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300italic.svg",
@@ -782,7 +868,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300italic.svg",
       "size": 82027,
-      "hash": "534bf80569180fc80b752966cd000d1d6a964322"
+      "hash": "534bf80569180fc80b752966cd000d1d6a964322",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300italic.ttf",
@@ -791,7 +878,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300italic.ttf",
       "size": 42148,
-      "hash": "466ac95a451ca6e33e48d68b183729f07923a1ef"
+      "hash": "466ac95a451ca6e33e48d68b183729f07923a1ef",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300italic.woff",
@@ -800,7 +888,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300italic.woff",
       "size": 23784,
-      "hash": "a17837101627cf9c5e47a56208ec0c9946fa27cc"
+      "hash": "a17837101627cf9c5e47a56208ec0c9946fa27cc",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-300italic.woff2",
@@ -809,7 +898,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-300italic.woff2",
       "size": 18660,
-      "hash": "6ba2eca2ea812d7f9b869f3d2989bc2bf63448cd"
+      "hash": "6ba2eca2ea812d7f9b869f3d2989bc2bf63448cd",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700.eot",
@@ -818,7 +908,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700.eot",
       "size": 27836,
-      "hash": "6ea710fb65dabc12fc33ff3cef1c347b5c22f298"
+      "hash": "6ea710fb65dabc12fc33ff3cef1c347b5c22f298",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700.svg",
@@ -827,7 +918,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700.svg",
       "size": 80884,
-      "hash": "47de017ceff4b151a906cf77e3d71c45831b4e45"
+      "hash": "47de017ceff4b151a906cf77e3d71c45831b4e45",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700.ttf",
@@ -836,7 +928,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700.ttf",
       "size": 63876,
-      "hash": "2ffcc5ce9ab19a4344c55594b1f0b861f195a5ae"
+      "hash": "2ffcc5ce9ab19a4344c55594b1f0b861f195a5ae",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700.woff",
@@ -845,7 +938,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700.woff",
       "size": 29972,
-      "hash": "ad23951f7de0590a5f9a0ea57294b0d3b9d0c178"
+      "hash": "ad23951f7de0590a5f9a0ea57294b0d3b9d0c178",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700.woff2",
@@ -854,7 +948,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700.woff2",
       "size": 24488,
-      "hash": "64576afb2040644cb288754588597d41162a5220"
+      "hash": "64576afb2040644cb288754588597d41162a5220",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700italic.eot",
@@ -863,7 +958,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700italic.eot",
       "size": 29727,
-      "hash": "be037e263c360b79a105d4da80112cb241a55632"
+      "hash": "be037e263c360b79a105d4da80112cb241a55632",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700italic.svg",
@@ -872,7 +968,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700italic.svg",
       "size": 83985,
-      "hash": "324a89acbc345d6af73154a83f575a92f2f97122"
+      "hash": "324a89acbc345d6af73154a83f575a92f2f97122",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700italic.ttf",
@@ -881,7 +978,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700italic.ttf",
       "size": 67488,
-      "hash": "184e65f5e8296e94fe7464de7d1b07e614497c6d"
+      "hash": "184e65f5e8296e94fe7464de7d1b07e614497c6d",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700italic.woff",
@@ -890,7 +988,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700italic.woff",
       "size": 31944,
-      "hash": "00cb6ec6140d41c01613204cc99e7bf2806ede44"
+      "hash": "00cb6ec6140d41c01613204cc99e7bf2806ede44",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-700italic.woff2",
@@ -899,7 +998,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-700italic.woff2",
       "size": 25988,
-      "hash": "41e17cc80485bec9511b235e399f5bce321838a6"
+      "hash": "41e17cc80485bec9511b235e399f5bce321838a6",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-italic.eot",
@@ -908,7 +1008,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-italic.eot",
       "size": 29538,
-      "hash": "2153ee96dae00462693a659d59a0fa9c649055b0"
+      "hash": "2153ee96dae00462693a659d59a0fa9c649055b0",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-italic.svg",
@@ -917,7 +1018,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-italic.svg",
       "size": 83394,
-      "hash": "34a266f9b826b5cd582d0ffd50ded4e8dabdf28f"
+      "hash": "34a266f9b826b5cd582d0ffd50ded4e8dabdf28f",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-italic.ttf",
@@ -926,7 +1028,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-italic.ttf",
       "size": 65732,
-      "hash": "723683d6e7cea1eae0d9a8581dae98e0c9c1ec5f"
+      "hash": "723683d6e7cea1eae0d9a8581dae98e0c9c1ec5f",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-italic.woff",
@@ -935,7 +1038,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-italic.woff",
       "size": 31760,
-      "hash": "16f3d0858f0b692e4aff8ccfef8a0f13acd30940"
+      "hash": "16f3d0858f0b692e4aff8ccfef8a0f13acd30940",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-italic.woff2",
@@ -944,7 +1048,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-italic.woff2",
       "size": 25944,
-      "hash": "57d2a86843b78bb8cdf132a1fa0064c9089b01c3"
+      "hash": "57d2a86843b78bb8cdf132a1fa0064c9089b01c3",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-regular.eot",
@@ -953,7 +1058,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-regular.eot",
       "size": 28323,
-      "hash": "31f3aca6afc0bb726eed893ecb8411f7a64becbe"
+      "hash": "31f3aca6afc0bb726eed893ecb8411f7a64becbe",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-regular.svg",
@@ -962,7 +1068,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-regular.svg",
       "size": 80331,
-      "hash": "2194c7bc3f4de38a8cbeab4f81a3bec8142fe1c8"
+      "hash": "2194c7bc3f4de38a8cbeab4f81a3bec8142fe1c8",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-regular.ttf",
@@ -971,7 +1078,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-regular.ttf",
       "size": 65080,
-      "hash": "4c72cd69f8fa051cdad008ec1c7c386e29268223"
+      "hash": "4c72cd69f8fa051cdad008ec1c7c386e29268223",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-regular.woff",
@@ -980,7 +1088,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-regular.woff",
       "size": 30468,
-      "hash": "9f9cbd0b5523bca327015aa841fd2974a7993f7c"
+      "hash": "9f9cbd0b5523bca327015aa841fd2974a7993f7c",
+      "sri": null
     },
     {
       "path": "app/fonts/lato-v14-latin_latin-ext-regular.woff2",
@@ -989,7 +1098,8 @@
       "cacheable": false,
       "url": "/fonts/lato-v14-latin_latin-ext-regular.woff2",
       "size": 24904,
-      "hash": "3f7aab38f4796eb022bc43ee3765d4730f12228b"
+      "hash": "3f7aab38f4796eb022bc43ee3765d4730f12228b",
+      "sri": null
     },
     {
       "path": "app/fonts/line-awesome.eot",
@@ -998,7 +1108,8 @@
       "cacheable": false,
       "url": "/fonts/line-awesome.eot",
       "size": 112916,
-      "hash": "3df69d99f3ff4c1179629d72d861259feb86b00f"
+      "hash": "3df69d99f3ff4c1179629d72d861259feb86b00f",
+      "sri": null
     },
     {
       "path": "app/fonts/line-awesome.svg",
@@ -1007,7 +1118,8 @@
       "cacheable": false,
       "url": "/fonts/line-awesome.svg",
       "size": 433695,
-      "hash": "e8961aed342b18fc24107c1acda91adf731083e8"
+      "hash": "e8961aed342b18fc24107c1acda91adf731083e8",
+      "sri": null
     },
     {
       "path": "app/fonts/line-awesome.ttf",
@@ -1016,7 +1128,8 @@
       "cacheable": false,
       "url": "/fonts/line-awesome.ttf",
       "size": 112728,
-      "hash": "9e24986ab9fab12abf9ed65cadc4501f74f04a16"
+      "hash": "9e24986ab9fab12abf9ed65cadc4501f74f04a16",
+      "sri": null
     },
     {
       "path": "app/fonts/line-awesome.woff",
@@ -1025,7 +1138,8 @@
       "cacheable": false,
       "url": "/fonts/line-awesome.woff",
       "size": 57436,
-      "hash": "fa9cc3a0abb3056a3e9a44ccc406c18f1d92c0b9"
+      "hash": "fa9cc3a0abb3056a3e9a44ccc406c18f1d92c0b9",
+      "sri": null
     },
     {
       "path": "app/fonts/line-awesome.woff2",
@@ -1034,7 +1148,8 @@
       "cacheable": false,
       "url": "/fonts/line-awesome.woff2",
       "size": 45108,
-      "hash": "6f6d409276da4f2b892a8589bf960d0771ca5aae"
+      "hash": "6f6d409276da4f2b892a8589bf960d0771ca5aae",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.eot",
@@ -1043,7 +1158,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.eot",
       "size": 112139,
-      "hash": "9433ed0091760aa53f97750e48eff1fd4b61ae5f"
+      "hash": "9433ed0091760aa53f97750e48eff1fd4b61ae5f",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.svg",
@@ -1052,7 +1168,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.svg",
       "size": 58483,
-      "hash": "52b4ae5ad775c2e0c1d3f4bed6014434df367e87"
+      "hash": "52b4ae5ad775c2e0c1d3f4bed6014434df367e87",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.ttf",
@@ -1061,7 +1178,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.ttf",
       "size": 290916,
-      "hash": "ae9d34d7421c45a87bd163a87778f6746119b085"
+      "hash": "ae9d34d7421c45a87bd163a87778f6746119b085",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff",
@@ -1070,7 +1188,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff",
       "size": 112628,
-      "hash": "52b60f6f9a5185dd6b6a10bd2b7a463bea2e0018"
+      "hash": "52b60f6f9a5185dd6b6a10bd2b7a463bea2e0018",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff2",
@@ -1079,7 +1198,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700.woff2",
       "size": 85436,
-      "hash": "ab6f72ddc3e92f6597501f9bd5dfc386fef59e71"
+      "hash": "ab6f72ddc3e92f6597501f9bd5dfc386fef59e71",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.eot",
@@ -1088,7 +1208,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.eot",
       "size": 47248,
-      "hash": "9e67066893f85fa01c8e0bda6c815839f446a724"
+      "hash": "9e67066893f85fa01c8e0bda6c815839f446a724",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.svg",
@@ -1097,7 +1218,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.svg",
       "size": 61529,
-      "hash": "35fcfd18abf4730b8b618787c23baafeb61230fd"
+      "hash": "35fcfd18abf4730b8b618787c23baafeb61230fd",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.ttf",
@@ -1106,7 +1228,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.ttf",
       "size": 103200,
-      "hash": "70ad12528e6e37a8ce17833e83ca54e111142aff"
+      "hash": "70ad12528e6e37a8ce17833e83ca54e111142aff",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff",
@@ -1115,7 +1238,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff",
       "size": 45988,
-      "hash": "e4cfe0b42ef88eb59bc72173fd9917798ec7c2c9"
+      "hash": "e4cfe0b42ef88eb59bc72173fd9917798ec7c2c9",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff2",
@@ -1124,7 +1248,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-700italic.woff2",
       "size": 35768,
-      "hash": "dcbf70b0fad21c0f784367293aa1a7495b47cba0"
+      "hash": "dcbf70b0fad21c0f784367293aa1a7495b47cba0",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.eot",
@@ -1133,7 +1258,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.eot",
       "size": 47365,
-      "hash": "df843cea5aec2ada5900428f38fa65a56246daec"
+      "hash": "df843cea5aec2ada5900428f38fa65a56246daec",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.svg",
@@ -1142,7 +1268,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.svg",
       "size": 61242,
-      "hash": "d5b916c5ca2b7aef8f55821e0ceb277b468a5f48"
+      "hash": "d5b916c5ca2b7aef8f55821e0ceb277b468a5f48",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.ttf",
@@ -1151,7 +1278,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.ttf",
       "size": 103828,
-      "hash": "63dc969f1a05cf5ac212687eff4227ac8393f6ec"
+      "hash": "63dc969f1a05cf5ac212687eff4227ac8393f6ec",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff",
@@ -1160,7 +1288,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff",
       "size": 46364,
-      "hash": "31680e223f1578b76326b6f0fc50e6ad50b51bd3"
+      "hash": "31680e223f1578b76326b6f0fc50e6ad50b51bd3",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff2",
@@ -1169,7 +1298,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-italic.woff2",
       "size": 35924,
-      "hash": "7d350baf5d8b83283f73fbe267b5abfa4c95d69f"
+      "hash": "7d350baf5d8b83283f73fbe267b5abfa4c95d69f",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.eot",
@@ -1178,7 +1308,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.eot",
       "size": 113103,
-      "hash": "6dc2e4589e07337c2264bab7adfe3094579dc367"
+      "hash": "6dc2e4589e07337c2264bab7adfe3094579dc367",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.svg",
@@ -1187,7 +1318,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.svg",
       "size": 60072,
-      "hash": "1fe221bda015b17bd8abe311a67c7fb214a0157f"
+      "hash": "1fe221bda015b17bd8abe311a67c7fb214a0157f",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.ttf",
@@ -1196,7 +1328,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.ttf",
       "size": 293516,
-      "hash": "0fa40da0fcf68ead20797f715e70fa61334f58d4"
+      "hash": "0fa40da0fcf68ead20797f715e70fa61334f58d4",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff",
@@ -1205,7 +1338,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff",
       "size": 113924,
-      "hash": "a464d631a2335acad9b53c1e314712d6fb29b749"
+      "hash": "a464d631a2335acad9b53c1e314712d6fb29b749",
+      "sri": null
     },
     {
       "path": "app/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff2",
@@ -1214,7 +1348,8 @@
       "cacheable": false,
       "url": "/fonts/source-sans-pro-v11-latin_latin-ext_cyrillic-ext-regular.woff2",
       "size": 86732,
-      "hash": "b65d81f77be9fe02e9606565d1dc86dbae769477"
+      "hash": "b65d81f77be9fe02e9606565d1dc86dbae769477",
+      "sri": null
     },
     {
       "path": "head.html",
