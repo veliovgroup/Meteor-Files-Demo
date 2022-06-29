@@ -33,7 +33,7 @@
     "@babel/runtime": "^7.4.5",
     "aws-sdk": "^2.814.0",
     "bcrypt": "^5.0.0",
-    "browserslist": "^4.6.3",
+    "browserslist": "^4.16.5",
     "bson": "^4.0.2",
     "bson-ext": "^2.0.2",
     "caniuse-lite": "^1.0.30000978",
