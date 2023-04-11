@@ -1,5 +1,8 @@
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/VeliovGroup/Meteor-Files-Demo)
-[![Become a patron](https://c5.patreon.com/external/logo/become_a_patron_button.png)](https://www.patreon.com/bePatron?u=20396046)
+[![support](https://img.shields.io/badge/support-GitHub-white)](https://github.com/sponsors/dr-dimitru)
+[![support](https://img.shields.io/badge/support-PayPal-white)](https://paypal.me/veliovgroup)
+<a href="https://ostr.io/info/built-by-developers-for-developers">
+  <img src="https://ostr.io/apple-touch-icon-60x60.png" height="20">
+</a>
 
 # Demo app
 
