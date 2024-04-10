@@ -32,7 +32,7 @@
   "dependencies": {
     "@babel/runtime": "^7.4.5",
     "aws-sdk": "^2.1354.0",
-    "bcrypt": "^5.0.0",
+    "bcrypt": "^5.1.1",
     "browserslist": "^4.16.5",
     "bson": "^4.0.2",
     "bson-ext": "^2.0.2",
